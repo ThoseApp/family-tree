@@ -21,7 +21,7 @@ const Logo = ({ component }: LogoProps) => {
         />
       </div> */}
 
-      <div className="text-2xl font-bold italic">Logo</div>
+      {/* <div className="text-2xl font-bold italic">Logo</div> */}
     </Link>
   );
 };

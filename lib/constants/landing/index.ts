@@ -5,14 +5,9 @@ import {
   CalendarIcon,
   ImageIcon,
   TreesIcon,
-  LucideIcon,
 } from "lucide-react";
 
-export type NavLink = {
-  label: string;
-  href: string;
-  icon?: LucideIcon;
-};
+import { NavLink } from "@/lib/types";
 
 export const navLinks: NavLink[] = [
   {
