@@ -30,7 +30,7 @@ const LandingNav = () => {
   return (
     <div
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300 h-16 sm:h-24 bg-white backdrop-blur-sm border-b border-white/20 flex items-center px-4 md:px-10 xl:px-16",
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-300 h-16 sm:h-24 bg-background backdrop-blur-sm border-b border-background/20 flex items-center px-4 md:px-10 xl:px-16",
         scrolled ? " shadow-md" : "",
         pathname !== "/" && "",
         pathname === "/" &&
@@ -50,11 +50,11 @@ const LandingNav = () => {
               className={cn(
                 " font-bold text-lg leading-8 transition-colors",
                 scrolled
-                  ? "text-black"
-                  : "text-black hover:text-primary hover:scale-110 ease-in transition duration-150 ",
+                  ? "text-foreground"
+                  : "text-foreground hover:text-primary hover:scale-110 ease-in transition duration-150 ",
                 pathname === route.href &&
                   "border-b-2 border-primary rounded-none hover:no-underline ",
-                !scrolled && pathname === "/" && "text-white"
+                !scrolled && pathname === "/" && "text-background"
               )}
             >
               <Link href={route.href}>{route.label}</Link>
@@ -67,11 +67,7 @@ const LandingNav = () => {
             asChild
             size="lg"
             className={cn(
-              "transition-colors rounded-full bg-primary text-black"
-              // scrolled
-              //   ? "bg-primary text-black"
-              //   : "bg-primary/10 text-primary hover:bg-primary/80",
-              // pathname === "/" && !scrolled && "bg-primary text-black"
+              "transition-colors rounded-full text-foreground h-10"
             )}
           >
             <Link href="/sign-up">Sign Up</Link>

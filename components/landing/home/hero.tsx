@@ -3,15 +3,15 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { fadeInUp, scaleIn, slideIn, staggerContainer } from "@/lib/animaitons";
-import { Separator } from "../ui/separator";
+import { Separator } from "../../ui/separator";
 import { Box } from "lucide-react";
 
 const Hero = () => {
   return (
-    <div className="flex items-center justify-center text-white  ">
+    <div className="flex items-center justify-center text-background  ">
       {/* Optional overlay for better text visibility */}
       <motion.div
-        className="absolute h-[90dvh] lg:h-screen inset-0 bg-black/30"
+        className="absolute h-[90dvh] lg:h-[114dvh] inset-0 bg-foreground/20"
         initial={{ opacity: 0 }}
         animate={{ opacity: 0.5 }}
         transition={{ duration: 0.8 }}
@@ -55,7 +55,7 @@ const Hero = () => {
                 asChild
                 variant="default"
                 size="lg"
-                className="rounded-full text-2xl h-[69px] w-[230px] font-medium"
+                className="rounded-full text-2xl font-medium"
               >
                 <Link href="/history">Read History</Link>
               </Button>

@@ -104,3 +104,10 @@
     background-image: url("/images/landing/hero_section.webp");
   }
 }
+
+.home-events-section {
+  background-image: url("/images/landing/upcoming_events_section.webp");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
