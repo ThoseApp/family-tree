@@ -1,8 +1,7 @@
 import React from "react";
 import Image from "next/image";
+
 import FrameWrapper from "@/components/wrappers/frame-wrapper";
-import ImageCard from "@/components/cards/image-card";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { familyMembers } from "@/lib/constants/landing";
 
@@ -25,14 +24,18 @@ const FamilyMembersSection = () => {
       {/* Photos Grid */}
       <div className="flex justify-center items-end gap-6">
         {familyMembers.map((member) => (
-          <ImageCard
+          <div
             key={member.alt}
-            imageSrc={member.imageSrc}
-            alt={member.alt}
-            className={cn(
-              `rounded-3xl overflow-hidden w-[${member.width}] h-[${member.height}]`
-            )}
-          />
+            className={`relative w-[${member.width}] h-[${member.height}] rounded-3xl overflow-hidden`}
+          >
+            <Image
+              src={member.imageSrc}
+              alt={member.alt}
+              fill
+              className="object-cover"
+              priority
+            />
+          </div>
         ))}
       </div>
     </FrameWrapper>

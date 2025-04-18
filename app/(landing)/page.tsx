@@ -49,7 +49,7 @@ export default function Home() {
           {/* Centered Heading */}
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-y-8">
             <h2 className="text-4xl md:text-6xl font-bold text-center text-background px-4">
-              Musuro's Family Tree
+              Musuro&apos;s Family Tree
             </h2>
             <p className="text-background text-center text-lg md:max-w-2xl">
               The informality of family life is a blessed condition that allows
