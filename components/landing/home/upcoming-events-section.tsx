@@ -3,10 +3,11 @@ import EventCard from "@/components/cards/event-card";
 import FrameWrapper from "@/components/wrappers/frame-wrapper";
 import { Button } from "@/components/ui/button";
 import { eventCategories } from "@/lib/constants/landing";
+import { MoveRight } from "lucide-react";
 
 const UpcomingEventsSection = () => {
   return (
-    <FrameWrapper className="  home-events-section py-12  text-background">
+    <FrameWrapper className="  home-events-section py-8 lg:py-12  text-background">
       {/* OVERLAY */}
       <div className=" before:content-[''] before:absolute before:inset-0 before:bg-[#191410BD]/70" />
 
@@ -45,19 +46,7 @@ const UpcomingEventsSection = () => {
           className="rounded-full items-center"
         >
           View Details
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
+          <MoveRight className="size-5 ml-2" />
         </Button>
       </div>
     </FrameWrapper>
