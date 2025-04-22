@@ -8,26 +8,16 @@ import React from "react";
 
 const GalleryPage = () => {
   return (
-    <div className="">
+    <div className="pb-20">
       {/* HEADER SECTION */}
       <PageHeader
         title="Cherished Family Moments"
         description="A collection of treasured memories, from celebrations to everyday joys. Relive the moments that bring us closer."
+        searchBar
       />
 
       {/* GALLERY GRID */}
       <GalleryGrid images={galleryImages} />
-
-      <div className="flex justify-center">
-        <Button
-          variant="alternative"
-          size="lg"
-          className="rounded-full items-center"
-        >
-          View Details
-          <MoveRight className="size-5 ml-2" />
-        </Button>
-      </div>
     </div>
   );
 };
