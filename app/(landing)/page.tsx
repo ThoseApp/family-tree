@@ -10,6 +10,10 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import FamilyMembersSection from "@/components/landing/home/family-members-section";
 import UpcomingEventsSection from "@/components/landing/home/upcoming-events-section";
+import FrameWrapper from "@/components/wrappers/frame-wrapper";
+import GalleryGrid from "@/components/gallery";
+import { galleryImages } from "@/lib/constants/landing";
+import { MoveRight } from "lucide-react";
 
 export default function Home() {
   return (
@@ -69,6 +73,29 @@ export default function Home() {
         <UpcomingEventsSection />
 
         {/* GALLERY */}
+        <FrameWrapper className="py-8 lg:py-12">
+          {/* HEADER SECTION */}
+          <div className="text-center  items-center space-y-6">
+            <h2 className="text-xl md:text-2xl font-semibold ">GALLERY</h2>
+            <p className=" font-bold text-base md:text-xl tracking-wider">
+              Remembering Our Golden Days
+            </p>
+          </div>
+
+          {/* GALLERY GRID */}
+          <GalleryGrid images={galleryImages} />
+
+          <div className="flex justify-center">
+            <Button
+              variant="alternative"
+              size="lg"
+              className="rounded-full items-center"
+            >
+              View Details
+              <MoveRight className="size-5 ml-2" />
+            </Button>
+          </div>
+        </FrameWrapper>
       </div>
     </motion.div>
   );
