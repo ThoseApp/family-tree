@@ -9,6 +9,7 @@ import {
 
 import { NavLink } from "@/lib/types";
 import { dummyProfileImage } from "../index";
+import { GalleryProps } from "@/components/gallery";
 
 export const navLinks: NavLink[] = [
   {
@@ -155,5 +156,68 @@ export const eventCategories = [
         imageUrl: dummyProfileImage,
       },
     ],
+  },
+];
+
+export const galleryImages: GalleryProps["images"] = [
+  {
+    url: dummyProfileImage,
+    date: "2023-01-01",
+    title: "Family Reunion 2023",
+  },
+  {
+    url: dummyProfileImage,
+    date: "2023-02-14",
+    title: "Valentine's Day Celebration",
+  },
+  {
+    url: dummyProfileImage,
+    date: "2023-03-17",
+    title: "St. Patrick's Day Party",
+  },
+  {
+    url: dummyProfileImage,
+    date: "2023-04-01",
+    title: "April Fool's Day Prank",
+  },
+  {
+    url: dummyProfileImage,
+    date: "2023-05-05",
+    title: "Cinco de Mayo Fiesta",
+  },
+  {
+    url: dummyProfileImage,
+    date: "2023-06-21",
+    title: "Summer Solstice Celebration",
+  },
+  {
+    url: dummyProfileImage,
+    date: "2023-07-04",
+    title: "Independence Day BBQ",
+  },
+  {
+    url: dummyProfileImage,
+    date: "2023-08-31",
+    title: "End of Summer Bash",
+  },
+  {
+    url: dummyProfileImage,
+    date: "2023-09-22",
+    title: "Fall Equinox Gathering",
+  },
+  {
+    url: dummyProfileImage,
+    date: "2023-10-31",
+    title: "Halloween Costume Party",
+  },
+  {
+    url: dummyProfileImage,
+    date: "2023-11-25",
+    title: "Thanksgiving Dinner",
+  },
+  {
+    url: dummyProfileImage,
+    date: "2023-12-25",
+    title: "Christmas Family Gathering",
   },
 ];
