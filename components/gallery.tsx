@@ -27,7 +27,7 @@ const GalleryImage = ({ url, date, title, index }: GalleryImageProps) => {
       )}
     >
       <img src={url} alt={title} className="object-cover w-full h-full" />
-      <div className="absolute bottom-0 bg-foreground/80 flex py-2 w-full">
+      <div className="absolute bottom-0 bg-foreground/90 flex py-2 w-full">
         <div className="text-background text-xs font-normal  ">
           <div className="text-sm inline-block border-b border-background py-2 pl-6 pr-2 ">
             {formatDate(date)}
