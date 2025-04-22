@@ -12,7 +12,6 @@ const UpcomingEventsSection = () => {
       <div className=" before:content-[''] before:absolute before:inset-0 before:bg-[#191410BD]/70" />
 
       {/* HEADER SECTION */}
-
       <div className="text-center  items-center z-10">
         <h2 className="text-xl md:text-2xl font-semibold text-background ">
           UPCOMING EVENTS
