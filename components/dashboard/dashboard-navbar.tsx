@@ -61,7 +61,7 @@ const DashboardNavbar = () => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="icon" className="rounded-full">
-                <Avatar className="h-8 w-8">
+                <Avatar className="size-10">
                   <AvatarImage
                     src={dummyProfileImage}
                     className="object-cover"
