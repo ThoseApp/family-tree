@@ -48,7 +48,7 @@ const LandingNav = () => {
               variant="navlink"
               key={route.href}
               className={cn(
-                " font-semibold text-lg leading-8 transition-colors !pb-0",
+                " font-semibold text-base  transition-colors !pb-0 h-10",
                 scrolled
                   ? "text-foreground"
                   : "text-foreground hover:text-primary hover:scale-110 ease-in transition duration-150 ",

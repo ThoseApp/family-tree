@@ -17,7 +17,7 @@ const FamilyMemberCard = ({
 }: FamilyMemberCardProps) => {
   return (
     <Card
-      className="w-full rounded-xl relative shadow-md overflow-hidden group cursor-pointer transition-all duration-200 ease-in-out"
+      className="w-full rounded-xl border relative shadow-md overflow-hidden group cursor-pointer transition-all duration-200 ease-in-out"
       // onClick={routeUser}
     >
       {/* TOP IMAGE */}

@@ -17,7 +17,9 @@ const LandingLayout = ({ children }: { children: React.ReactNode }) => {
           className={cn(
             "min-h-screen",
             pathname !== "/" && "pt-16 sm:pt-24",
-            pathname === "/" ? null : "px-4 md:px-10 xl:px-16"
+            pathname === "/" || pathname === "/history"
+              ? null
+              : "px-4 md:px-10 xl:px-16"
           )}
         >
           {children}

@@ -48,7 +48,7 @@ export default function Home() {
             priority
           />
 
-          <div className="absolute inset-0 bg-foreground/40" />
+          <div className="absolute inset-0 bg-foreground/50" />
 
           {/* Centered Heading */}
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-y-8">
