@@ -2,12 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LogOut } from "lucide-react";
 
 import Logo from "../logo";
 import { navLinksTopSection } from "@/lib/constants/dashbaord";
 import { cn } from "@/lib/utils";
-import { LogOut } from "lucide-react";
-import { useState } from "react";
 
 const DashboardSideBar = () => {
   const pathname = usePathname();
@@ -40,48 +39,6 @@ const DashboardSideBar = () => {
                 </Link>
               ))}
             </div>
-            {/* 
-            <div className="mt-auto pb-16 px-3">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-start px-3 py-2 rounded-lg hover:bg-primary/30 focus-visible:ring-0 focus-visible:ring-offset-0"
-                  >
-                    <Avatar className="h-8 w-8 mr-2 border border-[#C8CFD5]/30">
-                      <AvatarFallback className="bg-primary/20  font-medium">
-                        OJ
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col items-start text-left mr-auto">
-                      <span className="font-medium text-sm">Otor John</span>
-                      <span className="text-xs text-muted-foreground">
-                        Admin
-                      </span>
-                    </div>
-                    <ChevronDown className="h-4 w-4 text-muted-foreground ml-2" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 p-2">
-                  <DropdownMenuItem
-                    className="cursor-pointer flex items-center gap-2 rounded-md"
-                    onClick={toggleProfileEditModal}
-                  >
-                    <User className="h-4 w-4" />
-                    <span>Profile</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="cursor-pointer flex items-center gap-2 rounded-md text-destructive"
-                    onClick={toggleLogoutDialog}
-                  >
-                    <LogOut className="h-4 w-4" />
-                    <span>Log out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div> */}
 
             <div className="mt-auto  px-3">
               <div
