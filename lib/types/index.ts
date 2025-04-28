@@ -16,3 +16,11 @@ export interface UserProfile {
   created_at: string;
   updated_at: string;
 }
+
+export interface FamilyMember {
+  id: string;
+  name: string;
+  description: string;
+  imageSrc: string;
+  birthDate: string;
+}

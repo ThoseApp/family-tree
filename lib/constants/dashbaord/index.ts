@@ -8,9 +8,10 @@ import {
   ClipboardList,
   ImageIcon,
   CalendarIcon,
+  LogOutIcon,
 } from "lucide-react";
 
-export const navLinks: NavLink[] = [
+export const navLinksTopSection: NavLink[] = [
   {
     label: "Overview",
     href: "/dashboard",
@@ -50,5 +51,13 @@ export const navLinks: NavLink[] = [
     label: "Settings",
     href: "/dashboard/settings",
     icon: SettingsIcon,
+  },
+];
+
+export const navLinksBottomSection: NavLink[] = [
+  {
+    label: "Logout",
+    href: "/dashboard/logout",
+    icon: LogOutIcon,
   },
 ];

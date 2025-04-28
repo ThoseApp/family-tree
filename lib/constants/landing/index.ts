@@ -7,7 +7,7 @@ import {
   TreesIcon,
 } from "lucide-react";
 
-import { NavLink } from "@/lib/types";
+import { FamilyMember, NavLink } from "@/lib/types";
 import { dummyProfileImage } from "../index";
 import { GalleryProps } from "@/components/gallery";
 
@@ -221,3 +221,155 @@ export const galleryImages: GalleryProps["images"] = [
     title: "Christmas Family Gathering",
   },
 ];
+
+export const dummyFamilyMembers: FamilyMember[] = [
+  {
+    id: "1",
+    name: "John Doe",
+    description: "John Doe is a software engineer at Google",
+    imageSrc: dummyProfileImage,
+    birthDate: "2023-01-01",
+  },
+  {
+    id: "2",
+    name: "Jane Doe",
+    description: "Jane Doe is a software engineer at Google",
+    imageSrc: dummyProfileImage,
+    birthDate: "2023-01-01",
+  },
+  {
+    id: "3",
+    name: "John Doe",
+    description: "John Doe is a software engineer at Google",
+    imageSrc: dummyProfileImage,
+    birthDate: "2023-01-01",
+  },
+  {
+    id: "4",
+    name: "John Doe",
+    description: "John Doe is a software engineer at Google",
+    imageSrc: dummyProfileImage,
+    birthDate: "2023-01-01",
+  },
+  {
+    id: "5",
+    name: "John Doe",
+    description: "John Doe is a software engineer at Google",
+    imageSrc: dummyProfileImage,
+    birthDate: "2023-01-01",
+  },
+  {
+    id: "6",
+    name: "John Doe",
+    description: "John Doe is a software engineer at Google",
+    imageSrc: dummyProfileImage,
+    birthDate: "2023-01-01",
+  },
+  {
+    id: "7",
+    name: "John Doe",
+    description: "John Doe is a software engineer at Google",
+    imageSrc: dummyProfileImage,
+    birthDate: "2023-01-01",
+  },
+];
+
+export const dummyEvents = {
+  birthdays: [
+    {
+      imageUrl: dummyProfileImage,
+      date: {
+        month: "January",
+        day: "1",
+      },
+    },
+    {
+      imageUrl: dummyProfileImage,
+      date: {
+        month: "January",
+        day: "1",
+      },
+    },
+    {
+      imageUrl: dummyProfileImage,
+      date: {
+        month: "January",
+        day: "1",
+      },
+    },
+    {
+      imageUrl: dummyProfileImage,
+      date: {
+        month: "January",
+        day: "1",
+      },
+    },
+    {
+      imageUrl: dummyProfileImage,
+      date: {
+        month: "January",
+        day: "1",
+      },
+    },
+  ],
+  anniversary: [
+    {
+      imageUrl: dummyProfileImage,
+      date: {
+        month: "January",
+        day: "1",
+      },
+    },
+    {
+      imageUrl: dummyProfileImage,
+      date: {
+        month: "January",
+        day: "1",
+      },
+    },
+    {
+      imageUrl: dummyProfileImage,
+      date: {
+        month: "January",
+        day: "1",
+      },
+    },
+    {
+      imageUrl: dummyProfileImage,
+      date: {
+        month: "January",
+        day: "1",
+      },
+    },
+  ],
+  reunions: [
+    {
+      imageUrl: dummyProfileImage,
+      date: {
+        month: "January",
+        day: "1",
+      },
+    },
+    {
+      imageUrl: dummyProfileImage,
+      date: {
+        month: "January",
+        day: "1",
+      },
+    },
+    {
+      imageUrl: dummyProfileImage,
+      date: {
+        month: "January",
+        day: "1",
+      },
+    },
+    {
+      imageUrl: dummyProfileImage,
+      date: {
+        month: "January",
+        day: "1",
+      },
+    },
+  ],
+};
