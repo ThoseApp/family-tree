@@ -32,7 +32,7 @@ const EventCard: React.FC<EventCardProps> = ({
           />
 
           {date && (
-            <div className="absolute top-4 right-4 bg-background rounded-lg overflow-hidden shadow-md">
+            <div className="absolute top-4 right-4 bg-background rounded-lg overflow-hidden shadow-md z-10">
               <div className="bg-primary px-3 py-1">
                 <p className="text-xs font-bold text-center text-foreground">
                   {date.month}

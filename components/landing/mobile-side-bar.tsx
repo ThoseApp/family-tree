@@ -28,8 +28,8 @@ const MobileSidebar = () => {
           variant="ghost"
           size="icon"
           className={cn(
-            "lg:hidden hover:bg-accent/40",
-            pathname === "/" && "text-background hover:text-background/80"
+            "lg:hidden hover:bg-accent/40"
+            // pathname === "/" && "text-background hover:text-background/80"
           )}
         >
           <Menu />

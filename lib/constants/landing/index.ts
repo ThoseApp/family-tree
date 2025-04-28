@@ -273,3 +273,103 @@ export const dummyFamilyMembers: FamilyMember[] = [
     birthDate: "2023-01-01",
   },
 ];
+
+export const dummyEvents = {
+  birthdays: [
+    {
+      imageUrl: dummyProfileImage,
+      date: {
+        month: "January",
+        day: "1",
+      },
+    },
+    {
+      imageUrl: dummyProfileImage,
+      date: {
+        month: "January",
+        day: "1",
+      },
+    },
+    {
+      imageUrl: dummyProfileImage,
+      date: {
+        month: "January",
+        day: "1",
+      },
+    },
+    {
+      imageUrl: dummyProfileImage,
+      date: {
+        month: "January",
+        day: "1",
+      },
+    },
+    {
+      imageUrl: dummyProfileImage,
+      date: {
+        month: "January",
+        day: "1",
+      },
+    },
+  ],
+  anniversary: [
+    {
+      imageUrl: dummyProfileImage,
+      date: {
+        month: "January",
+        day: "1",
+      },
+    },
+    {
+      imageUrl: dummyProfileImage,
+      date: {
+        month: "January",
+        day: "1",
+      },
+    },
+    {
+      imageUrl: dummyProfileImage,
+      date: {
+        month: "January",
+        day: "1",
+      },
+    },
+    {
+      imageUrl: dummyProfileImage,
+      date: {
+        month: "January",
+        day: "1",
+      },
+    },
+  ],
+  reunions: [
+    {
+      imageUrl: dummyProfileImage,
+      date: {
+        month: "January",
+        day: "1",
+      },
+    },
+    {
+      imageUrl: dummyProfileImage,
+      date: {
+        month: "January",
+        day: "1",
+      },
+    },
+    {
+      imageUrl: dummyProfileImage,
+      date: {
+        month: "January",
+        day: "1",
+      },
+    },
+    {
+      imageUrl: dummyProfileImage,
+      date: {
+        month: "January",
+        day: "1",
+      },
+    },
+  ],
+};
