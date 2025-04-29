@@ -20,7 +20,13 @@ export interface UserProfile {
 export interface FamilyMember {
   id: string;
   name: string;
+  gender?: string;
   description: string;
   imageSrc: string;
   birthDate: string;
+  fatherName?: string;
+  motherName?: string;
+  orderOfBirth?: number;
+  spouseName?: string;
+  orderOfMarriage?: number;
 }
