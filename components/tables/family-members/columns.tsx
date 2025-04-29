@@ -29,7 +29,7 @@ export const columns: ColumnDef<FamilyMember>[] = [
             alt={user.name}
             width={32}
             height={32}
-            className="rounded-full"
+            className="rounded-full object-cover"
           />
           <p className="text-sm text-left ">{user.name}</p>
         </div>

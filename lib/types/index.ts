@@ -30,3 +30,11 @@ export interface FamilyMember {
   spouseName?: string;
   orderOfMarriage?: number;
 }
+
+export interface Notification {
+  id: string;
+  title: string;
+  body: string;
+  read: boolean;
+  image: string;
+}
