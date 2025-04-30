@@ -22,7 +22,7 @@ import { dummyProfileImage } from "@/lib/constants";
 const DashboardNavbar = () => {
   const pathname = usePathname();
   return (
-    <div className="flex bg-border/30 items-center  px-3  py-4 lg:px-6">
+    <div className="flex bg-border/30 backdrop-blur-sm items-center  px-3  py-4 lg:px-6">
       <DashboardMobileSidebar />
 
       <div className="w-full flex items-center justify-between gap-8">

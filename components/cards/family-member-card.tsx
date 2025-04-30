@@ -1,8 +1,6 @@
-import { formatDate } from "@/lib/utils";
-import { cn } from "@/lib/utils";
 import Image from "next/image";
 import React from "react";
-import { Card, CardContent, CardFooter } from "../ui/card";
+import { Card, CardContent } from "../ui/card";
 
 interface FamilyMemberCardProps {
   imageSrc: string;
