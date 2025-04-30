@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Image from "next/image";
 import { dummyProfileImage } from "@/lib/constants";
+import Link from "next/link";
 
 const DashboardNavbar = () => {
   const pathname = usePathname();
@@ -54,8 +55,15 @@ const DashboardNavbar = () => {
             <Heart className="size-6" />
           </Button>
 
-          <Button variant="outline" size="icon" className="rounded-full">
-            <Bell className="size-6" />
+          <Button
+            variant="outline"
+            size="icon"
+            className="rounded-full"
+            asChild
+          >
+            <Link href="/dashboard/notifications">
+              <Bell className="size-6" />
+            </Link>
           </Button>
 
           <DropdownMenu>

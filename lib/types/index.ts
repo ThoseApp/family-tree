@@ -31,10 +31,39 @@ export interface FamilyMember {
   orderOfMarriage?: number;
 }
 
+export interface Event {
+  id: string;
+  name: string;
+  date: string;
+  category: string;
+}
+
 export interface Notification {
   id: string;
   title: string;
   body: string;
   read: boolean;
   image: string;
+}
+
+export interface Gallery {
+  id: string;
+  name: string;
+  image: string;
+  fileSize: number;
+  uploadDate: string;
+  uploadTime: string;
+  uploader: string;
+}
+
+export interface NoticeBoard {
+  id: string;
+  title: string;
+  description: string;
+  image: string;
+  pinned: boolean;
+  editor: string;
+  postedDate: string;
+  postedTime: string;
+  tags: string[];
 }

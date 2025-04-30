@@ -1,4 +1,11 @@
-import { FamilyMember, NavLink, Notification } from "@/lib/types";
+import {
+  Event,
+  FamilyMember,
+  Gallery,
+  NavLink,
+  NoticeBoard,
+  Notification,
+} from "@/lib/types";
 import {
   SettingsIcon,
   Hourglass,
@@ -269,5 +276,150 @@ export const dummyNotifications: Notification[] = [
     body: "Notification body",
     read: false,
     image: dummyProfileImage,
+  },
+];
+
+export const dummyEvents: Event[] = [
+  {
+    id: "1",
+    name: "Event 1",
+    date: "2021-01-01",
+    category: "string",
+  },
+  {
+    id: "2",
+    name: "Event 2",
+    date: "2021-01-01",
+    category: "string",
+  },
+  {
+    id: "3",
+    name: "Event 3",
+    date: "2021-01-01",
+    category: "string",
+  },
+
+  {
+    id: "4",
+    name: "Event 4",
+    date: "2021-01-01",
+    category: "string",
+  },
+];
+
+export const dummyGallery: Gallery[] = [
+  {
+    id: "1",
+    name: "Gallery 1",
+    image: dummyProfileImage,
+    fileSize: 100,
+    uploadDate: "2021-01-01",
+    uploadTime: "10:00",
+    uploader: "string",
+  },
+  {
+    id: "2",
+    name: "Gallery 2",
+    image: dummyProfileImage,
+    fileSize: 100,
+    uploadDate: "2021-01-01",
+    uploadTime: "10:00",
+    uploader: "string",
+  },
+  {
+    id: "3",
+    name: "Gallery 3",
+    image: dummyProfileImage,
+    fileSize: 100,
+    uploadDate: "2021-01-01",
+    uploadTime: "10:00",
+    uploader: "string",
+  },
+  {
+    id: "4",
+    name: "Gallery 4",
+    image: dummyProfileImage,
+    fileSize: 100,
+    uploadDate: "2021-01-01",
+    uploadTime: "10:00",
+    uploader: "string",
+  },
+  {
+    id: "5",
+    name: "Gallery 5",
+    image: dummyProfileImage,
+    fileSize: 100,
+    uploadDate: "2021-01-01",
+    uploadTime: "10:00",
+    uploader: "string",
+  },
+];
+
+export const dummyNoticeBoard: NoticeBoard[] = [
+  {
+    id: "1",
+    title: "Notice Board 1",
+    description: "Notice Board description",
+    image: dummyProfileImage,
+    pinned: true,
+    editor: "string",
+    postedDate: "2021-01-01",
+    postedTime: "10:00",
+    tags: ["string", "string", "string"],
+  },
+  {
+    id: "2",
+    title: "Notice Board 2",
+    description: "Notice Board description",
+    image: dummyProfileImage,
+    pinned: false,
+    editor: "string",
+    postedDate: "2021-01-01",
+    postedTime: "10:00",
+    tags: ["string", "string", "string"],
+  },
+  {
+    id: "3",
+    title: "Notice Board 3",
+    description: "Notice Board description",
+    image: dummyProfileImage,
+    pinned: false,
+    editor: "string",
+    postedDate: "2021-01-01",
+    postedTime: "10:00",
+    tags: ["string", "string", "string"],
+  },
+  {
+    id: "4",
+    title: "Notice Board 4",
+    description: "Notice Board description",
+    image: dummyProfileImage,
+    pinned: false,
+    editor: "string",
+    postedDate: "2021-01-01",
+    postedTime: "10:00",
+    tags: ["string", "string", "string"],
+  },
+  {
+    id: "5",
+    title: "Notice Board 5",
+    description: "Notice Board description",
+    image: dummyProfileImage,
+    pinned: false,
+    editor: "string",
+    postedDate: "2021-01-01",
+    postedTime: "10:00",
+    tags: ["string", "string", "string"],
+  },
+  {
+    id: "6",
+    title: "Notice Board 6",
+    description: "Notice Board description",
+    image: dummyProfileImage,
+    pinned: false,
+    editor: "string",
+    postedDate: "2021-01-01",
+    postedTime: "10:00",
+    tags: ["string", "string", "string"],
   },
 ];
