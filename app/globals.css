@@ -83,8 +83,8 @@
   background-image: url("/images/landing/hero_section.webp");
   background-size: cover;
   background-repeat: no-repeat;
-  background-position: center;
-  padding: 1rem 1.5rem;
+  background-position: bottom;
+  /* padding: 1rem 1.5rem; */
 }
 
 @media (min-width: 768px) {

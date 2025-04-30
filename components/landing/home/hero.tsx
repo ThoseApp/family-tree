@@ -38,9 +38,9 @@ const Hero = () => {
             </div>
 
             <div className="flex flex-col gap-y-2 text-2xl font-medium leading-8">
-              <motion.p className=" sm:text-center " variants={slideIn}>
+              {/* <motion.p className=" sm:text-center " variants={slideIn}>
                 This Story Begins in 1892,
-              </motion.p>
+              </motion.p> */}
 
               <motion.p className=" sm:text-center " variants={slideIn}>
                 The Story Behind the Mosuro Name
