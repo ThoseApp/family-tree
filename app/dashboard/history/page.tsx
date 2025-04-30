@@ -16,7 +16,6 @@ const Page = () => {
           </Button>
         </div>
       </div>
-      h
     </div>
   );
 };

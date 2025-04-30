@@ -31,6 +31,13 @@ export interface FamilyMember {
   orderOfMarriage?: number;
 }
 
+export interface Event {
+  id: string;
+  name: string;
+  date: string;
+  category: string;
+}
+
 export interface Notification {
   id: string;
   title: string;

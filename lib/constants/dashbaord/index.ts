@@ -1,4 +1,4 @@
-import { FamilyMember, NavLink, Notification } from "@/lib/types";
+import { Event, FamilyMember, NavLink, Notification } from "@/lib/types";
 import {
   SettingsIcon,
   Hourglass,
@@ -269,5 +269,33 @@ export const dummyNotifications: Notification[] = [
     body: "Notification body",
     read: false,
     image: dummyProfileImage,
+  },
+];
+
+export const dummyEvents: Event[] = [
+  {
+    id: "1",
+    name: "Event 1",
+    date: "2021-01-01",
+    category: "string",
+  },
+  {
+    id: "2",
+    name: "Event 2",
+    date: "2021-01-01",
+    category: "string",
+  },
+  {
+    id: "3",
+    name: "Event 3",
+    date: "2021-01-01",
+    category: "string",
+  },
+
+  {
+    id: "4",
+    name: "Event 4",
+    date: "2021-01-01",
+    category: "string",
   },
 ];
