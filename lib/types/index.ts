@@ -55,3 +55,15 @@ export interface Gallery {
   uploadTime: string;
   uploader: string;
 }
+
+export interface NoticeBoard {
+  id: string;
+  title: string;
+  description: string;
+  image: string;
+  pinned: boolean;
+  editor: string;
+  postedDate: string;
+  postedTime: string;
+  tags: string[];
+}
