@@ -1,4 +1,10 @@
-import { Event, FamilyMember, NavLink, Notification } from "@/lib/types";
+import {
+  Event,
+  FamilyMember,
+  Gallery,
+  NavLink,
+  Notification,
+} from "@/lib/types";
 import {
   SettingsIcon,
   Hourglass,
@@ -297,5 +303,53 @@ export const dummyEvents: Event[] = [
     name: "Event 4",
     date: "2021-01-01",
     category: "string",
+  },
+];
+
+export const dummyGallery: Gallery[] = [
+  {
+    id: "1",
+    name: "Gallery 1",
+    image: dummyProfileImage,
+    fileSize: 100,
+    uploadDate: "2021-01-01",
+    uploadTime: "10:00",
+    uploader: "string",
+  },
+  {
+    id: "2",
+    name: "Gallery 2",
+    image: dummyProfileImage,
+    fileSize: 100,
+    uploadDate: "2021-01-01",
+    uploadTime: "10:00",
+    uploader: "string",
+  },
+  {
+    id: "3",
+    name: "Gallery 3",
+    image: dummyProfileImage,
+    fileSize: 100,
+    uploadDate: "2021-01-01",
+    uploadTime: "10:00",
+    uploader: "string",
+  },
+  {
+    id: "4",
+    name: "Gallery 4",
+    image: dummyProfileImage,
+    fileSize: 100,
+    uploadDate: "2021-01-01",
+    uploadTime: "10:00",
+    uploader: "string",
+  },
+  {
+    id: "5",
+    name: "Gallery 5",
+    image: dummyProfileImage,
+    fileSize: 100,
+    uploadDate: "2021-01-01",
+    uploadTime: "10:00",
+    uploader: "string",
   },
 ];

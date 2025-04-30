@@ -1,7 +1,10 @@
-import React from "react";
+import SignInDetails from "@/components/auth/sign-in/sign-in-details";
+export const dynamic = "force-dynamic";
 
-const SignInPage = () => {
-  return <div>SignInPage</div>;
-};
-
-export default SignInPage;
+export default async function SignInPage() {
+  return (
+    <>
+      <SignInDetails />
+    </>
+  );
+}

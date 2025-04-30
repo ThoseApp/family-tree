@@ -59,11 +59,11 @@ export const columns: ColumnDef<Event>[] = [
     header: "Action",
     cell: ({ row }) => (
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon">
+        <Button variant="outline" size="icon">
           <Pencil />
         </Button>
 
-        <Button variant="ghost" size="icon">
+        <Button variant="outline" size="icon">
           <Trash2 />
         </Button>
       </div>

@@ -45,3 +45,13 @@ export interface Notification {
   read: boolean;
   image: string;
 }
+
+export interface Gallery {
+  id: string;
+  name: string;
+  image: string;
+  fileSize: number;
+  uploadDate: string;
+  uploadTime: string;
+  uploader: string;
+}
