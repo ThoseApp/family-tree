@@ -101,7 +101,7 @@ export const columns: ColumnDef<Gallery>[] = [
           Decline
         </Button>
 
-        <Button className="flex justify-end bg-green-500 hover:bg-green-500/80">
+        <Button className="flex justify-end bg-green-500 hover:bg-green-500/80 text-background">
           Approve
         </Button>
       </div>

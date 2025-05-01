@@ -8,7 +8,7 @@ import { Plus } from "lucide-react";
 import React, { useState } from "react";
 
 const Page = () => {
-  const [newNotice, setNewNotice] = useState(true);
+  const [newNotice, setNewNotice] = useState(false);
 
   const toggleNewNotice = () => {
     setNewNotice(!newNotice);
@@ -21,7 +21,10 @@ const Page = () => {
         <h1 className="text-2xl font-semibold">Family Notice Board</h1>
 
         <div className="flex items-center gap-4">
-          <Button className="bg-foreground text-background rounded-full hover:bg-foreground/80">
+          <Button
+            className="bg-foreground text-background rounded-full hover:bg-foreground/80"
+            onClick={toggleNewNotice}
+          >
             <Plus className="size-5" />
             New Notice
           </Button>
@@ -29,7 +32,7 @@ const Page = () => {
       </div>
 
       {/* GRID SECTION */}
-      <div className="flex items-start gap-4 w-full">
+      <div className={cn("", newNotice && "flex items-start gap-4 w-full")}>
         <div
           className={cn(
             "grid grid-cols-1  lg:grid-cols-2 gap-4",
@@ -42,7 +45,7 @@ const Page = () => {
         </div>
         {newNotice && (
           <div className="w-1/2">
-            <NewNoticeCard />
+            <NewNoticeCard onClose={toggleNewNotice} />
           </div>
         )}
       </div>

@@ -15,7 +15,11 @@ import {
 } from "../ui/card";
 import { Button } from "../ui/button";
 
-const NewNoticeCard = () => {
+interface NewNoticeCardProps {
+  onClose: () => void;
+}
+
+const NewNoticeCard = ({ onClose }: NewNoticeCardProps) => {
   const [tags, setTags] = useState<string[]>(["#Event"]);
   const [tagInput, setTagInput] = useState<string>("");
 
@@ -95,7 +99,9 @@ const NewNoticeCard = () => {
         </div>
       </CardContent>
       <CardFooter className="flex justify-end space-x-2">
-        <Button variant="outline">Cancel</Button>
+        <Button variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
         <Button className="bg-foreground hover:bg-foreground/80 text-background">
           Post
         </Button>
