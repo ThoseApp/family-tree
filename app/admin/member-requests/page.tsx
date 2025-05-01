@@ -7,7 +7,7 @@ const Page = () => {
     <div className="flex flex-col gap-y-8 lg:gap-y-12 ">
       {/* HEADER SECTION */}
       <div className="flex md:items-center md:flex-row flex-col md:justify-between gap-y-4">
-        <h1 className="text-2xl font-semibold">Gallery Requests</h1>
+        <h1 className="text-2xl font-semibold">Member Requests</h1>
       </div>
 
       <MemberRequestsTable data={dummyFamilyMembers} />

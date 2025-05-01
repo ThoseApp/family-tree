@@ -1,98 +1,169 @@
 import DashboardOverviewCard from "@/components/cards/dashboard-overview-card";
 import UpcomingEventCard from "@/components/cards/upcoming-event-card";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { dummyProfileImage } from "@/lib/constants";
 import {
-  dummyNewAlbumCreation,
-  dummyUpcomingEvents,
-} from "@/lib/constants/dashbaord";
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { dummyProfileImage } from "@/lib/constants";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import React from "react";
 
 const DashboardPage = () => {
+  // Placeholder data - replace with actual data fetching
+  const pendingMembers = 4;
+  const galleryRequests = 2;
+  const landingPageImageUrl = dummyProfileImage; // Replace with actual image path
+  const eventHighlightImageUrl = dummyProfileImage; // Replace with actual image path
+
   return (
-    <div className="flex flex-col  gap-y-8 lg:gap-y-12">
-      <DashboardOverviewCard
-        imageSrc={dummyProfileImage}
-        title="Grandma Beth’s 80th Birthday Celebration "
-        date="May 12, 2025, 4:00 PM -6:00 PM"
-        description="Grandma’s House, 123 Family Lane, Lagos."
-        routePath="/family-tree"
-      />
+    <div className="flex flex-col gap-y-8 lg:gap-y-12">
+      {/* HEADER SECTION */}
+      <div className="flex md:items-center md:flex-row flex-col md:justify-between gap-y-4">
+        <h1 className="text-2xl font-semibold">Welcome back, Admin</h1>
+      </div>
 
-      {/* UPCOMING EVENTS */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Upcoming Events</CardTitle>
-        </CardHeader>
+      {/* Dashboard Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+        {/* Pending Member Requests Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-medium text-muted-foreground">
+              Pending Member Requests
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex items-center justify-between">
+            <span className="text-6xl font-bold">{pendingMembers}</span>
+          </CardContent>
+          <CardFooter>
+            <div className="flex items-center gap-4 w-full justify-end">
+              <Button
+                variant="outline"
+                className="w-full rounded-full"
+                size="lg"
+              >
+                View All
+              </Button>
+              <Button
+                className="w-full rounded-full bg-foreground text-background hover:bg-foreground/80"
+                size="lg"
+              >
+                Accept
+              </Button>
+            </div>
+          </CardFooter>
+        </Card>
 
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {dummyUpcomingEvents.map((event, index) => (
-              <UpcomingEventCard
-                key={index}
-                imageSrc={event.imageUrl}
-                name={event.name}
-                description={event.description}
-                date={event.date}
+        {/* Gallery Uploads Requests Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-medium text-muted-foreground">
+              Gallery Uploads Requests
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex items-center justify-between">
+            <span className="text-6xl font-bold">{galleryRequests}</span>
+          </CardContent>
+
+          <CardFooter>
+            <div className="flex items-center gap-4 w-full justify-end">
+              <Button
+                variant="outline"
+                className="w-full rounded-full"
+                size="lg"
+              >
+                View All
+              </Button>
+              <Button
+                className="w-full rounded-full bg-foreground text-background hover:bg-foreground/80"
+                size="lg"
+              >
+                Accept
+              </Button>
+            </div>
+          </CardFooter>
+        </Card>
+
+        {/* Landing Page Updates Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-medium text-muted-foreground">
+              Landing Page Updates
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {/* Ensure Image component covers the area */}
+            <div className="relative aspect-video">
+              <Image
+                src={landingPageImageUrl}
+                alt="Landing Page Preview"
+                fill
+                className="object-cover rounded-xl"
               />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* NEW ALBUM CREATION */}
-      <Card>
-        <CardHeader>
-          <CardTitle>New Album Creation</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {dummyNewAlbumCreation.slice(0, 7).map((album, index) => (
-              <div
-                key={index}
-                className={cn(
-                  "relative h-[30vh] bg-border w-full  rounded-xl",
-
-                  index === 5 && "col-span-3"
-                )}
+            </div>
+          </CardContent>
+          <CardFooter>
+            <div className="flex items-center gap-4 w-full justify-end">
+              <Button
+                className="w-full rounded-full bg-foreground text-background hover:bg-foreground/80"
+                size="lg"
               >
-                <Image
-                  src={album.imageUrl}
-                  alt={album.name}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+                Edit
+              </Button>
+            </div>
+          </CardFooter>
+        </Card>
 
-      {/* NEW FAMILY MEMBER ADDED */}
-      <Card>
-        <CardHeader>
-          <CardTitle>New Family Member Added</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6 bg-border/30 rounded-xl">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <div
-                key={index}
-                className="relative h-[30vh] bg-border w-full  rounded-xl"
+        {/* Event Highlights Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-medium text-muted-foreground">
+              Event Highlights
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <p className="font-semibold">Smith Family Reunion</p>
+              <p className="text-sm text-muted-foreground">April 15</p>
+            </div>
+            <div className="relative aspect-video">
+              <Image
+                src={eventHighlightImageUrl}
+                alt="Event Highlight"
+                fill
+                className="object-cover rounded-xl"
+              />
+            </div>
+          </CardContent>
+          <CardFooter>
+            <div className="flex items-center gap-4 w-full justify-end">
+              <Button
+                variant="outline"
+                className="w-full rounded-full"
+                size="lg"
               >
-                <Image
-                  src={dummyProfileImage}
-                  alt="Family Member"
-                  fill
-                  className="object-cover rounded-xl"
-                />
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+                View All
+              </Button>
+            </div>
+          </CardFooter>
+        </Card>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex items-center gap-4">
+        <Button variant="outline" className=" rounded-full" size="lg">
+          Add Event
+        </Button>
+        <Button variant="outline" className=" rounded-full" size="lg">
+          Add Member
+        </Button>
+      </div>
     </div>
   );
 };
