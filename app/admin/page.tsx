@@ -34,7 +34,9 @@ const DashboardPage = () => {
         {/* Pending Member Requests Card */}
         <Card>
           <CardHeader>
-            <CardTitle>Pending Member Requests</CardTitle>
+            <CardTitle className="text-lg font-medium text-muted-foreground">
+              Pending Member Requests
+            </CardTitle>
           </CardHeader>
           <CardContent className="flex items-center justify-between">
             <span className="text-6xl font-bold">{pendingMembers}</span>
@@ -61,7 +63,9 @@ const DashboardPage = () => {
         {/* Gallery Uploads Requests Card */}
         <Card>
           <CardHeader>
-            <CardTitle>Gallery Uploads Requests</CardTitle>
+            <CardTitle className="text-lg font-medium text-muted-foreground">
+              Gallery Uploads Requests
+            </CardTitle>
           </CardHeader>
           <CardContent className="flex items-center justify-between">
             <span className="text-6xl font-bold">{galleryRequests}</span>
@@ -89,7 +93,9 @@ const DashboardPage = () => {
         {/* Landing Page Updates Card */}
         <Card>
           <CardHeader>
-            <CardTitle>Landing Page Updates</CardTitle>
+            <CardTitle className="text-lg font-medium text-muted-foreground">
+              Landing Page Updates
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {/* Ensure Image component covers the area */}
@@ -117,7 +123,9 @@ const DashboardPage = () => {
         {/* Event Highlights Card */}
         <Card>
           <CardHeader>
-            <CardTitle>Event Highlights</CardTitle>
+            <CardTitle className="text-lg font-medium text-muted-foreground">
+              Event Highlights
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
