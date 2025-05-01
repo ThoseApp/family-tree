@@ -1,5 +1,6 @@
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 interface EventCardProps {
   imageUrl: string;
@@ -18,7 +19,7 @@ const EventCard: React.FC<EventCardProps> = ({
   date,
 }) => {
   return (
-    <div className="relative aspect-[1/1]">
+    <Link href={`/profile/user`} className="relative aspect-[1/1]">
       <div
         className={`absolute top-0 left-0 z-10 w-[90%] h-[90%] rounded-2xl overflow-hidden shadow-lg transition-transform ease-in duration-300 hover:scale-105 ${className}`}
       >
@@ -52,7 +53,7 @@ const EventCard: React.FC<EventCardProps> = ({
 
       {/* BROWN BG */}
       <div className="absolute right-0 bottom-0 w-[90%] h-[90%] rounded-2xl bg-[#49382A]" />
-    </div>
+    </Link>
   );
 };
 

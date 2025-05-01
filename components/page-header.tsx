@@ -1,8 +1,10 @@
+"use client";
+
 import React from "react";
 import { Button } from "./ui/button";
 import { ArrowLeft, ChevronLeft, Filter, MoveLeft, Search } from "lucide-react";
 import { Input } from "./ui/input";
-
+import { useRouter } from "next/navigation";
 interface PageHeaderProps {
   title: string;
   description?: string;
@@ -10,6 +12,7 @@ interface PageHeaderProps {
 }
 
 const PageHeader = ({ title, description, searchBar }: PageHeaderProps) => {
+  const router = useRouter();
   return (
     <div className="flex-col flex gap-y-5 py-8 lg:py-12 w-full">
       <div className="text-center flex items-center">
@@ -18,6 +21,7 @@ const PageHeader = ({ title, description, searchBar }: PageHeaderProps) => {
           variant="ghost"
           size="icon"
           className="flex-shrink-0 rounded-full"
+          onClick={() => router.back()}
           asChild
         >
           <ChevronLeft className="size-24 cursor-pointer" />

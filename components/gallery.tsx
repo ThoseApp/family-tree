@@ -1,4 +1,5 @@
 import { cn, formatDate } from "@/lib/utils";
+import Image from "next/image";
 import React from "react";
 
 export interface GalleryProps {
@@ -13,10 +14,15 @@ interface GalleryImageProps {
   url: string;
   date: string;
   title: string;
-  index: number;
+  index?: number;
 }
 
-const GalleryImage = ({ url, date, title, index }: GalleryImageProps) => {
+export const GalleryImage = ({
+  url,
+  date,
+  title,
+  index,
+}: GalleryImageProps) => {
   return (
     <div
       className={cn(
@@ -26,7 +32,14 @@ const GalleryImage = ({ url, date, title, index }: GalleryImageProps) => {
         index === 8 && "col-span-2"
       )}
     >
-      <img src={url} alt={title} className="object-cover w-full h-full" />
+      <div className="relative h-[40vh] w-full">
+        <Image
+          src={url}
+          alt={title}
+          fill
+          className="object-cover w-full h-full"
+        />
+      </div>
       <div className="absolute bottom-0 bg-foreground/90 flex py-2 w-full">
         <div className="text-background text-xs font-normal  ">
           <div className="text-sm inline-block border-b border-background py-2 pl-6 pr-2 ">
