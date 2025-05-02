@@ -1,6 +1,6 @@
 import React from "react";
 import DashboardMobileSidebar from "./dashboard-mobile-sidebar";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Bell, Heart, LogOut, Mail, Search, User } from "lucide-react";
 import { Mic } from "lucide-react";
 import { Input } from "../ui/input";
@@ -22,6 +22,8 @@ import Link from "next/link";
 
 const DashboardNavbar = () => {
   const pathname = usePathname();
+  const router = useRouter();
+
   return (
     <div className="flex bg-border/30 backdrop-blur-sm items-center  px-3  py-4 lg:px-6">
       <DashboardMobileSidebar />
@@ -81,7 +83,7 @@ const DashboardNavbar = () => {
             <DropdownMenuContent align="end" className="w-56 p-2">
               <DropdownMenuItem
                 className="cursor-pointer flex items-center gap-2 rounded-md"
-                // onClick={toggleProfileEditModal}
+                onClick={() => router.push("/dashboard/profile")}
               >
                 <User className="size-5" />
                 <span>Profile</span>

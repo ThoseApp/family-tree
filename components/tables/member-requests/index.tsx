@@ -3,12 +3,15 @@ import React from "react";
 import { columns } from "./columns";
 import { DataTable } from "@/components/ui/data-table";
 
-interface FamilyMembersTableProps {
+interface MemberRequestsTableProps {
   data: FamilyMember[];
   onUserClick?: (user: FamilyMember) => void;
 }
 
-const FamilyMembersTable = ({ data, onUserClick }: FamilyMembersTableProps) => {
+const MemberRequestsTable = ({
+  data,
+  onUserClick,
+}: MemberRequestsTableProps) => {
   return (
     <DataTable
       columns={columns}
@@ -22,4 +25,4 @@ const FamilyMembersTable = ({ data, onUserClick }: FamilyMembersTableProps) => {
   );
 };
 
-export default FamilyMembersTable;
+export default MemberRequestsTable;

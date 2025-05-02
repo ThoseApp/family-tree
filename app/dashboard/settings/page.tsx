@@ -15,7 +15,7 @@ import { UploadCloud, EyeOff } from "lucide-react";
 
 const SettingsPage = () => {
   return (
-    <div className="flex flex-col gap-y-8 lg:gap-y-12 p-4 md:p-6 lg:p-8">
+    <div className="flex flex-col gap-y-8 lg:gap-y-12 ">
       {/* HEADER SECTION */}
       <div className="flex md:items-center md:flex-row flex-col md:justify-between gap-y-4">
         <h1 className="text-2xl font-semibold">Settings</h1>

@@ -56,11 +56,7 @@ const NoticeBoardCard = ({ noticeBoard }: NoticeBoardCardProps) => {
         <div className="flex flex-wrap gap-2">
           {noticeBoard.tags &&
             noticeBoard.tags.map((tag: string, index: number) => (
-              <Badge
-                key={index}
-                variant="secondary"
-                className="bg-[#EABF6238] text-yellow-800"
-              >
+              <Badge key={index} variant="tag">
                 {tag}
               </Badge>
             ))}
