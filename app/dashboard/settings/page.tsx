@@ -158,7 +158,7 @@ const SettingsPage = () => {
                 className="bg-yellow-50/30 border-gray-200 rounded-lg"
               />
             </div>
-            <div className="flex justify-end">
+            <div className="p-0 mt-4 flex justify-end gap-x-3">
               <Button variant="outline">Cancel</Button>
               <Button className="bg-yellow-500 hover:bg-yellow-600 text-white">
                 Save Changes

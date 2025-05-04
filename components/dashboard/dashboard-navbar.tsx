@@ -19,6 +19,7 @@ import {
 import Image from "next/image";
 import { dummyProfileImage } from "@/lib/constants";
 import Link from "next/link";
+import AdminMobileSidebar from "../admin/admin-mobile-sidebar";
 
 const DashboardNavbar = () => {
   const pathname = usePathname();
@@ -26,7 +27,11 @@ const DashboardNavbar = () => {
 
   return (
     <div className="flex bg-border/30 backdrop-blur-sm items-center  px-3  py-4 lg:px-6">
-      <DashboardMobileSidebar />
+      {pathname.includes("/admin") ? (
+        <AdminMobileSidebar />
+      ) : (
+        <DashboardMobileSidebar />
+      )}
 
       <div className="w-full flex items-center justify-between gap-8">
         {/* SEARCH BAR */}
@@ -49,24 +54,26 @@ const DashboardNavbar = () => {
 
         {/* ACTION ICONS */}
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" className="rounded-full">
-            <Mail className="size-6" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" className="rounded-full">
+              <Mail className="size-6" />
+            </Button>
 
-          <Button variant="outline" size="icon" className="rounded-full">
-            <Heart className="size-6" />
-          </Button>
+            <Button variant="outline" size="icon" className="rounded-full">
+              <Heart className="size-6" />
+            </Button>
 
-          <Button
-            variant="outline"
-            size="icon"
-            className="rounded-full"
-            asChild
-          >
-            <Link href="/dashboard/notifications">
-              <Bell className="size-6" />
-            </Link>
-          </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="rounded-full"
+              asChild
+            >
+              <Link href="/dashboard/notifications">
+                <Bell className="size-6" />
+              </Link>
+            </Button>
+          </div>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
