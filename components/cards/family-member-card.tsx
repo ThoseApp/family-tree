@@ -1,6 +1,9 @@
+"use client";
+
 import Image from "next/image";
 import React from "react";
 import { Card, CardContent } from "../ui/card";
+import { useRouter } from "next/navigation";
 
 interface FamilyMemberCardProps {
   imageSrc: string;
@@ -13,10 +16,15 @@ const FamilyMemberCard = ({
   name,
   description,
 }: FamilyMemberCardProps) => {
+  const router = useRouter();
+
+  const routeUser = () => {
+    router.push(`/profile/${name}`);
+  };
   return (
     <Card
       className="w-full rounded-xl border relative shadow-md overflow-hidden group cursor-pointer transition-all duration-200 ease-in-out"
-      // onClick={routeUser}
+      onClick={routeUser}
     >
       {/* TOP IMAGE */}
       <div className="relative h-[30vh] bg-border w-full">

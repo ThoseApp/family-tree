@@ -1,14 +1,17 @@
-import { FamilyMember } from "@/lib/types";
+import { Gallery } from "@/lib/types";
 import React from "react";
 import { columns } from "./columns";
 import { DataTable } from "@/components/ui/data-table";
 
-interface FamilyMembersTableProps {
-  data: FamilyMember[];
-  onUserClick?: (user: FamilyMember) => void;
+interface GalleryRequestsTableProps {
+  data: Gallery[];
+  onUserClick?: (user: Gallery) => void;
 }
 
-const FamilyMembersTable = ({ data, onUserClick }: FamilyMembersTableProps) => {
+const GalleryRequestsTable = ({
+  data,
+  onUserClick,
+}: GalleryRequestsTableProps) => {
   return (
     <DataTable
       columns={columns}
@@ -22,4 +25,4 @@ const FamilyMembersTable = ({ data, onUserClick }: FamilyMembersTableProps) => {
   );
 };
 
-export default FamilyMembersTable;
+export default GalleryRequestsTable;

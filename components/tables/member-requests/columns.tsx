@@ -131,9 +131,15 @@ export const columns: ColumnDef<FamilyMember>[] = [
     id: "action",
     header: "Action",
     cell: ({ row }) => (
-      <Button className="flex justify-end" variant="outline">
-        Edit
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button className="flex justify-end" variant="destructive">
+          Decline
+        </Button>
+
+        <Button className="flex justify-end bg-green-500 hover:bg-green-500/80 text-background">
+          Approve
+        </Button>
+      </div>
     ),
   },
 ];
