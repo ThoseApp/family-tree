@@ -5,6 +5,7 @@ import {
   BUCKET_NAME,
   MAX_IMAGE_SIZE_MB,
   MAX_VIDEO_SIZE_MB,
+  MAX_DOCUMENT_SIZE_MB,
 } from "@/lib/constants";
 
 const supabase = createClient();
@@ -87,6 +88,49 @@ export const uploadVideo = async (
   } catch (error: any) {
     const errorMessage = error.message || "An error occurred";
     console.error("Video upload error:", errorMessage);
+
+    toast.error(errorMessage);
+    return null;
+  }
+};
+
+export const uploadDocument = async (
+  file: File,
+  folder: keyof typeof BucketFolderEnum
+): Promise<string | null> => {
+  if (!file) {
+    return null;
+  }
+
+  try {
+    // Check file size (limit: 50MB)
+    if (file.size > MAX_DOCUMENT_SIZE_MB * 1024 * 1024) {
+      throw new Error("File size exceeds 50MB limit.");
+    }
+
+    // Create a unique filename using timestamp
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${folder}/${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2)}.${fileExt}`;
+
+    // Upload the file to Supabase bucket
+    const { error } = await supabase.storage
+      .from(BUCKET_NAME)
+      .upload(fileName, file, {
+        cacheControl: "3600",
+        upsert: false, // Prevent overwriting
+      });
+
+    if (error) throw error;
+
+    // Get the public URL of the uploaded document
+    const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(fileName);
+
+    return data.publicUrl;
+  } catch (error: any) {
+    const errorMessage = error.message || "An error occurred";
+    console.error("Document upload error:", errorMessage);
 
     toast.error(errorMessage);
     return null;
