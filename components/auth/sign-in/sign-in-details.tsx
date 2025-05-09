@@ -162,7 +162,7 @@ const SignInDetails = () => {
                   )}
                 />
 
-                <div className="flex justify-between items-center">
+                <div className="flex justify-end items-center">
                   {/* REMEMBER ME */}
                   {/* <div className="flex items-center space-x-2">
                     <Checkbox
@@ -183,14 +183,14 @@ const SignInDetails = () => {
                   </div> */}
 
                   {/* FORGOTTEN PASSWORD LINK */}
-                  {/* <Button
+                  <Button
                     onClick={() => router.push("/forgot-password")}
                     variant="link"
                     type="button"
                     className={` py-2 justify-end items-end flex text-sm ease-in  cursor-pointer hover:scale-105 transition `}
                   >
                     Forgot password?{" "}
-                  </Button> */}
+                  </Button>
                 </div>
 
                 <Button
@@ -232,6 +232,10 @@ const SignInDetails = () => {
               <span className="text-sm font-normal ">Continue with Google</span>
             </Button>
           </div>
+
+          <p className="text-center text-xs font-medium mt-4">
+            By signing in, I accept Company’s Terms of Use and Privacy Policy
+          </p>
         </div>
       </AuthWrapper>
     </>

@@ -3,6 +3,7 @@ import Image from "next/image";
 import React from "react";
 import { Button } from "../ui/button";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 
 interface AuthWrapperProps {
   children: React.ReactNode;
@@ -24,7 +25,7 @@ const AuthWrapper = ({ children, imageSrc, imageStyle }: AuthWrapperProps) => {
       <div className="hidden h-full md:flex md:flex-col md:fixed md:w-[50vw] md:left-0 md:inset-y-0">
         <div
           className="relative w-full h-full"
-          style={{ clipPath: "polygon(0 0, 100% 0%, 70% 100%, 0% 100%)" }}
+          style={{ clipPath: "polygon(0 0, 100% 0%, 80% 100%, 0% 100%)" }}
         >
           <Image
             alt={`auth-${imageSrc}`}
@@ -39,19 +40,39 @@ const AuthWrapper = ({ children, imageSrc, imageStyle }: AuthWrapperProps) => {
           {/* CENTERED DIV */}
           <div className="absolute top-0 bottom-0 left-32 flex items-center flex-col justify-center gap-4">
             <h2 className="text-white text-3xl font-semibold">
-              Don&apos;t Have an Account Already?
+              {pathname === "/sign-in" ||
+              pathname === "/forgot-password" ||
+              pathname === "/reset-password" ||
+              pathname === "/otp-verification"
+                ? "Don’t Have an Account Already?"
+                : pathname === "/sign-up"
+                ? "Already Signed Up?"
+                : "Forgot Password?"}
             </h2>
             <div className="text-white text-sm">
-              {pathname === "/sign-in"
-                ? "Don’t Have an Account Already?"
+              {pathname === "/sign-in" ||
+              pathname === "/forgot-password" ||
+              pathname === "/reset-password" ||
+              pathname === "/otp-verification"
+                ? "Create an account to keep using this website page"
+                : pathname === "/sign-up"
+                ? "Log in to your account so you can continue using this website page"
                 : "Already Signed Up?"}
             </div>
             <Button
               variant="outline"
               size="lg"
-              className="rounded-full mt-2 bg-transparent text-background"
+              className="rounded-full mt-2 min-w-40 bg-transparent text-background"
+              asChild
             >
-              {pathname === "/sign-in" ? "Sign Up" : "Sign In"}
+              <Link href={pathname === "/sign-in" ? "/sign-up" : "/sign-in"}>
+                {pathname === "/sign-in" ||
+                pathname === "/forgot-password" ||
+                pathname === "/reset-password" ||
+                pathname === "/otp-verification"
+                  ? "Sign Up"
+                  : "Sign In"}
+              </Link>
             </Button>
           </div>
         </div>
