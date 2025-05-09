@@ -25,7 +25,7 @@ const AuthWrapper = ({ children, imageSrc, imageStyle }: AuthWrapperProps) => {
       <div className="hidden h-full md:flex md:flex-col md:fixed md:w-[50vw] md:left-0 md:inset-y-0">
         <div
           className="relative w-full h-full"
-          style={{ clipPath: "polygon(0 0, 100% 0%, 70% 100%, 0% 100%)" }}
+          style={{ clipPath: "polygon(0 0, 100% 0%, 80% 100%, 0% 100%)" }}
         >
           <Image
             alt={`auth-${imageSrc}`}
