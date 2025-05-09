@@ -10,8 +10,11 @@ export interface UserProfile {
   id: string;
   user_id: string;
   email: string;
-
-  // TODO: Add more fields
+  first_name: string;
+  last_name: string;
+  phone_number: string;
+  relationship_to_family: string;
+  date_of_birth: string;
 
   created_at: string;
   updated_at: string;
@@ -66,4 +69,12 @@ export interface NoticeBoard {
   postedDate: string;
   postedTime: string;
   tags: string[];
+}
+
+// API Response
+export interface ApiResponse<T> {
+  data: T;
+  success: boolean;
+  errors: string[];
+  message: string;
 }
