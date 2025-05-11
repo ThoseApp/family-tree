@@ -14,6 +14,7 @@ interface PasswordInputProps {
   showPassword: boolean;
   toggleVisibility: () => void;
   placeholder?: string;
+  disabled?: boolean;
 }
 
 const PasswordInput = ({
@@ -21,6 +22,7 @@ const PasswordInput = ({
   showPassword,
   toggleVisibility,
   placeholder,
+  disabled,
 }: PasswordInputProps) => (
   <div className="relative">
     <Input
@@ -28,6 +30,7 @@ const PasswordInput = ({
       placeholder={placeholder || "Enter password"}
       className="focus-visible:ring-0"
       {...field}
+      disabled={disabled}
     />
     <div className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer">
       <TooltipProvider>
