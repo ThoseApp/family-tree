@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist, StorageValue } from "zustand/middleware";
 import { User } from "@supabase/supabase-js";
 import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
 
 interface UserStore {
   user: User | null;
@@ -9,7 +10,16 @@ interface UserStore {
   success: boolean | null;
   error: string | null;
 
-  signUp: (email: string, password: string) => Promise<any>;
+  signUp: (userData: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    phoneNumber?: string;
+    dateOfBirth?: Date;
+    relative?: string;
+    relationshipToRelative?: string;
+  }) => Promise<any>;
   login: (email: string, password: string, nextRoute: string) => Promise<any>;
   logout: () => Promise<void>;
   passwordReset: (email: string) => Promise<any>;
@@ -30,24 +40,22 @@ export const useUserStore = create(
     (set, get) => ({
       ...initialState,
       login: async (email, password, nextRoute) => {
-        set({ loading: true, success: null });
+        set({ loading: true, success: null, error: null });
+        const supabase = createClient();
 
         try {
-          // const user = await ApiService.login(email, password);
-          // STIMULATE LOADING
-          await new Promise((resolve) => setTimeout(resolve, 2000));
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
 
-          const user = {
-            id: "1",
-            email: email,
-            name: "John Doe",
-          };
+          if (error) throw error;
 
-          set({ success: true, loading: false });
+          set({ user: data.user, success: true, loading: false });
           toast.success("Login successful");
-          return { data: { user }, path: nextRoute || "/dashboard" };
+          return { data, path: nextRoute || "/dashboard" };
         } catch (error: any) {
-          const errorMessage = error?.response?.data?.message || "Login failed";
+          const errorMessage = error?.message || "Login failed";
           set({ error: errorMessage, success: null });
           toast.error(errorMessage);
           return null;
@@ -55,25 +63,69 @@ export const useUserStore = create(
           set({ loading: false });
         }
       },
-      signUp: async (email, password) => {
-        set({ loading: true, success: null });
-        try {
-          // const user = await ApiService.signUp(email, password);
-          // STIMULATE LOADING
-          await new Promise((resolve) => setTimeout(resolve, 2000));
 
-          const user = {
-            id: "1",
-            email: email,
-            name: "John Doe",
-          };
+      signUp: async (userData) => {
+        const {
+          email,
+          password,
+          firstName,
+          lastName,
+          phoneNumber,
+          dateOfBirth,
+          relative,
+          relationshipToRelative,
+        } = userData;
+        set({ loading: true, success: null, error: null });
+        const supabase = createClient();
+
+        try {
+          // First register the user with Supabase Auth
+          const { data: authData, error: authError } =
+            await supabase.auth.signUp({
+              email,
+              password,
+              options: {
+                data: {
+                  first_name: firstName,
+                  last_name: lastName,
+                  full_name: `${firstName} ${lastName}`,
+                  phone_number: phoneNumber || null,
+                  date_of_birth: dateOfBirth ? dateOfBirth.toISOString() : null,
+                  relationship_to_relative: relationshipToRelative || null,
+                },
+              },
+            });
+
+          if (authError) throw authError;
+
+          // Then insert the user profile into a profiles table (if you have one)
+          if (authData.user) {
+            const { error: profileError } = await supabase
+              .from("profiles")
+              .upsert({
+                id: authData.user.id,
+                first_name: firstName,
+                last_name: lastName,
+                email: email,
+                phone_number: phoneNumber || null,
+                date_of_birth: dateOfBirth ? dateOfBirth.toISOString() : null,
+                relative: relative || null,
+                relationship_to_relative: relationshipToRelative || null,
+              });
+
+            if (profileError) {
+              console.error("Error creating profile:", profileError);
+              // Continue anyway since the auth account was created
+            }
+          }
 
           set({ success: true, loading: false });
-          toast.success("Sign up successful");
-          return { data: { user } };
+          toast.success(
+            "Sign up successful! Check your email for verification."
+          );
+          return { data: authData };
         } catch (error: any) {
-          const errorMessage =
-            error?.response?.data?.message || "Sign up failed";
+          const errorMessage = error?.message || "Sign up failed";
           set({ error: errorMessage, success: null });
           toast.error(errorMessage);
           return null;
@@ -81,14 +133,17 @@ export const useUserStore = create(
           set({ loading: false });
         }
       },
-      logout: async () => {
-        set({ loading: true, success: null });
-        try {
-          // const user = await ApiService.logout();
-          // STIMULATE LOADING
-          await new Promise((resolve) => setTimeout(resolve, 2000));
 
-          set({ ...initialState });
+      logout: async () => {
+        set({ loading: true, success: null, error: null });
+        const supabase = createClient();
+
+        try {
+          const { error } = await supabase.auth.signOut();
+
+          if (error) throw error;
+
+          set({ user: null, success: true, loading: false });
           toast.success("Logged out successfully");
         } catch (error: any) {
           const errorMessage = error.message || "Logout failed";
@@ -98,21 +153,23 @@ export const useUserStore = create(
           set({ loading: false });
         }
       },
-      passwordReset: async (email) => {
-        set({ loading: true, success: null });
-        try {
-          // STIMULATE LOADING
-          await new Promise((resolve) => setTimeout(resolve, 2000));
 
-          // TODO: Implement actual password reset logic here
-          console.log(`Password reset requested for ${email}`);
+      passwordReset: async (email) => {
+        set({ loading: true, success: null, error: null });
+        const supabase = createClient();
+
+        try {
+          const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: `${window.location.origin}/auth/reset-password`,
+          });
+
+          if (error) throw error;
 
           set({ success: true, loading: false });
           toast.success("Password reset email sent successfully");
           return { message: "Password reset email sent" };
         } catch (error: any) {
-          const errorMessage =
-            error?.response?.data?.message || "Password reset failed";
+          const errorMessage = error?.message || "Password reset failed";
           set({ error: errorMessage, success: null });
           toast.error(errorMessage);
           return null;
@@ -120,21 +177,24 @@ export const useUserStore = create(
           set({ loading: false });
         }
       },
-      emailVerification: async (email) => {
-        set({ loading: true, success: null });
-        try {
-          // STIMULATE LOADING
-          await new Promise((resolve) => setTimeout(resolve, 2000));
 
-          // TODO: Implement actual email verification logic here
-          console.log(`Email verification requested for ${email}`);
+      emailVerification: async (email) => {
+        set({ loading: true, success: null, error: null });
+        const supabase = createClient();
+
+        try {
+          const { error } = await supabase.auth.resend({
+            type: "signup",
+            email,
+          });
+
+          if (error) throw error;
 
           set({ success: true, loading: false });
           toast.success("Verification email sent successfully");
           return { message: "Verification email sent" };
         } catch (error: any) {
-          const errorMessage =
-            error?.response?.data?.message || "Email verification failed";
+          const errorMessage = error?.message || "Email verification failed";
           set({ error: errorMessage, success: null });
           toast.error(errorMessage);
           return null;
@@ -151,7 +211,6 @@ export const useUserStore = create(
         return {
           ...initialState,
           user,
-
           login: () => Promise.resolve(),
           signUp: () => Promise.resolve(),
           logout: () => Promise.resolve(),

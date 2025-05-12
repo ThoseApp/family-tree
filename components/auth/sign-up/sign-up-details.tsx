@@ -40,12 +40,19 @@ import { CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const SignUpDetails = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   // const isMounted = useMountedState();
-  const { login, loading } = useUserStore();
+  const { signUp, loading } = useUserStore();
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] =
     useState<boolean>(false);
@@ -67,7 +74,8 @@ const SignUpDetails = () => {
       lastName: "",
       email: "",
       phoneNumber: "",
-      relationshipToFamily: "",
+      relative: "",
+      relationshipToRelative: "",
       password: "",
       confirmPassword: "",
     },
@@ -87,12 +95,24 @@ const SignUpDetails = () => {
     setCompLoader(true);
     try {
       form.clearErrors();
-      console.log("Form Values:", values);
 
-      const loggedIn = await login(values.email, values.password, next!);
-      console.log(loggedIn);
+      const signUpResult = await signUp({
+        email: values.email,
+        password: values.password,
+        firstName: values.firstName,
+        lastName: values.lastName,
+        phoneNumber: values.phoneNumber,
+        dateOfBirth: values.dateOfBirth,
+        relative: values.relative,
+        relationshipToRelative: values.relationshipToRelative,
+      });
 
-      toast.success("Sign up submitted (placeholder)");
+      if (signUpResult) {
+        // If signup was successful, redirect to verification page
+        router.push(
+          "/(auth)/otp-verification?email=" + encodeURIComponent(values.email)
+        );
+      }
     } catch (error: any) {
       toast.error("Something went wrong during sign-up");
       console.error("Sign-up error:", error);
@@ -220,6 +240,10 @@ const SignUpDetails = () => {
                           }}
                         />
                       </FormControl>
+                      {/* <FormDescription className="text-xs">
+                        You can leave this field empty if you prefer not to
+                        share your phone number.
+                      </FormDescription> */}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -271,22 +295,63 @@ const SignUpDetails = () => {
                 />
                 <FormField
                   control={form.control}
-                  name="relationshipToFamily"
+                  name="relative"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Relationship to Family</FormLabel>
+                      <FormLabel>Relative Name</FormLabel>
                       <FormControl>
                         <Input
                           disabled={isLoading}
-                          placeholder="e.g., Cousin, Aunt, Brother"
+                          placeholder="e.g., John Doe"
                           className="focus-visible:ring-0"
                           {...field}
                           onChange={(e) => {
                             field.onChange(e);
-                            form.clearErrors("relationshipToFamily");
+                            form.clearErrors("relative");
                           }}
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="relationshipToRelative"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Relationship to Relative</FormLabel>
+                      <Select
+                        disabled={isLoading}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          form.clearErrors("relationshipToRelative");
+                        }}
+                        value={field.value || undefined}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="focus-visible:ring-0">
+                            <SelectValue placeholder="Select relationship" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="parent">Parent</SelectItem>
+                          <SelectItem value="child">Child</SelectItem>
+                          <SelectItem value="sibling">Sibling</SelectItem>
+                          <SelectItem value="spouse">Spouse</SelectItem>
+                          <SelectItem value="grandparent">
+                            Grandparent
+                          </SelectItem>
+                          <SelectItem value="grandchild">Grandchild</SelectItem>
+                          <SelectItem value="aunt-uncle">Aunt/Uncle</SelectItem>
+                          <SelectItem value="niece-nephew">
+                            Niece/Nephew
+                          </SelectItem>
+                          <SelectItem value="cousin">Cousin</SelectItem>
+                          <SelectItem value="in-law">In-law</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -374,7 +439,7 @@ const SignUpDetails = () => {
           </div>
 
           <p className="text-center text-xs font-medium mt-4">
-            By signing up to create an account, I accept Company’s Terms of Use
+            By signing up to create an account, I accept Company's Terms of Use
             and Privacy Policy
           </p>
         </div>

@@ -45,7 +45,31 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/dashboard") ||
     request.nextUrl.pathname.startsWith("/admin");
 
-  const isAuthRoute = request.nextUrl.pathname.includes("/(auth)");
+  const isAuthRoute =
+    request.nextUrl.pathname === "/sign-in" ||
+    request.nextUrl.pathname === "/sign-up" ||
+    request.nextUrl.pathname === "/forgot-password" ||
+    request.nextUrl.pathname === "/reset-password" ||
+    request.nextUrl.pathname === "/otp-verification" ||
+    request.nextUrl.pathname.includes("/(auth)"); // For route groups
+
+  // USER NOT LOGGED IN - Handle protected routes
+  if (!user && isPrivateRoute) {
+    // User is not logged in and tries to access protected route
+    const url = request.nextUrl.clone();
+    url.pathname = "/sign-in";
+    url.searchParams.set("message", "Please sign in to proceed");
+    url.searchParams.set("next", request.nextUrl.pathname); // Save current path for redirect after login
+    return NextResponse.redirect(url);
+  }
+
+  // USER LOGGED IN - Handle auth routes
+  if (user && isAuthRoute) {
+    // User is logged in but tries to access auth pages
+    const url = request.nextUrl.clone();
+    url.pathname = "/dashboard";
+    return NextResponse.redirect(url);
+  }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
   // If you're creating a new response object with NextResponse.next() make sure to:

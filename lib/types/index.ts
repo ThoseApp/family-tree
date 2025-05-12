@@ -12,7 +12,8 @@ export interface UserProfile {
   first_name: string;
   last_name: string;
   phone_number: string;
-  relationship_to_family: string;
+  relative: string;
+  relationship_to_relative: string;
   date_of_birth: string;
 
   created_at: string;
