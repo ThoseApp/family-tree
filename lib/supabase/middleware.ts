@@ -42,10 +42,10 @@ export async function updateSession(request: NextRequest) {
    */
 
   const isPrivateRoute =
-    !request.nextUrl.pathname.startsWith("/dashboard") ||
-    !request.nextUrl.pathname.startsWith("/admin");
+    request.nextUrl.pathname.startsWith("/dashboard") ||
+    request.nextUrl.pathname.startsWith("/admin");
 
-  const isAuthRoute = request.nextUrl.pathname.startsWith("/auth");
+  const isAuthRoute = request.nextUrl.pathname.includes("/(auth)");
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
   // If you're creating a new response object with NextResponse.next() make sure to:
