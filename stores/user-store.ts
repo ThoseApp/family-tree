@@ -24,6 +24,7 @@ interface UserStore {
   logout: () => Promise<void>;
   passwordReset: (email: string) => Promise<any>;
   emailVerification: (email: string) => Promise<any>;
+  verifyOtp: (email: string, code: string) => Promise<any>;
 }
 
 const initialState = {
@@ -33,6 +34,7 @@ const initialState = {
   error: null,
   passwordReset: async (email: string) => {},
   emailVerification: async (email: string) => {},
+  verifyOtp: async (email: string, code: string) => {},
 };
 
 export const useUserStore = create(
@@ -202,6 +204,30 @@ export const useUserStore = create(
           set({ loading: false });
         }
       },
+
+      verifyOtp: async (email, code) => {
+        set({ loading: true, success: null, error: null });
+        const supabase = createClient();
+
+        try {
+          const { error } = await supabase.auth.verifyOtp({
+            email,
+            token: code,
+            type: "signup",
+          });
+
+          if (error) throw error;
+
+          set({ success: true, loading: false });
+          return { success: true };
+        } catch (error: any) {
+          const errorMessage = error?.message || "Invalid verification code";
+          set({ error: errorMessage, success: null });
+          return { error: errorMessage };
+        } finally {
+          set({ loading: false });
+        }
+      },
     }),
     {
       name: "user-store",
@@ -216,6 +242,7 @@ export const useUserStore = create(
           logout: () => Promise.resolve(),
           passwordReset: () => Promise.resolve(),
           emailVerification: () => Promise.resolve(),
+          verifyOtp: () => Promise.resolve(),
         };
       },
     }
