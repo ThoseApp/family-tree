@@ -20,8 +20,10 @@ import Image from "next/image";
 import { dummyProfileImage } from "@/lib/constants";
 import Link from "next/link";
 import AdminMobileSidebar from "../admin/admin-mobile-sidebar";
+import { useUserStore } from "@/stores/user-store";
 
 const DashboardNavbar = () => {
+  const { logout } = useUserStore();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -98,7 +100,7 @@ const DashboardNavbar = () => {
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="cursor-pointer flex items-center gap-2 rounded-md text-destructive hover:bg-destructive/20 hover:text-destructive"
-                // onClick={toggleLogoutDialog}
+                onClick={logout}
               >
                 <LogOut className="size-5" />
                 <span>Log out</span>

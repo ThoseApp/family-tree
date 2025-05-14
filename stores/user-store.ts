@@ -34,6 +34,7 @@ interface UserStore {
   }) => Promise<any>;
   updatePassword: (password: string) => Promise<any>;
   getUserProfile: () => Promise<any>;
+  resetPasswordWithToken: (token: string, password: string) => Promise<any>;
 }
 
 const initialState = {
@@ -47,6 +48,7 @@ const initialState = {
   updateProfile: async (profileData: any) => {},
   updatePassword: async (password: string) => {},
   getUserProfile: async () => {},
+  resetPasswordWithToken: async (token: string, password: string) => {},
 };
 
 export const useUserStore = create(
@@ -159,6 +161,7 @@ export const useUserStore = create(
 
           set({ user: null, success: true, loading: false });
           toast.success("Logged out successfully");
+          window.location.reload();
         } catch (error: any) {
           const errorMessage = error.message || "Logout failed";
           set({ error: errorMessage, loading: false });
@@ -174,19 +177,44 @@ export const useUserStore = create(
 
         try {
           const { error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: `${window.location.origin}/auth/reset-password`,
+            redirectTo: `${window.location.origin}/reset-password`,
           });
 
           if (error) throw error;
 
           set({ success: true, loading: false });
           toast.success("Password reset email sent successfully");
-          return { message: "Password reset email sent" };
+          return { success: true, message: "Password reset email sent" };
         } catch (error: any) {
           const errorMessage = error?.message || "Password reset failed";
           set({ error: errorMessage, success: null });
           toast.error(errorMessage);
-          return null;
+          return { success: false, error: errorMessage };
+        } finally {
+          set({ loading: false });
+        }
+      },
+
+      resetPasswordWithToken: async (token, password) => {
+        set({ loading: true, success: null, error: null });
+        const supabase = createClient();
+
+        try {
+          // Use the token to update the user's password
+          const { error } = await supabase.auth.updateUser({
+            password: password,
+          });
+
+          if (error) throw error;
+
+          set({ success: true, loading: false });
+          toast.success("Password reset successfully");
+          return { success: true };
+        } catch (error: any) {
+          const errorMessage = error?.message || "Password reset failed";
+          set({ error: errorMessage, success: null });
+          toast.error(errorMessage);
+          return { success: false, error: errorMessage };
         } finally {
           set({ loading: false });
         }
@@ -307,7 +335,7 @@ export const useUserStore = create(
               bio: profileData.bio,
               updated_at: new Date().toISOString(),
             })
-            .eq("id", user.id);
+            .eq("user_id", user.id);
 
           if (profileError) throw profileError;
 
@@ -371,6 +399,7 @@ export const useUserStore = create(
           updateProfile: () => Promise.resolve(),
           updatePassword: () => Promise.resolve(),
           getUserProfile: () => Promise.resolve(),
+          resetPasswordWithToken: () => Promise.resolve(),
         };
       },
     }
