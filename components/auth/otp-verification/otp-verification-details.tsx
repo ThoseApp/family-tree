@@ -27,12 +27,15 @@ import { useUserStore } from "@/stores/user-store";
 import AuthWrapper from "@/components/wrappers/auth-wrapper";
 import { LoadingIcon } from "@/components/loading-icon";
 import { InputOTP } from "@/components/ui/input-otp";
-import { createClient } from "@/lib/supabase/client";
 
 const OtpVerificationDetails = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { emailVerification, loading: storeLoading } = useUserStore();
+  const {
+    emailVerification,
+    verifyOtp,
+    loading: storeLoading,
+  } = useUserStore();
   const [loading, setLoading] = useState<boolean>(false);
   const [resendingOtp, setResendingOtp] = useState<boolean>(false);
   const [displayRouteMessage, setDisplayRouteMessage] = useState<boolean>(true);
@@ -70,26 +73,19 @@ const OtpVerificationDetails = () => {
     try {
       form.clearErrors();
 
-      // Create Supabase client
-      const supabase = createClient();
+      // Use the verifyOtp function from the user store
+      const result = await verifyOtp(targetEmail, values.finalCode);
 
-      // Verify the OTP code against Supabase Auth
-      const { error } = await supabase.auth.verifyOtp({
-        email: targetEmail,
-        token: values.finalCode,
-        type: "signup",
-      });
-
-      if (error) {
+      if (result.error) {
         form.setError("finalCode", {
-          message: error.message || "Invalid verification code",
+          message: result.error,
         });
-        toast.error(error.message || "Invalid verification code");
+        toast.error(result.error);
         return;
       }
 
       toast.success("Email verification successful! You can now log in.");
-      router.push("/(auth)/sign-in");
+      router.push("/sign-in");
     } catch (error: any) {
       toast.error("An unexpected error occurred. Please try again.");
       console.error("OTP verification error:", error);
@@ -217,7 +213,7 @@ const OtpVerificationDetails = () => {
                 className="text-sm text-muted-foreground hover:text-foreground border-none rounded-full"
                 asChild
               >
-                <Link href="/(auth)/sign-in">
+                <Link href="/sign-in">
                   <ChevronLeft className="size-4 mr-2" />
                   Back to Login
                 </Link>

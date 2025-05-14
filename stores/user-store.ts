@@ -25,6 +25,15 @@ interface UserStore {
   passwordReset: (email: string) => Promise<any>;
   emailVerification: (email: string) => Promise<any>;
   verifyOtp: (email: string, code: string) => Promise<any>;
+  updateProfile: (profileData: {
+    firstName?: string;
+    lastName?: string;
+    phoneNumber?: string;
+    dateOfBirth?: string;
+    bio?: string;
+  }) => Promise<any>;
+  updatePassword: (password: string) => Promise<any>;
+  getUserProfile: () => Promise<any>;
 }
 
 const initialState = {
@@ -35,6 +44,9 @@ const initialState = {
   passwordReset: async (email: string) => {},
   emailVerification: async (email: string) => {},
   verifyOtp: async (email: string, code: string) => {},
+  updateProfile: async (profileData: any) => {},
+  updatePassword: async (password: string) => {},
+  getUserProfile: async () => {},
 };
 
 export const useUserStore = create(
@@ -105,7 +117,7 @@ export const useUserStore = create(
             const { error: profileError } = await supabase
               .from("profiles")
               .upsert({
-                id: authData.user.id,
+                user_id: authData.user.id,
                 first_name: firstName,
                 last_name: lastName,
                 email: email,
@@ -228,6 +240,119 @@ export const useUserStore = create(
           set({ loading: false });
         }
       },
+
+      getUserProfile: async () => {
+        const { user } = get();
+        if (!user) {
+          return null;
+        }
+
+        set({ loading: true, error: null });
+        const supabase = createClient();
+
+        try {
+          const { data, error } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("user_id", user.id)
+            .single();
+
+          if (error) throw error;
+
+          return data;
+        } catch (error: any) {
+          const errorMessage = error?.message || "Failed to fetch user profile";
+          set({ error: errorMessage });
+          return null;
+        } finally {
+          set({ loading: false });
+        }
+      },
+
+      updateProfile: async (profileData) => {
+        const { user } = get();
+        if (!user) {
+          toast.error("You must be logged in to update your profile");
+          return null;
+        }
+
+        set({ loading: true, success: null, error: null });
+        const supabase = createClient();
+
+        try {
+          // Update user metadata in auth
+          const { error: authError } = await supabase.auth.updateUser({
+            data: {
+              first_name: profileData.firstName,
+              last_name: profileData.lastName,
+              full_name:
+                profileData.firstName && profileData.lastName
+                  ? `${profileData.firstName} ${profileData.lastName}`
+                  : undefined,
+              phone_number: profileData.phoneNumber,
+              date_of_birth: profileData.dateOfBirth,
+            },
+          });
+
+          if (authError) throw authError;
+
+          // Update profile in profiles table
+          const { error: profileError } = await supabase
+            .from("profiles")
+            .update({
+              first_name: profileData.firstName,
+              last_name: profileData.lastName,
+              phone_number: profileData.phoneNumber,
+              date_of_birth: profileData.dateOfBirth,
+              bio: profileData.bio,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", user.id);
+
+          if (profileError) throw profileError;
+
+          set({ success: true, loading: false });
+          toast.success("Profile updated successfully");
+          return { success: true };
+        } catch (error: any) {
+          const errorMessage = error?.message || "Failed to update profile";
+          set({ error: errorMessage, success: null });
+          toast.error(errorMessage);
+          return { error: errorMessage };
+        } finally {
+          set({ loading: false });
+        }
+      },
+
+      updatePassword: async (password) => {
+        const { user } = get();
+        if (!user) {
+          toast.error("You must be logged in to update your password");
+          return null;
+        }
+
+        set({ loading: true, success: null, error: null });
+        const supabase = createClient();
+
+        try {
+          const { error } = await supabase.auth.updateUser({
+            password,
+          });
+
+          if (error) throw error;
+
+          set({ success: true, loading: false });
+          toast.success("Password updated successfully");
+          return { success: true };
+        } catch (error: any) {
+          const errorMessage = error?.message || "Failed to update password";
+          set({ error: errorMessage, success: null });
+          toast.error(errorMessage);
+          return { error: errorMessage };
+        } finally {
+          set({ loading: false });
+        }
+      },
     }),
     {
       name: "user-store",
@@ -243,6 +368,9 @@ export const useUserStore = create(
           passwordReset: () => Promise.resolve(),
           emailVerification: () => Promise.resolve(),
           verifyOtp: () => Promise.resolve(),
+          updateProfile: () => Promise.resolve(),
+          updatePassword: () => Promise.resolve(),
+          getUserProfile: () => Promise.resolve(),
         };
       },
     }

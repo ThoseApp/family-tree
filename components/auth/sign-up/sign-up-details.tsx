@@ -110,7 +110,7 @@ const SignUpDetails = () => {
       if (signUpResult) {
         // If signup was successful, redirect to verification page
         router.push(
-          "/(auth)/otp-verification?email=" + encodeURIComponent(values.email)
+          "/otp-verification?email=" + encodeURIComponent(values.email)
         );
       }
     } catch (error: any) {
