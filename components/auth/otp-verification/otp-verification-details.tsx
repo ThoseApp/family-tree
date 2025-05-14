@@ -47,8 +47,13 @@ const OtpVerificationDetails = () => {
   useEffect(() => {
     if (emailFromQuery) {
       setTargetEmail(emailFromQuery);
+    } else {
+      toast.error("Email address is missing. Redirecting to sign up page.");
+      setTimeout(() => {
+        router.push("/sign-up");
+      }, 2000);
     }
-  }, [emailFromQuery]);
+  }, [emailFromQuery, router]);
 
   const toggleDisplayRouteMessage = () => {
     setDisplayRouteMessage(!displayRouteMessage);
@@ -85,7 +90,9 @@ const OtpVerificationDetails = () => {
       }
 
       toast.success("Email verification successful! You can now log in.");
-      router.push("/sign-in");
+      router.push(
+        "/sign-in?message=Email verified successfully. Please log in."
+      );
     } catch (error: any) {
       toast.error("An unexpected error occurred. Please try again.");
       console.error("OTP verification error:", error);
@@ -102,10 +109,14 @@ const OtpVerificationDetails = () => {
 
     setResendingOtp(true);
     try {
-      await emailVerification(targetEmail);
-      toast.success(
-        "A new verification email has been sent to your email address."
-      );
+      const result = await emailVerification(targetEmail);
+      if (result) {
+        toast.success(
+          "A new verification email has been sent to your email address."
+        );
+      } else {
+        toast.error("Failed to resend verification email. Please try again.");
+      }
     } catch (error: any) {
       toast.error(
         "Failed to resend verification email. Please try again later."
@@ -134,7 +145,11 @@ const OtpVerificationDetails = () => {
             </div>
 
             {message && displayRouteMessage && (
-              <div className="py-3 px-3 flex items-center justify-between bg-red-500 text-background rounded-md">
+              <div
+                className={`py-3 px-3 flex items-center justify-between ${
+                  message.includes("successful") ? "bg-green-500" : "bg-red-500"
+                } text-background rounded-md`}
+              >
                 <div className="text-sm">{message}</div>
                 <span
                   className="flex-shrink-0 cursor-pointer transition hover:scale-105 ease-in"
@@ -211,12 +226,10 @@ const OtpVerificationDetails = () => {
                 variant="outline"
                 type="button"
                 className="text-sm text-muted-foreground hover:text-foreground border-none rounded-full"
-                asChild
+                onClick={() => router.push("/sign-in")}
               >
-                <Link href="/sign-in">
-                  <ChevronLeft className="size-4 mr-2" />
-                  Back to Login
-                </Link>
+                <ChevronLeft className="size-4 mr-2" />
+                Back to Login
               </Button>
             </div>
           </div>

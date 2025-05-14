@@ -39,6 +39,7 @@ export interface Event {
   name: string;
   date: string;
   category: string;
+  description?: string;
 }
 
 export interface Notification {

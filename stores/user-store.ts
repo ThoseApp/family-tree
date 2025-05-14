@@ -200,7 +200,9 @@ export const useUserStore = create(
         const supabase = createClient();
 
         try {
-          // Use the token to update the user's password
+          // For Supabase, the token is already handled in the URL parameters automatically
+          // when user clicks the reset password link in their email.
+          // We just need to call updateUser with the new password
           const { error } = await supabase.auth.updateUser({
             password: password,
           });
