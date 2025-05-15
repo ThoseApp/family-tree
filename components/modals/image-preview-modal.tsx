@@ -12,6 +12,8 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"; // Adjust path as per your project structure
 import { Button } from "@/components/ui/button"; // Adjust path as per your project structure
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface ImagePreviewModalProps {
   isOpen: boolean;
@@ -21,6 +23,9 @@ interface ImagePreviewModalProps {
   onConfirm: () => void;
   onEdit?: () => void;
   isLoading?: boolean; // Optional: for loading state on OK button
+  showCaptionInput?: boolean; // Whether to show the caption input field
+  captionValue?: string; // Current caption value
+  onCaptionChange?: (value: string) => void; // Handler for caption changes
 }
 
 export const ImagePreviewModal = ({
@@ -31,6 +36,9 @@ export const ImagePreviewModal = ({
   onConfirm,
   onEdit,
   isLoading,
+  showCaptionInput = false,
+  captionValue = "",
+  onCaptionChange = () => {},
 }: ImagePreviewModalProps) => {
   if (!isOpen) {
     return null;
@@ -74,6 +82,24 @@ export const ImagePreviewModal = ({
               </div>
             )}
           </div>
+
+          {showCaptionInput && (
+            <div className="mt-4">
+              <Label
+                htmlFor="caption"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Caption
+              </Label>
+              <Input
+                id="caption"
+                value={captionValue}
+                onChange={(e) => onCaptionChange(e.target.value)}
+                placeholder="Add a caption for this image"
+                className="mt-1"
+              />
+            </div>
+          )}
         </div>
 
         <DialogFooter className="p-6 pt-0 sm:justify-between bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700">
