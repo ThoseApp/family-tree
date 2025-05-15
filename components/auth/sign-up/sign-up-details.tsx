@@ -439,8 +439,8 @@ const SignUpDetails = () => {
           </div>
 
           <p className="text-center text-xs font-medium mt-4">
-            By signing up to create an account, I accept Company's Terms of Use
-            and Privacy Policy
+            By signing up to create an account, I accept Company&apos;s Terms of
+            Use and Privacy Policy
           </p>
         </div>
       </AuthWrapper>

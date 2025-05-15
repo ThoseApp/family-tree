@@ -9,10 +9,13 @@ import { usePathname } from "next/navigation";
 import { MessageCircle } from "lucide-react";
 import MobileSidebar from "./mobile-side-bar";
 import { navLinks } from "@/lib/constants/landing";
-
+import { useUserStore } from "@/stores/user-store";
 const LandingNav = () => {
+  const { user } = useUserStore();
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
+
+  console.log(user);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -70,7 +73,11 @@ const LandingNav = () => {
               "transition-colors rounded-full text-foreground h-10"
             )}
           >
-            <Link href="/sign-up">Sign Up</Link>
+            {user ? (
+              <Link href="/dashboard">Dashboard</Link>
+            ) : (
+              <Link href="/sign-up">Sign Up</Link>
+            )}
           </Button>
         </div>
 

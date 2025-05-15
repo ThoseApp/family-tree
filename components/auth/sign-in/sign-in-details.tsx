@@ -72,7 +72,6 @@ const SignInDetails = () => {
 
       if (loggedIn && loggedIn.data) {
         // Successfully logged in, redirect user to the appropriate page
-        toast.success("Logged in successfully");
         router.push(loggedIn.path || "/dashboard");
       }
     } catch (error: any) {
@@ -236,7 +235,7 @@ const SignInDetails = () => {
 
           <div className="text-center mt-8">
             <p className="text-sm">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Button
                 variant="link"
                 className="p-0 h-auto font-semibold"
@@ -248,7 +247,8 @@ const SignInDetails = () => {
           </div>
 
           <p className="text-center text-xs font-medium mt-4">
-            By signing in, I accept Company's Terms of Use and Privacy Policy
+            By signing in, I accept Company&apos;s Terms of Use and Privacy
+            Policy
           </p>
         </div>
       </AuthWrapper>

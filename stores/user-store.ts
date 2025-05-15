@@ -252,7 +252,7 @@ export const useUserStore = create(
         const supabase = createClient();
 
         try {
-          const { error } = await supabase.auth.verifyOtp({
+          const { data, error } = await supabase.auth.verifyOtp({
             email,
             token: code,
             type: "signup",
@@ -260,7 +260,7 @@ export const useUserStore = create(
 
           if (error) throw error;
 
-          set({ success: true, loading: false });
+          set({ success: true, user: data.user, loading: false });
           return { success: true };
         } catch (error: any) {
           const errorMessage = error?.message || "Invalid verification code";

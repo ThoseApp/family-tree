@@ -1,3 +1,5 @@
+"use client";
+
 import { Gallery } from "@/lib/types";
 import React from "react";
 import { columns } from "./columns";

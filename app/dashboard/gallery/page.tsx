@@ -219,7 +219,7 @@ const Page = () => {
       </div>
 
       {/* Search input */}
-      <div className="relative w-full max-w-md">
+      {/* <div className="relative w-full max-w-md">
         <Input
           placeholder="Search by caption..."
           value={searchQuery}
@@ -227,7 +227,7 @@ const Page = () => {
           className="pl-10"
         />
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-      </div>
+      </div> */}
 
       {isLoading && tableData.length === 0 ? (
         <div className="flex items-center justify-center h-40">
@@ -264,7 +264,7 @@ const Page = () => {
           (viewMode === "grid" && filteredGridData.length === 0)) && (
           <div className="text-center py-10">
             <p className="text-muted-foreground">
-              No images found matching "{searchQuery}"
+              No images found matching &quot;{searchQuery}&quot;
             </p>
           </div>
         )}
