@@ -30,6 +30,9 @@ import {
 } from "@/components/ui/form";
 import { createClient } from "@/lib/supabase/client";
 import Image from "next/image";
+import { BucketFolderEnum } from "@/lib/constants/enums";
+import { BUCKET_NAME } from "@/lib/constants";
+import { uploadImage } from "@/lib/file-upload";
 
 const profileSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -161,12 +164,6 @@ const SettingsPage = () => {
     }
 
     const file = event.target.files[0];
-    const fileSize = file.size / 1024 / 1024; // Convert to MB
-
-    if (fileSize > 2) {
-      toast.error("File size must be less than 2MB");
-      return;
-    }
 
     setUploading(true);
     try {
@@ -174,33 +171,19 @@ const SettingsPage = () => {
         throw new Error("User not authenticated");
       }
 
-      const supabase = createClient();
+      // Use the centralized upload function
+      const avatarUrl = await uploadImage(file, BucketFolderEnum.avatars);
 
-      // Upload the file to Supabase Storage
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${user.id}-${Math.random()
-        .toString(36)
-        .substring(2)}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      // Get the public URL
-      const { data: urlData } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(filePath);
-
-      const avatarUrl = urlData.publicUrl;
+      if (!avatarUrl) {
+        throw new Error("Failed to upload image");
+      }
 
       // Update profile with new avatar URL
+      const supabase = createClient();
       const { error: updateError } = await supabase
         .from("profiles")
-        .update({ avatar_url: avatarUrl })
-        .eq("id", user.id);
+        .update({ image: avatarUrl })
+        .eq("user_id", user.id);
 
       if (updateError) throw updateError;
 

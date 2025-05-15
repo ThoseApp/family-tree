@@ -15,6 +15,9 @@ export interface UserProfile {
   relative: string;
   relationship_to_relative: string;
   date_of_birth: string;
+  image: string;
+  bio: string;
+  email: string;
 
   created_at: string;
   updated_at: string;
@@ -67,8 +70,8 @@ export interface NoticeBoard {
   image: string;
   pinned: boolean;
   editor: string;
-  postedDate: string;
-  postedTime: string;
+  posteddate: string;
+  postedtime: string;
   tags: string[];
 }
 

@@ -335,7 +335,7 @@ const Page = () => {
             No history records yet
           </h3>
           <p className="text-gray-500 mb-4">
-            Start adding your family's historical events and stories.
+            Start adding your family&apos;s historical events and stories.
           </p>
           <Button onClick={() => setShowAddForm(true)}>
             <Plus className="h-4 w-4 mr-2" />

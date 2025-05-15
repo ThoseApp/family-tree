@@ -279,6 +279,7 @@ export const useUserStore = create(
 
         set({ loading: true, error: null });
         const supabase = createClient();
+        console.log("get profile with id", user.id);
 
         try {
           const { data, error } = await supabase
@@ -288,6 +289,8 @@ export const useUserStore = create(
             .single();
 
           if (error) throw error;
+
+          console.log("[getUserProfile] data", data);
 
           return data;
         } catch (error: any) {
