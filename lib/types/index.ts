@@ -72,6 +72,15 @@ export interface NoticeBoard {
   tags: string[];
 }
 
+export interface HistoryItem {
+  id: string;
+  year: string;
+  title: string;
+  description: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 // API Response
 export interface ApiResponse<T> {
   data: T;
