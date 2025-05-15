@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist, StorageValue } from "zustand/middleware";
 import { User } from "@supabase/supabase-js";
 import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
 
 interface UserStore {
   user: User | null;
@@ -9,11 +10,31 @@ interface UserStore {
   success: boolean | null;
   error: string | null;
 
-  signUp: (email: string, password: string) => Promise<any>;
+  signUp: (userData: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    phoneNumber?: string;
+    dateOfBirth?: Date;
+    relative?: string;
+    relationshipToRelative?: string;
+  }) => Promise<any>;
   login: (email: string, password: string, nextRoute: string) => Promise<any>;
   logout: () => Promise<void>;
   passwordReset: (email: string) => Promise<any>;
   emailVerification: (email: string) => Promise<any>;
+  verifyOtp: (email: string, code: string) => Promise<any>;
+  updateProfile: (profileData: {
+    firstName?: string;
+    lastName?: string;
+    phoneNumber?: string;
+    dateOfBirth?: string;
+    bio?: string;
+  }) => Promise<any>;
+  updatePassword: (password: string) => Promise<any>;
+  getUserProfile: () => Promise<any>;
+  resetPasswordWithToken: (token: string, password: string) => Promise<any>;
 }
 
 const initialState = {
@@ -23,6 +44,11 @@ const initialState = {
   error: null,
   passwordReset: async (email: string) => {},
   emailVerification: async (email: string) => {},
+  verifyOtp: async (email: string, code: string) => {},
+  updateProfile: async (profileData: any) => {},
+  updatePassword: async (password: string) => {},
+  getUserProfile: async () => {},
+  resetPasswordWithToken: async (token: string, password: string) => {},
 };
 
 export const useUserStore = create(
@@ -30,24 +56,22 @@ export const useUserStore = create(
     (set, get) => ({
       ...initialState,
       login: async (email, password, nextRoute) => {
-        set({ loading: true, success: null });
+        set({ loading: true, success: null, error: null });
+        const supabase = createClient();
 
         try {
-          // const user = await ApiService.login(email, password);
-          // STIMULATE LOADING
-          await new Promise((resolve) => setTimeout(resolve, 2000));
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
 
-          const user = {
-            id: "1",
-            email: email,
-            name: "John Doe",
-          };
+          if (error) throw error;
 
-          set({ success: true, loading: false });
+          set({ user: data.user, success: true, loading: false });
           toast.success("Login successful");
-          return { data: { user }, path: nextRoute || "/dashboard" };
+          return { data, path: nextRoute || "/dashboard" };
         } catch (error: any) {
-          const errorMessage = error?.response?.data?.message || "Login failed";
+          const errorMessage = error?.message || "Login failed";
           set({ error: errorMessage, success: null });
           toast.error(errorMessage);
           return null;
@@ -55,25 +79,69 @@ export const useUserStore = create(
           set({ loading: false });
         }
       },
-      signUp: async (email, password) => {
-        set({ loading: true, success: null });
-        try {
-          // const user = await ApiService.signUp(email, password);
-          // STIMULATE LOADING
-          await new Promise((resolve) => setTimeout(resolve, 2000));
 
-          const user = {
-            id: "1",
-            email: email,
-            name: "John Doe",
-          };
+      signUp: async (userData) => {
+        const {
+          email,
+          password,
+          firstName,
+          lastName,
+          phoneNumber,
+          dateOfBirth,
+          relative,
+          relationshipToRelative,
+        } = userData;
+        set({ loading: true, success: null, error: null });
+        const supabase = createClient();
+
+        try {
+          // First register the user with Supabase Auth
+          const { data: authData, error: authError } =
+            await supabase.auth.signUp({
+              email,
+              password,
+              options: {
+                data: {
+                  first_name: firstName,
+                  last_name: lastName,
+                  full_name: `${firstName} ${lastName}`,
+                  phone_number: phoneNumber || null,
+                  date_of_birth: dateOfBirth ? dateOfBirth.toISOString() : null,
+                  relationship_to_relative: relationshipToRelative || null,
+                },
+              },
+            });
+
+          if (authError) throw authError;
+
+          // Then insert the user profile into a profiles table (if you have one)
+          if (authData.user) {
+            const { error: profileError } = await supabase
+              .from("profiles")
+              .upsert({
+                user_id: authData.user.id,
+                first_name: firstName,
+                last_name: lastName,
+                email: email,
+                phone_number: phoneNumber || null,
+                date_of_birth: dateOfBirth ? dateOfBirth.toISOString() : null,
+                relative: relative || null,
+                relationship_to_relative: relationshipToRelative || null,
+              });
+
+            if (profileError) {
+              console.error("Error creating profile:", profileError);
+              // Continue anyway since the auth account was created
+            }
+          }
 
           set({ success: true, loading: false });
-          toast.success("Sign up successful");
-          return { data: { user } };
+          toast.success(
+            "Sign up successful! Check your email for verification."
+          );
+          return { data: authData };
         } catch (error: any) {
-          const errorMessage =
-            error?.response?.data?.message || "Sign up failed";
+          const errorMessage = error?.message || "Sign up failed";
           set({ error: errorMessage, success: null });
           toast.error(errorMessage);
           return null;
@@ -81,15 +149,19 @@ export const useUserStore = create(
           set({ loading: false });
         }
       },
-      logout: async () => {
-        set({ loading: true, success: null });
-        try {
-          // const user = await ApiService.logout();
-          // STIMULATE LOADING
-          await new Promise((resolve) => setTimeout(resolve, 2000));
 
-          set({ ...initialState });
+      logout: async () => {
+        set({ loading: true, success: null, error: null });
+        const supabase = createClient();
+
+        try {
+          const { error } = await supabase.auth.signOut();
+
+          if (error) throw error;
+
+          set({ user: null, success: true, loading: false });
           toast.success("Logged out successfully");
+          window.location.reload();
         } catch (error: any) {
           const errorMessage = error.message || "Logout failed";
           set({ error: errorMessage, loading: false });
@@ -98,21 +170,75 @@ export const useUserStore = create(
           set({ loading: false });
         }
       },
-      passwordReset: async (email) => {
-        set({ loading: true, success: null });
-        try {
-          // STIMULATE LOADING
-          await new Promise((resolve) => setTimeout(resolve, 2000));
 
-          // TODO: Implement actual password reset logic here
-          console.log(`Password reset requested for ${email}`);
+      passwordReset: async (email) => {
+        set({ loading: true, success: null, error: null });
+        const supabase = createClient();
+
+        try {
+          const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: `${window.location.origin}/reset-password`,
+          });
+
+          if (error) throw error;
 
           set({ success: true, loading: false });
           toast.success("Password reset email sent successfully");
-          return { message: "Password reset email sent" };
+          return { success: true, message: "Password reset email sent" };
         } catch (error: any) {
-          const errorMessage =
-            error?.response?.data?.message || "Password reset failed";
+          const errorMessage = error?.message || "Password reset failed";
+          set({ error: errorMessage, success: null });
+          toast.error(errorMessage);
+          return { success: false, error: errorMessage };
+        } finally {
+          set({ loading: false });
+        }
+      },
+
+      resetPasswordWithToken: async (token, password) => {
+        set({ loading: true, success: null, error: null });
+        const supabase = createClient();
+
+        try {
+          // For Supabase, the token is already handled in the URL parameters automatically
+          // when user clicks the reset password link in their email.
+          // We just need to call updateUser with the new password
+          const { error } = await supabase.auth.updateUser({
+            password: password,
+          });
+
+          if (error) throw error;
+
+          set({ success: true, loading: false });
+          toast.success("Password reset successfully");
+          return { success: true };
+        } catch (error: any) {
+          const errorMessage = error?.message || "Password reset failed";
+          set({ error: errorMessage, success: null });
+          toast.error(errorMessage);
+          return { success: false, error: errorMessage };
+        } finally {
+          set({ loading: false });
+        }
+      },
+
+      emailVerification: async (email) => {
+        set({ loading: true, success: null, error: null });
+        const supabase = createClient();
+
+        try {
+          const { error } = await supabase.auth.resend({
+            type: "signup",
+            email,
+          });
+
+          if (error) throw error;
+
+          set({ success: true, loading: false });
+          toast.success("Verification email sent successfully");
+          return { message: "Verification email sent" };
+        } catch (error: any) {
+          const errorMessage = error?.message || "Email verification failed";
           set({ error: errorMessage, success: null });
           toast.error(errorMessage);
           return null;
@@ -120,24 +246,139 @@ export const useUserStore = create(
           set({ loading: false });
         }
       },
-      emailVerification: async (email) => {
-        set({ loading: true, success: null });
-        try {
-          // STIMULATE LOADING
-          await new Promise((resolve) => setTimeout(resolve, 2000));
 
-          // TODO: Implement actual email verification logic here
-          console.log(`Email verification requested for ${email}`);
+      verifyOtp: async (email, code) => {
+        set({ loading: true, success: null, error: null });
+        const supabase = createClient();
+
+        try {
+          const { data, error } = await supabase.auth.verifyOtp({
+            email,
+            token: code,
+            type: "signup",
+          });
+
+          if (error) throw error;
+
+          set({ success: true, user: data.user, loading: false });
+          return { success: true };
+        } catch (error: any) {
+          const errorMessage = error?.message || "Invalid verification code";
+          set({ error: errorMessage, success: null });
+          return { error: errorMessage };
+        } finally {
+          set({ loading: false });
+        }
+      },
+
+      getUserProfile: async () => {
+        const { user } = get();
+        if (!user) {
+          return null;
+        }
+
+        set({ loading: true, error: null });
+        const supabase = createClient();
+
+        try {
+          const { data, error } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("user_id", user.id)
+            .single();
+
+          if (error) throw error;
+
+          return data;
+        } catch (error: any) {
+          const errorMessage = error?.message || "Failed to fetch user profile";
+          set({ error: errorMessage });
+          return null;
+        } finally {
+          set({ loading: false });
+        }
+      },
+
+      updateProfile: async (profileData) => {
+        const { user } = get();
+        if (!user) {
+          toast.error("You must be logged in to update your profile");
+          return null;
+        }
+
+        set({ loading: true, success: null, error: null });
+        const supabase = createClient();
+
+        try {
+          // Update user metadata in auth
+          const { error: authError } = await supabase.auth.updateUser({
+            data: {
+              first_name: profileData.firstName,
+              last_name: profileData.lastName,
+              full_name:
+                profileData.firstName && profileData.lastName
+                  ? `${profileData.firstName} ${profileData.lastName}`
+                  : undefined,
+              phone_number: profileData.phoneNumber,
+              date_of_birth: profileData.dateOfBirth,
+            },
+          });
+
+          if (authError) throw authError;
+
+          // Update profile in profiles table
+          const { error: profileError } = await supabase
+            .from("profiles")
+            .update({
+              first_name: profileData.firstName,
+              last_name: profileData.lastName,
+              phone_number: profileData.phoneNumber,
+              date_of_birth: profileData.dateOfBirth,
+              bio: profileData.bio,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("user_id", user.id);
+
+          if (profileError) throw profileError;
 
           set({ success: true, loading: false });
-          toast.success("Verification email sent successfully");
-          return { message: "Verification email sent" };
+          toast.success("Profile updated successfully");
+          return { success: true };
         } catch (error: any) {
-          const errorMessage =
-            error?.response?.data?.message || "Email verification failed";
+          const errorMessage = error?.message || "Failed to update profile";
           set({ error: errorMessage, success: null });
           toast.error(errorMessage);
+          return { error: errorMessage };
+        } finally {
+          set({ loading: false });
+        }
+      },
+
+      updatePassword: async (password) => {
+        const { user } = get();
+        if (!user) {
+          toast.error("You must be logged in to update your password");
           return null;
+        }
+
+        set({ loading: true, success: null, error: null });
+        const supabase = createClient();
+
+        try {
+          const { error } = await supabase.auth.updateUser({
+            password,
+          });
+
+          if (error) throw error;
+
+          set({ success: true, loading: false });
+          toast.success("Password updated successfully");
+          return { success: true };
+        } catch (error: any) {
+          const errorMessage = error?.message || "Failed to update password";
+          set({ error: errorMessage, success: null });
+          toast.error(errorMessage);
+          return { error: errorMessage };
         } finally {
           set({ loading: false });
         }
@@ -151,12 +392,16 @@ export const useUserStore = create(
         return {
           ...initialState,
           user,
-
           login: () => Promise.resolve(),
           signUp: () => Promise.resolve(),
           logout: () => Promise.resolve(),
           passwordReset: () => Promise.resolve(),
           emailVerification: () => Promise.resolve(),
+          verifyOtp: () => Promise.resolve(),
+          updateProfile: () => Promise.resolve(),
+          updatePassword: () => Promise.resolve(),
+          getUserProfile: () => Promise.resolve(),
+          resetPasswordWithToken: () => Promise.resolve(),
         };
       },
     }

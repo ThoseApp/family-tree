@@ -1,5 +1,19 @@
 import * as z from "zod";
 
+const relationshipOptions = [
+  "parent",
+  "child",
+  "sibling",
+  "spouse",
+  "grandparent",
+  "grandchild",
+  "aunt-uncle",
+  "niece-nephew",
+  "cousin",
+  "in-law",
+  "other",
+] as const;
+
 export const formSchema = z
   .object({
     firstName: z.string().min(2, {
@@ -18,7 +32,7 @@ export const formSchema = z
       }),
     phoneNumber: z
       .string()
-      .regex(/^\+?[1-9]\d{1,14}$/, {
+      .refine((val) => val === "" || /^\+?[1-9]\d{1,14}$/.test(val), {
         message: "Invalid phone number format.",
       })
       .optional(),
@@ -26,8 +40,11 @@ export const formSchema = z
       required_error: "Date of birth is required.",
       invalid_type_error: "That's not a valid date!",
     }),
-    relationshipToFamily: z.string().min(2, {
-      message: "Relationship to family must be at least 2 characters.",
+    relative: z.string().min(2, {
+      message: "Relative is required.",
+    }),
+    relationshipToRelative: z.string().min(1, {
+      message: "Please select a relationship type.",
     }),
     password: z.string().min(1, {
       message: "Password is required",

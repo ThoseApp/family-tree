@@ -43,7 +43,7 @@ const SignInDetails = () => {
   const [compLoader, setCompLoader] = useState<boolean>(false);
 
   const message = searchParams!.get("message");
-  const next = searchParams!.get("next");
+  const next = searchParams!.get("next") || "/dashboard";
 
   const toggleDisplayRouteMessage = () => {
     setDisplayRouteMessage(!displayRouteMessage);
@@ -68,22 +68,17 @@ const SignInDetails = () => {
     try {
       form.clearErrors();
 
-      const loggedIn = await login(values.email, values.password, next!);
-      console.log(loggedIn);
+      const loggedIn = await login(values.email, values.password, next);
 
-      // if (loggedIn && loggedIn.path) {
-      //   //  ROUTE USER
-      //   router.push(loggedIn.path);
-
-      //   toast.success("Logged in successfully");
-      // }
+      if (loggedIn && loggedIn.data) {
+        // Successfully logged in, redirect user to the appropriate page
+        router.push(loggedIn.path || "/dashboard");
+      }
     } catch (error: any) {
       toast.error("Something went wrong");
-
-      console.log(error);
+      console.error("Login error:", error);
     } finally {
       setCompLoader(false);
-      router.refresh();
     }
   };
 
@@ -101,7 +96,11 @@ const SignInDetails = () => {
             </div>
 
             {message && displayRouteMessage && (
-              <div className="py-3 px-3 flex items-center justify-between bg-red-500 text-background rounded-md">
+              <div
+                className={`py-3 px-3 flex items-center justify-between ${
+                  message.includes("successful") ? "bg-green-500" : "bg-red-500"
+                } text-background rounded-md`}
+              >
                 <div className="text-sm">{message}</div>
 
                 <span
@@ -153,7 +152,8 @@ const SignInDetails = () => {
                         <PasswordInput
                           field={field}
                           showPassword={showPassword}
-                          toggleVisibility={() => togglePasswordVisibility()}
+                          toggleVisibility={togglePasswordVisibility}
+                          disabled={isLoading}
                         />
                       </FormControl>
 
@@ -233,8 +233,22 @@ const SignInDetails = () => {
             </Button>
           </div>
 
+          <div className="text-center mt-8">
+            <p className="text-sm">
+              Don&apos;t have an account?{" "}
+              <Button
+                variant="link"
+                className="p-0 h-auto font-semibold"
+                onClick={() => router.push("/sign-up")}
+              >
+                Sign up
+              </Button>
+            </p>
+          </div>
+
           <p className="text-center text-xs font-medium mt-4">
-            By signing in, I accept Company’s Terms of Use and Privacy Policy
+            By signing in, I accept Company&apos;s Terms of Use and Privacy
+            Policy
           </p>
         </div>
       </AuthWrapper>

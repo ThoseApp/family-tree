@@ -1,7 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import { X, Edit3 } from "lucide-react"; // Assuming lucide-react for icons
+import { X, Edit3, ImageOff } from "lucide-react"; // Added ImageOff for error state
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useState } from "react";
+import React from "react";
 
 import {
   Dialog,
@@ -12,6 +20,8 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"; // Adjust path as per your project structure
 import { Button } from "@/components/ui/button"; // Adjust path as per your project structure
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface ImagePreviewModalProps {
   isOpen: boolean;
@@ -21,88 +31,176 @@ interface ImagePreviewModalProps {
   onConfirm: () => void;
   onEdit?: () => void;
   isLoading?: boolean; // Optional: for loading state on OK button
+  showCaptionInput?: boolean; // Whether to show the caption input field
+  captionValue?: string; // Current caption value
+  onCaptionChange?: (value: string) => void; // Handler for caption changes
 }
 
 export const ImagePreviewModal = ({
   isOpen,
   onClose,
   imageUrl,
-  imageName = "image.jpeg", // Default image name
+  imageName = "image.jpeg",
   onConfirm,
   onEdit,
   isLoading,
+  showCaptionInput = false,
+  captionValue = "",
+  onCaptionChange = () => {},
 }: ImagePreviewModalProps) => {
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [imgError, setImgError] = useState(false);
+  const [caption, setCaption] = useState(captionValue);
+  const maxCaptionLength = 200;
+
+  // Sync captionValue prop with local state
+  React.useEffect(() => {
+    setCaption(captionValue);
+  }, [captionValue]);
+
+  const handleCaptionChange = (value: string) => {
+    if (value.length <= maxCaptionLength) {
+      setCaption(value);
+      onCaptionChange(value);
+    }
+  };
+
   if (!isOpen) {
     return null;
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-3xl bg-white dark:bg-gray-800 p-0">
-        <DialogHeader className="p-6 pb-0">
+      <DialogContent className="sm:max-w-3xl w-full bg-white dark:bg-gray-900 p-0 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
+        <DialogHeader className="p-6 pb-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            <DialogTitle className="text-xl font-semibold text-gray-800 dark:text-gray-100">
               Image Preview
               {imageName && (
-                <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">
+                <span className="text-base font-normal text-gray-500 dark:text-gray-400 ml-3">
                   {imageName}
                 </span>
               )}
             </DialogTitle>
-            <DialogClose asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <X className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-              </Button>
-            </DialogClose>
           </div>
         </DialogHeader>
 
-        <div className="p-6">
-          <div className="relative w-full aspect-[2/1] rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-            {imageUrl ? (
-              <Image
-                src={imageUrl}
-                alt={imageName || "Image preview"}
-                layout="fill"
-                objectFit="contain" // Or "cover", depending on desired behavior
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-700">
+        <div className="p-6 flex-grow overflow-y-auto">
+          <div className="relative w-full aspect-[16/9] rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+            {!imgLoaded && !imgError && (
+              <div className="absolute inset-0 flex items-center justify-center animate-pulse">
+                <div className="w-24 h-24 bg-gray-200 dark:bg-gray-600 rounded-full" />
+              </div>
+            )}
+            {imgError ? (
+              <div className="w-full h-full flex flex-col items-center justify-center">
+                <ImageOff className="w-12 h-12 text-gray-400 mb-2" />
                 <p className="text-gray-500 dark:text-gray-400">
                   Image not available
                 </p>
               </div>
+            ) : (
+              <Image
+                src={imageUrl}
+                alt={imageName || "Image preview"}
+                layout="fill"
+                objectFit="contain"
+                className={`transition-transform duration-200 ${
+                  imgLoaded ? "hover:scale-105" : ""
+                }`}
+                onLoadingComplete={() => setImgLoaded(true)}
+                onError={() => setImgError(true)}
+                priority
+              />
             )}
           </div>
+
+          {showCaptionInput && (
+            <div className="mt-4">
+              <Label
+                htmlFor="caption"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block"
+              >
+                Caption
+              </Label>
+              <textarea
+                id="caption"
+                value={caption}
+                onChange={(e) => handleCaptionChange(e.target.value)}
+                placeholder="Add a caption for this image (optional)"
+                className="mt-1 w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 resize-none min-h-[50px]"
+                maxLength={maxCaptionLength}
+                aria-label="Image caption"
+              />
+              <div className="flex justify-end mt-1 text-xs text-gray-500 dark:text-gray-400">
+                <span>
+                  {caption.length}/{maxCaptionLength}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
-        <DialogFooter className="p-6 pt-0 sm:justify-between bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700">
+        <DialogFooter className="p-4 pt-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700  space-x-2">
           <Button
             variant="outline"
             onClick={onClose}
-            className="dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700"
+            className="dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700/50 transform hover:scale-105 transition-transform duration-150"
+            aria-label="Cancel preview"
           >
             Cancel
           </Button>
-          <div className="flex items-center space-x-2">
-            {onEdit && (
-              <Button
-                variant="outline"
-                onClick={onEdit}
-                className="dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700"
-              >
-                <Edit3 className="mr-2 h-4 w-4" />
-                Edit Image
-              </Button>
+          {onEdit && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    onClick={onEdit}
+                    className="dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700/50 transform hover:scale-105 transition-transform duration-150"
+                    aria-label="Edit image"
+                  >
+                    <Edit3 className="mr-2 h-4 w-4" />
+                    Edit Image
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Edit image details</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          <Button
+            onClick={onConfirm}
+            disabled={isLoading}
+            aria-label="Confirm preview"
+          >
+            {isLoading ? (
+              <>
+                <svg
+                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Processing...
+              </>
+            ) : (
+              "OK"
             )}
-            <Button
-              onClick={onConfirm}
-              disabled={isLoading}
-              className="bg-gray-800 hover:bg-gray-900 dark:bg-gray-700 dark:hover:bg-gray-600 text-white"
-            >
-              {isLoading ? "Processing..." : "OK"}
-            </Button>
-          </div>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

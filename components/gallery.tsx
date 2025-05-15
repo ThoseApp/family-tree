@@ -1,3 +1,5 @@
+"use client";
+
 import { cn, formatDate } from "@/lib/utils";
 import Image from "next/image";
 import React from "react";
@@ -7,7 +9,9 @@ export interface GalleryProps {
     url: string;
     date: string;
     title: string;
+    id?: string;
   }[];
+  onImageClick?: (image: any) => void;
 }
 
 interface GalleryImageProps {
@@ -15,6 +19,8 @@ interface GalleryImageProps {
   date: string;
   title: string;
   index?: number;
+  id?: string;
+  onClick?: (image: any) => void;
 }
 
 export const GalleryImage = ({
@@ -22,15 +28,24 @@ export const GalleryImage = ({
   date,
   title,
   index,
+  id,
+  onClick,
 }: GalleryImageProps) => {
+  const handleClick = () => {
+    if (onClick) {
+      onClick({ url, date, title, id });
+    }
+  };
+
   return (
     <div
       className={cn(
-        "relative w-full h-full",
+        "relative w-full h-full cursor-pointer hover:opacity-90 transition-opacity",
         index === 1 && "row-span-2",
         index === 2 && "col-span-2",
         index === 8 && "col-span-2"
       )}
+      onClick={handleClick}
     >
       <div className="relative h-[40vh] w-full">
         <Image
@@ -52,7 +67,7 @@ export const GalleryImage = ({
   );
 };
 
-const GalleryGrid = ({ images }: { images: GalleryProps["images"] }) => {
+const GalleryGrid = ({ images, onImageClick }: GalleryProps) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-8">
       {images.slice(0, 9).map((image, index) => (
@@ -62,6 +77,8 @@ const GalleryGrid = ({ images }: { images: GalleryProps["images"] }) => {
           url={image.url}
           date={image.date}
           title={image.title}
+          id={image.id}
+          onClick={onImageClick}
         />
       ))}
     </div>
