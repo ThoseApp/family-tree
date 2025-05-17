@@ -1,17 +1,33 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
+
+export interface HistoryItem {
+  id: string;
+  year: string;
+  title: string;
+  description: string;
+  created_at?: string;
+  updated_at?: string;
+}
 
 interface HistoryState {
-  // TODO: Define your state properties here
-  historyItems: any[]; // Example property
+  historyItems: HistoryItem[];
   isLoading: boolean;
   error: string | null;
 }
 
 interface HistoryActions {
-  // TODO: Define your actions here
-  fetchHistory: () => Promise<void>; // Example action
-  addHistoryItem: (item: any) => void; // Example action
+  fetchHistory: () => Promise<HistoryItem[]>;
+  addHistoryItem: (
+    item: Omit<HistoryItem, "id">
+  ) => Promise<HistoryItem | null>;
+  updateHistoryItem: (
+    id: string,
+    item: Partial<Omit<HistoryItem, "id">>
+  ) => Promise<HistoryItem | null>;
+  deleteHistoryItem: (id: string) => Promise<boolean>;
 }
 
 const initialState: HistoryState = {
@@ -22,32 +38,134 @@ const initialState: HistoryState = {
 
 export const useHistoryStore = create(
   persist<HistoryState & HistoryActions>(
-    (set) => ({
+    (set, get) => ({
       ...initialState,
       fetchHistory: async () => {
         set({ isLoading: true, error: null });
+        const supabase = createClient();
+
         try {
-          // Simulate API call
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          const mockHistory = [{ id: 1, event: "User logged in" }]; // Replace with actual API call
-          set({ historyItems: mockHistory, isLoading: false });
+          const { data, error } = await supabase
+            .from("history")
+            .select("*")
+            .order("year", { ascending: false });
+
+          if (error) throw error;
+
+          const historyItems = data as HistoryItem[];
+          set({ historyItems, isLoading: false });
+          return historyItems;
         } catch (err: any) {
+          const errorMessage = err?.message || "Failed to fetch history";
           set({
-            error: err.message || "Failed to fetch history",
+            error: errorMessage,
             isLoading: false,
           });
+          toast.error(errorMessage);
+          return [];
         }
       },
-      addHistoryItem: (item) => {
-        set((state) => ({
-          historyItems: [...state.historyItems, item],
-        }));
+
+      addHistoryItem: async (item) => {
+        set({ isLoading: true, error: null });
+        const supabase = createClient();
+
+        try {
+          const { data, error } = await supabase
+            .from("history")
+            .insert(item)
+            .select()
+            .single();
+
+          if (error) throw error;
+
+          const newItem = data as HistoryItem;
+          set((state) => ({
+            historyItems: [...state.historyItems, newItem],
+            isLoading: false,
+          }));
+
+          toast.success("History item added successfully");
+          return newItem;
+        } catch (err: any) {
+          const errorMessage = err?.message || "Failed to add history item";
+          set({
+            error: errorMessage,
+            isLoading: false,
+          });
+          toast.error(errorMessage);
+          return null;
+        }
       },
-      // TODO: Implement other actions
+
+      updateHistoryItem: async (id, updates) => {
+        set({ isLoading: true, error: null });
+        const supabase = createClient();
+
+        try {
+          const { data, error } = await supabase
+            .from("history")
+            .update(updates)
+            .eq("id", id)
+            .select()
+            .single();
+
+          if (error) throw error;
+
+          const updatedItem = data as HistoryItem;
+          set((state) => ({
+            historyItems: state.historyItems.map((item) =>
+              item.id === id ? updatedItem : item
+            ),
+            isLoading: false,
+          }));
+
+          toast.success("History item updated successfully");
+          return updatedItem;
+        } catch (err: any) {
+          const errorMessage = err?.message || "Failed to update history item";
+          set({
+            error: errorMessage,
+            isLoading: false,
+          });
+          toast.error(errorMessage);
+          return null;
+        }
+      },
+
+      deleteHistoryItem: async (id) => {
+        set({ isLoading: true, error: null });
+        const supabase = createClient();
+
+        try {
+          const { error } = await supabase
+            .from("history")
+            .delete()
+            .eq("id", id);
+
+          if (error) throw error;
+
+          set((state) => ({
+            historyItems: state.historyItems.filter((item) => item.id !== id),
+            isLoading: false,
+          }));
+
+          toast.success("History item deleted successfully");
+          return true;
+        } catch (err: any) {
+          const errorMessage = err?.message || "Failed to delete history item";
+          set({
+            error: errorMessage,
+            isLoading: false,
+          });
+          toast.error(errorMessage);
+          return false;
+        }
+      },
     }),
     {
-      name: "history-storage", // unique name
-      storage: createJSONStorage(() => localStorage), // (optional) by default, 'localStorage' is used
+      name: "history-storage",
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );

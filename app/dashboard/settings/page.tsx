@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { UploadCloud, EyeOff, Eye } from "lucide-react";
+import { UploadCloud, EyeOff, Eye, CheckCircle } from "lucide-react";
 import { useUserStore } from "@/stores/user-store";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -29,6 +29,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { createClient } from "@/lib/supabase/client";
+import Image from "next/image";
+import { BucketFolderEnum } from "@/lib/constants/enums";
+import { BUCKET_NAME } from "@/lib/constants";
+import { uploadImage } from "@/lib/file-upload";
 
 const profileSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -61,6 +65,8 @@ const SettingsPage = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [profileSuccess, setProfileSuccess] = useState(false);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
   const router = useRouter();
 
   const profileForm = useForm<z.infer<typeof profileSchema>>({
@@ -93,7 +99,6 @@ const SettingsPage = () => {
       try {
         const profile = await getUserProfile();
 
-        console.log("[Settings Page] Profile:", profile);
         if (profile) {
           profileForm.reset({
             firstName: profile.first_name || "",
@@ -109,6 +114,7 @@ const SettingsPage = () => {
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
+        toast.error("Failed to load profile data");
       } finally {
         setLoading(false);
       }
@@ -120,7 +126,11 @@ const SettingsPage = () => {
   const handleProfileSubmit = async (values: z.infer<typeof profileSchema>) => {
     setLoading(true);
     try {
-      await updateProfile(values);
+      const result = await updateProfile(values);
+      if (result?.success) {
+        setProfileSuccess(true);
+        setTimeout(() => setProfileSuccess(false), 3000);
+      }
     } catch (error) {
       console.error("Error updating profile:", error);
     } finally {
@@ -133,8 +143,12 @@ const SettingsPage = () => {
   ) => {
     setLoading(true);
     try {
-      await updatePassword(values.password);
-      passwordForm.reset();
+      const result = await updatePassword(values.password);
+      if (result?.success) {
+        passwordForm.reset();
+        setPasswordSuccess(true);
+        setTimeout(() => setPasswordSuccess(false), 3000);
+      }
     } catch (error) {
       console.error("Error updating password:", error);
     } finally {
@@ -150,12 +164,6 @@ const SettingsPage = () => {
     }
 
     const file = event.target.files[0];
-    const fileSize = file.size / 1024 / 1024; // Convert to MB
-
-    if (fileSize > 2) {
-      toast.error("File size must be less than 2MB");
-      return;
-    }
 
     setUploading(true);
     try {
@@ -163,33 +171,19 @@ const SettingsPage = () => {
         throw new Error("User not authenticated");
       }
 
-      const supabase = createClient();
+      // Use the centralized upload function
+      const avatarUrl = await uploadImage(file, BucketFolderEnum.avatars);
 
-      // Upload the file to Supabase Storage
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${user.id}-${Math.random()
-        .toString(36)
-        .substring(2)}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      // Get the public URL
-      const { data: urlData } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(filePath);
-
-      const avatarUrl = urlData.publicUrl;
+      if (!avatarUrl) {
+        throw new Error("Failed to upload image");
+      }
 
       // Update profile with new avatar URL
+      const supabase = createClient();
       const { error: updateError } = await supabase
         .from("profiles")
-        .update({ avatar_url: avatarUrl })
-        .eq("id", user.id);
+        .update({ image: avatarUrl })
+        .eq("user_id", user.id);
 
       if (updateError) throw updateError;
 
@@ -229,11 +223,13 @@ const SettingsPage = () => {
             <CardContent className="p-0">
               <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-8 bg-yellow-50/30">
                 {avatarUrl ? (
-                  <div className="mb-4">
-                    <img
+                  <div className="mb-4 relative w-24 h-24 rounded-full overflow-hidden">
+                    <Image
                       src={avatarUrl}
                       alt="Profile"
-                      className="w-24 h-24 rounded-full object-cover"
+                      fill
+                      sizes="96px"
+                      className="object-cover"
                     />
                   </div>
                 ) : (
@@ -403,7 +399,15 @@ const SettingsPage = () => {
                     </FormItem>
                   )}
                 />
-                <div className="p-0 mt-4 flex justify-end gap-x-3">
+                <div className="p-0 mt-4 flex justify-end gap-x-3 items-center">
+                  {profileSuccess && (
+                    <div className="flex items-center text-green-600 mr-2">
+                      <CheckCircle className="h-4 w-4 mr-1" />
+                      <span className="text-sm">
+                        Profile updated successfully!
+                      </span>
+                    </div>
+                  )}
                   <Button
                     type="button"
                     variant="outline"
@@ -517,7 +521,15 @@ const SettingsPage = () => {
                     </FormItem>
                   )}
                 />
-                <div className="p-0 mt-4 flex justify-end gap-x-3">
+                <div className="p-0 mt-4 flex justify-end gap-x-3 items-center">
+                  {passwordSuccess && (
+                    <div className="flex items-center text-green-600 mr-2">
+                      <CheckCircle className="h-4 w-4 mr-1" />
+                      <span className="text-sm">
+                        Password updated successfully!
+                      </span>
+                    </div>
+                  )}
                   <Button
                     type="button"
                     variant="outline"
