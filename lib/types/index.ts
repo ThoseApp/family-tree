@@ -40,9 +40,13 @@ export interface FamilyMember {
 export interface Event {
   id: string;
   name: string;
-  date: string;
+  user_id: string;
+  date: string | { month: string; day: string };
   category: string;
   description?: string;
+  image?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Notification {
@@ -90,4 +94,26 @@ export interface ApiResponse<T> {
   success: boolean;
   errors: string[];
   message: string;
+}
+
+export interface MediaItem {
+  id: string;
+  type: "image" | "video";
+  url: string;
+  thumbnailUrl?: string;
+  caption?: string;
+  uploadedBy: string;
+  uploadedAt: string;
+  albumId?: string;
+  tags?: string[];
+}
+
+export interface Album {
+  id: string;
+  name: string;
+  description?: string;
+  createdBy: string;
+  createdAt: string;
+  coverImageUrl?: string;
+  mediaItems: MediaItem[];
 }

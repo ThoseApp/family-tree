@@ -12,7 +12,7 @@ const supabase = createClient();
 
 export const uploadImage = async (
   file: File,
-  folder: keyof typeof BucketFolderEnum
+  folder: BucketFolderEnum
 ): Promise<string | null> => {
   if (!file) {
     return null;
@@ -96,7 +96,7 @@ export const uploadVideo = async (
 
 export const uploadDocument = async (
   file: File,
-  folder: keyof typeof BucketFolderEnum
+  folder: BucketFolderEnum
 ): Promise<string | null> => {
   if (!file) {
     return null;

@@ -40,6 +40,10 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
+import { uploadImage } from "@/lib/file-upload";
+import { BucketFolderEnum } from "@/lib/constants/enums";
+import Image from "next/image";
+import { useUserStore } from "@/stores/user-store";
 
 const EVENT_CATEGORIES = [
   "Birthday",
@@ -53,18 +57,22 @@ const EVENT_CATEGORIES = [
 
 const EventsPage = () => {
   const {
-    events,
+    userEvents,
     loading,
-    fetchEvents,
+    fetchUserEvents,
     createEvent,
     updateEvent,
     deleteEvent,
   } = useEventsStore();
+  const { user } = useUserStore();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [eventToDelete, setEventToDelete] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedEditFile, setSelectedEditFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Form state for the main form
   const [formData, setFormData] = useState({
@@ -72,6 +80,7 @@ const EventsPage = () => {
     date: "",
     category: "",
     description: "",
+    image: "",
   });
 
   // Date state for the date picker
@@ -83,6 +92,7 @@ const EventsPage = () => {
     date: "",
     category: "",
     description: "",
+    image: "",
   });
 
   // Edit date state
@@ -91,8 +101,10 @@ const EventsPage = () => {
   );
 
   useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
+    if (user) {
+      fetchUserEvents(user.id);
+    }
+  }, [fetchUserEvents, user]);
 
   // Update formData.date when selectedDate changes
   useEffect(() => {
@@ -120,8 +132,10 @@ const EventsPage = () => {
       date: "",
       category: "",
       description: "",
+      image: "",
     });
     setSelectedDate(undefined);
+    setSelectedFile(null);
   };
 
   const handleInputChange = (
@@ -135,9 +149,48 @@ const EventsPage = () => {
     setFormData((prev) => ({ ...prev, category: value }));
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+    } else {
+      setSelectedFile(null);
+    }
+  };
+
+  const handleEditFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedEditFile(e.target.files[0]);
+    } else {
+      setSelectedEditFile(null);
+    }
+  };
+
   const handleMainFormSubmit = async () => {
     if (!formData.name || !formData.date || !formData.category) {
-      toast.error("Please fill in all required fields");
+      toast.error("Please fill in all required fields (Name, Date, Category)");
+      return;
+    }
+
+    setIsUploading(true);
+    let imageUrl = formData.image;
+
+    if (selectedFile) {
+      const uploadedUrl = await uploadImage(
+        selectedFile,
+        BucketFolderEnum.EVENT_IMAGES
+      );
+      if (uploadedUrl) {
+        imageUrl = uploadedUrl;
+      } else {
+        setIsUploading(false);
+        toast.error("Image upload failed. Please try again.");
+        return;
+      }
+    }
+    setIsUploading(false);
+
+    if (!user) {
+      toast.error("User not authenticated");
       return;
     }
 
@@ -145,8 +198,10 @@ const EventsPage = () => {
       await createEvent({
         name: formData.name,
         date: formData.date,
+        user_id: user.id,
         category: formData.category,
         description: formData.description || undefined,
+        image: imageUrl || undefined,
       });
 
       resetForm();
@@ -185,7 +240,9 @@ const EventsPage = () => {
       date: event.date,
       category: event.category,
       description: event.description || "",
+      image: event.image || "",
     });
+    setSelectedEditFile(null);
 
     // Try to parse the date for the date picker
     try {
@@ -206,9 +263,27 @@ const EventsPage = () => {
       !editData.date ||
       !editData.category
     ) {
-      toast.error("Please fill in all required fields");
+      toast.error("Please fill in all required fields (Name, Date, Category)");
       return;
     }
+
+    setIsUploading(true);
+    let imageUrl = editData.image;
+
+    if (selectedEditFile) {
+      const uploadedUrl = await uploadImage(
+        selectedEditFile,
+        BucketFolderEnum.EVENT_IMAGES
+      );
+      if (uploadedUrl) {
+        imageUrl = uploadedUrl;
+      } else {
+        setIsUploading(false);
+        toast.error("Image upload failed. Please try again.");
+        return;
+      }
+    }
+    setIsUploading(false);
 
     try {
       await updateEvent(selectedEvent.id, {
@@ -216,6 +291,7 @@ const EventsPage = () => {
         date: editData.date,
         category: editData.category,
         description: editData.description || undefined,
+        image: imageUrl || undefined,
       });
 
       setIsEditDialogOpen(false);
@@ -271,13 +347,13 @@ const EventsPage = () => {
         </div>
       </div>
 
-      {loading && events.length === 0 ? (
+      {loading && userEvents.length === 0 ? (
         <div className="flex items-center justify-center h-40">
           <LoadingIcon className="size-8" />
         </div>
       ) : (
         <EventsTable
-          data={events}
+          data={userEvents}
           onEditClick={handleEdit}
           onDeleteClick={(id) => handleDelete(id)}
         />
@@ -292,15 +368,42 @@ const EventsPage = () => {
 
           <CardContent>
             <div className="flex flex-col gap-2 lg:gap-4">
+              {/* IMAGE UPLOAD (OPTIONAL) */}
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="image-upload">Event Image (Optional)</Label>
+                <Input
+                  id="image-upload"
+                  name="image-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  disabled={loading || isUploading}
+                />
+                {selectedFile && (
+                  <div className="mt-2">
+                    <p className="text-sm text-muted-foreground">Preview:</p>
+                    <Image
+                      src={URL.createObjectURL(selectedFile)}
+                      alt="Preview"
+                      width={100}
+                      height={100}
+                      className="rounded-md object-cover"
+                    />
+                  </div>
+                )}
+              </div>
+
               {/* TITLE */}
               <div className="flex flex-col gap-2">
-                <Label htmlFor="name">Title</Label>
+                <Label htmlFor="name">Event Name</Label>
                 <Input
                   id="name"
                   name="name"
+                  placeholder="E.g Grandma Beth's 80th Birthday Celebration"
                   value={formData.name}
                   onChange={handleInputChange}
-                  disabled={loading}
+                  disabled={loading || isUploading}
+                  required
                 />
               </div>
 
@@ -315,7 +418,7 @@ const EventsPage = () => {
                         "w-full pl-3 text-left font-normal",
                         !selectedDate && "text-muted-foreground"
                       )}
-                      disabled={loading}
+                      disabled={loading || isUploading}
                     >
                       {selectedDate ? (
                         format(selectedDate, "PPP")
@@ -335,17 +438,24 @@ const EventsPage = () => {
                     />
                   </PopoverContent>
                 </Popover>
+                <Input
+                  type="hidden"
+                  name="date"
+                  value={formData.date}
+                  readOnly
+                />
               </div>
 
               {/* CATEGORY */}
               <div className="flex flex-col gap-2">
                 <Label htmlFor="category">Category</Label>
                 <Select
-                  value={formData.category}
                   onValueChange={handleSelectChange}
+                  value={formData.category}
+                  disabled={loading || isUploading}
                 >
                   <SelectTrigger id="category">
-                    <SelectValue placeholder="Select category" />
+                    <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
                     {EVENT_CATEGORIES.map((category) => (
@@ -366,7 +476,7 @@ const EventsPage = () => {
                   rows={4}
                   value={formData.description}
                   onChange={handleInputChange}
-                  disabled={loading}
+                  disabled={loading || isUploading}
                 />
               </div>
             </div>
@@ -376,7 +486,7 @@ const EventsPage = () => {
             <div className="flex items-center justify-end gap-2">
               <Button
                 className="bg-foreground text-background rounded-full hover:bg-foreground/80"
-                disabled={loading}
+                disabled={loading || isUploading}
                 onClick={handleMainFormSubmit}
               >
                 {loading && <LoadingIcon className="mr-2" />}
@@ -386,7 +496,7 @@ const EventsPage = () => {
                 variant="outline"
                 className="rounded-full"
                 onClick={() => setShowForm(false)}
-                disabled={loading}
+                disabled={loading || isUploading}
               >
                 Cancel
               </Button>
@@ -404,6 +514,48 @@ const EventsPage = () => {
           </DialogHeader>
           <form onSubmit={handleUpdate}>
             <div className="grid gap-4 py-4">
+              {/* Edit Image Upload */}
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="edit-image-upload">
+                  Event Image (Optional)
+                </Label>
+                <Input
+                  id="edit-image-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleEditFileChange}
+                  disabled={loading || isUploading}
+                />
+                {selectedEditFile && (
+                  <div className="mt-2">
+                    <p className="text-sm text-muted-foreground">
+                      New Image Preview:
+                    </p>
+                    <Image
+                      src={URL.createObjectURL(selectedEditFile)}
+                      alt="New image preview"
+                      width={100}
+                      height={100}
+                      className="rounded-md object-cover"
+                    />
+                  </div>
+                )}
+                {!selectedEditFile && editData.image && (
+                  <div className="mt-2">
+                    <p className="text-sm text-muted-foreground">
+                      Current Image:
+                    </p>
+                    <Image
+                      src={editData.image}
+                      alt="Current event image"
+                      width={100}
+                      height={100}
+                      className="rounded-md object-cover"
+                    />
+                  </div>
+                )}
+              </div>
+
               <div className="flex flex-col gap-2">
                 <Label htmlFor="edit-name">Event Name</Label>
                 <Input
@@ -411,7 +563,7 @@ const EventsPage = () => {
                   name="name"
                   value={editData.name}
                   onChange={handleEditInputChange}
-                  disabled={loading}
+                  disabled={loading || isUploading}
                   required
                 />
               </div>
@@ -425,7 +577,7 @@ const EventsPage = () => {
                         "w-full pl-3 text-left font-normal",
                         !selectedEditDate && "text-muted-foreground"
                       )}
-                      disabled={loading}
+                      disabled={loading || isUploading}
                     >
                       {selectedEditDate ? (
                         format(selectedEditDate, "PPP")
@@ -451,6 +603,7 @@ const EventsPage = () => {
                 <Select
                   value={editData.category}
                   onValueChange={handleEditSelectChange}
+                  disabled={loading || isUploading}
                 >
                   <SelectTrigger id="edit-category">
                     <SelectValue placeholder="Select category" />
@@ -471,7 +624,7 @@ const EventsPage = () => {
                   name="description"
                   value={editData.description}
                   onChange={handleEditInputChange}
-                  disabled={loading}
+                  disabled={loading || isUploading}
                   rows={3}
                 />
               </div>
@@ -479,7 +632,7 @@ const EventsPage = () => {
             <div className="flex justify-end gap-2 mt-4">
               <Button
                 type="submit"
-                disabled={loading}
+                disabled={loading || isUploading}
                 className="bg-foreground text-background rounded-full hover:bg-foreground/80"
               >
                 {loading && <LoadingIcon className="mr-2" />}
