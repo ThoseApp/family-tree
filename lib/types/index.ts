@@ -57,14 +57,16 @@ export interface Notification {
   image: string;
 }
 
-export interface Gallery {
+export interface GalleryImage {
   id: string;
-  name: string;
-  image: string;
-  fileSize: number;
-  uploadDate: string;
-  uploadTime: string;
-  uploader: string;
+  url: string;
+  caption?: string;
+  uploaded_at?: string;
+  created_at: string;
+  updated_at?: string;
+  user_id: string;
+  file_name: string;
+  file_size: number;
 }
 
 export interface NoticeBoard {

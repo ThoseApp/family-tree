@@ -8,7 +8,7 @@ import {
   dummyNewAlbumCreation,
   dummyUpcomingEvents,
 } from "@/lib/constants/dashbaord";
-import { cn } from "@/lib/utils";
+import { cn, ensureDateAsObject } from "@/lib/utils";
 import { useEventsStore } from "@/stores/events-store";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
@@ -47,39 +47,6 @@ const formatDateAsString = (dateInput: any): string => {
 };
 
 // Helper function to ensure date is in { month: string; day: string } format (for UpcomingEventCard)
-const ensureDateAsObject = (dateInput: any): { month: string; day: string } => {
-  if (
-    dateInput &&
-    typeof dateInput.month === "string" &&
-    typeof dateInput.day === "string"
-  ) {
-    return { month: dateInput.month, day: dateInput.day }; // Already the correct object type
-  }
-  if (typeof dateInput === "string") {
-    // Attempt to parse string like "Month Day" or "Month Day, Year"
-    const d = new Date(dateInput);
-    if (!isNaN(d.getTime())) {
-      // Successfully parsed the date string
-      const monthNames = [
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December",
-      ];
-      return { month: monthNames[d.getMonth()], day: String(d.getDate()) };
-    }
-  }
-  // Fallback if conversion fails or input is not recognized
-  return { month: "Invalid", day: "Date" };
-};
 
 const DashboardPage = () => {
   const { fetchUpcomingEvents } = useEventsStore();

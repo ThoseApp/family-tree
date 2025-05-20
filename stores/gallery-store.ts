@@ -5,22 +5,13 @@ import { v4 as uuidv4 } from "uuid";
 import { uploadImage } from "@/lib/file-upload";
 import { BucketFolderEnum } from "@/lib/constants/enums";
 import { BUCKET_NAME } from "@/lib/constants";
+import { GalleryImage } from "@/lib/types";
 
 // Define GalleryImage type
-interface GalleryImage {
-  id: string;
-  url: string;
-  caption?: string;
-  uploaded_at?: string;
-  created_at: string;
-  updated_at?: string;
-  user_id: string;
-  file_name: string;
-  file_size: number;
-}
 
 interface GalleryState {
   images: GalleryImage[];
+  userImages: GalleryImage[];
   isLoading: boolean;
   error: string | null;
   selectedImage: GalleryImage | null;
@@ -28,6 +19,7 @@ interface GalleryState {
 
 interface GalleryActions {
   fetchImages: () => Promise<void>;
+  fetchUserImages: (userId: string) => Promise<void>;
   uploadImage: (file: File, caption?: string) => Promise<void>;
   deleteImage: (imageId: string) => Promise<void>;
   updateImageDetails: (
@@ -39,6 +31,7 @@ interface GalleryActions {
 
 const initialState: GalleryState = {
   images: [],
+  userImages: [],
   isLoading: false,
   error: null,
   selectedImage: null,
@@ -75,6 +68,29 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
         console.error("Error fetching images:", err);
         set({
           error: err.message || "Failed to fetch images",
+          isLoading: false,
+        });
+      }
+    },
+
+    fetchUserImages: async (userId) => {
+      set({ isLoading: true, error: null });
+      const supabase = createClient();
+
+      try {
+        const { data, error } = await supabase
+          .from("galleries")
+          .select("*")
+          .eq("user_id", userId)
+          .order("updated_at", { ascending: false });
+
+        if (error) throw error;
+
+        set({ userImages: data || [], isLoading: false });
+      } catch (err: any) {
+        console.error("Error fetching user images:", err);
+        set({
+          error: err.message || "Failed to fetch user images",
           isLoading: false,
         });
       }
