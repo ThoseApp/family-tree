@@ -18,6 +18,9 @@ export interface UserProfile {
   image: string;
   bio: string;
   email: string;
+  is_admin?: boolean;
+  gender?: string;
+  timeline?: any; // JSONB type
 
   created_at: string;
   updated_at: string;
