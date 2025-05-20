@@ -1,9 +1,16 @@
-import React from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import Image from "next/image"; // Assuming Next.js for Image component
 import { dummyProfileImage } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-
+import { useUserStore } from "@/stores/user-store";
+import { useGalleryStore } from "@/stores/gallery-store";
+import { toast } from "sonner";
+import { UserProfile } from "@/lib/types";
+import { formatDate } from "@/lib/utils";
+import Link from "next/link";
 // Placeholder data based on the image
 const profile = {
   name: "John Smith",
@@ -67,6 +74,25 @@ const FamilyMember = ({
 );
 
 const Page = () => {
+  const { user, getUserProfile } = useUserStore();
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const { fetchUserImages, userImages } = useGalleryStore();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) {
+      toast.error("User not authenticated");
+      return;
+    }
+
+    (async () => {
+      fetchUserImages(user.id);
+      const profile = await getUserProfile();
+      setUserProfile(profile);
+    })();
+  }, [user]);
+
   return (
     <div className="flex flex-col gap-y-8 lg:gap-y-12">
       {/* HEADER SECTION */}
@@ -82,15 +108,19 @@ const Page = () => {
             <div className="flex items-center space-x-4">
               <div className="relative w-16 h-16">
                 <Image
-                  src={profile.imageUrl}
-                  alt={profile.name}
+                  src={userProfile?.image || ""}
+                  alt={userProfile?.first_name || ""}
                   fill
                   className="rounded-full object-cover"
                 />
               </div>
-              <h1 className="text-2xl font-semibold">{profile.name}</h1>
+              <h1 className="text-2xl font-semibold">
+                {userProfile?.first_name} {userProfile?.last_name}
+              </h1>
             </div>
-            <Button variant="outline">Edit Profile</Button>
+            <Button variant="outline" asChild>
+              <Link href="/dashboard/settings">Edit Profile</Link>
+            </Button>
           </div>
         </CardHeader>
 
@@ -101,33 +131,33 @@ const Page = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-gray-700">
               <div>
                 <span className="font-medium text-gray-900">Full Name:</span>{" "}
-                {profile.fullName}
+                {userProfile?.first_name} {userProfile?.last_name}
               </div>
               <div>
                 <span className="font-medium text-gray-900">
                   Date of Birth:
                 </span>{" "}
-                {profile.dob}
+                {formatDate(new Date(userProfile?.date_of_birth || ""))}
               </div>
               <div>
                 <span className="font-medium text-gray-900">Gender:</span>{" "}
-                {profile.gender}
+                {userProfile?.gender}
               </div>
               <div>
                 <span className="font-medium text-gray-900">Phone Number:</span>{" "}
-                {profile.phone}{" "}
+                {userProfile?.phone_number}{" "}
                 <span className="text-sm text-gray-500">(Optional)</span>
               </div>
               <div>
                 <span className="font-medium text-gray-900">Occupation:</span>{" "}
-                {profile.occupation}{" "}
+                {userProfile?.occupation}{" "}
                 <span className="text-sm text-gray-500">(Optional)</span>
               </div>
               <div>
                 <span className="font-medium text-gray-900">
                   Marital Status:
                 </span>{" "}
-                {profile.maritalStatus}
+                {userProfile?.marital_status}
               </div>
             </div>
           </div>
@@ -135,7 +165,7 @@ const Page = () => {
           {/* Biography */}
           <div className="mb-8">
             <h2 className="text-xl font-semibold mb-2">Biography</h2>
-            <p className="text-gray-700 leading-relaxed">{profile.biography}</p>
+            <p className="text-gray-700 leading-relaxed">{userProfile?.bio}</p>
           </div>
 
           {/* Family Links */}
@@ -194,13 +224,13 @@ const Page = () => {
             <h2 className="text-xl font-semibold mb-2">Gallery</h2>
             <p className="text-gray-600 mb-4">Personal photos uploaded</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {profile.gallery.map((imgSrc, index) => (
+              {userImages.map((imgSrc, index) => (
                 <div
                   key={index}
                   className="aspect-square overflow-hidden rounded"
                 >
                   <Image
-                    src={imgSrc}
+                    src={imgSrc.url}
                     alt={`Gallery image ${index + 1}`}
                     width={200}
                     height={200}

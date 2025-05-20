@@ -20,7 +20,7 @@ interface GalleryState {
 interface GalleryActions {
   fetchImages: () => Promise<void>;
   fetchUserImages: (userId: string) => Promise<void>;
-  uploadImage: (file: File, caption?: string) => Promise<void>;
+  uploadImage: (file: File, caption?: string, userId?: string) => Promise<void>;
   deleteImage: (imageId: string) => Promise<void>;
   updateImageDetails: (
     imageId: string,
@@ -96,19 +96,11 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
       }
     },
 
-    uploadImage: async (file, caption) => {
+    uploadImage: async (file, caption, userId) => {
       set({ isLoading: true, error: null });
       const supabase = createClient();
 
       try {
-        // Get current user
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) {
-          throw new Error("User not authenticated");
-        }
-
         // Upload the file directly to avoid issues with the utility function
         // Create a unique file_name
         const fileExt = file.name.split(".").pop();
@@ -154,7 +146,7 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
           uploaded_at: now,
           created_at: now,
           updated_at: now,
-          user_id: user.id,
+          user_id: userId || "",
           file_name: file_name,
           file_size: file.size,
         };
@@ -167,6 +159,7 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
 
         // Update local state
         set((state) => ({
+          userImages: [newImage, ...state.userImages],
           images: [newImage, ...state.images],
           isLoading: false,
         }));

@@ -44,24 +44,19 @@ export const GalleryImage = ({
       )}
       onClick={handleClick}
     >
-      <CardContent className="h-[40vh]">
+      <CardContent className="aspect-[3/4] p-0">
         <div className="relative h-full w-full">
           <Image
             src={url}
             alt={title}
             fill
-            className="object-cover w-full h-full"
+            className="object-cover w-full h-full rounded-t-md"
           />
         </div>
       </CardContent>
-      <CardFooter className="bg-foreground/90 text-background text-xs font-normal p-0">
-        <div className="w-full">
-          <div className="text-sm inline-block border-b border-background py-2 pl-6 pr-2">
-            {formatDate(date)}
-          </div>
-          <h3 className="pl-6 py-2 truncate">{title}</h3>
-        </div>
-      </CardFooter>
+      <div className="p-2 text-center">
+        <h3 className="text-sm font-medium truncate">{title}</h3>
+      </div>
     </Card>
   );
 };
@@ -113,22 +108,13 @@ const GalleryGrid = ({ images, onImageClick }: GalleryProps) => {
             key={image.id || index}
             index={index}
             url={image.url}
-            date={image.uploaded_at || ""}
-            title={image.caption || ""}
+            date={image.uploaded_at || image.created_at || ""}
+            title={image.caption || image.file_name || "Untitled"}
             id={image.id}
-            onClick={handleImagePreviewOpen}
+            onClick={onImageClick}
           />
         ))}
       </div>
-      {selectedImage && (
-        <ImagePreviewModal
-          isOpen={isModalOpen}
-          onClose={handleModalClose}
-          imageUrl={selectedImage.url}
-          imageName={selectedImage.title}
-          onConfirm={handleModalConfirm}
-        />
-      )}
     </>
   );
 };

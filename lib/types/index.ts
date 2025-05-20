@@ -21,6 +21,8 @@ export interface UserProfile {
   is_admin?: boolean;
   gender?: string;
   timeline?: any; // JSONB type
+  marital_status?: string;
+  occupation?: string;
 
   created_at: string;
   updated_at: string;
@@ -64,6 +66,7 @@ export interface GalleryImage {
   id: string;
   url: string;
   caption?: string;
+  album?: string;
   uploaded_at?: string;
   created_at: string;
   updated_at?: string;
