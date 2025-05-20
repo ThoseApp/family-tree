@@ -159,7 +159,7 @@ export const eventCategories = [
   },
 ];
 
-export const galleryImages: GalleryProps["images"] = [
+export const galleryImages: any = [
   {
     url: dummyProfileImage,
     date: "2023-01-01",

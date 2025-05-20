@@ -253,7 +253,7 @@ const Page = () => {
         </div>
       ) : viewMode === "table" ? (
         <GalleryTable
-          data={filteredTableData}
+          data={filteredTableData as any}
           onUserClick={handlePreviewImage}
           deleteImage={handleDeleteImage}
           previewImage={handlePreviewImage}

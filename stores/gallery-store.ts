@@ -46,14 +46,6 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
       const supabase = createClient();
 
       try {
-        // Get current user
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) {
-          throw new Error("User not authenticated");
-        }
-
         // Get images from the gallery table
         const { data, error } = await supabase
           .from("galleries")

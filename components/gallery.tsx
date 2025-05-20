@@ -44,8 +44,8 @@ export const GalleryImage = ({
       )}
       onClick={handleClick}
     >
-      <CardContent className="aspect-[3/4] p-0">
-        <div className="relative h-full w-full">
+      <CardContent className=" p-0">
+        <div className="relative h-[40dvh] w-full">
           <Image
             src={url}
             alt={title}

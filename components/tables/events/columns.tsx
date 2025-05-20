@@ -47,7 +47,13 @@ export const createColumns = (
     cell(props) {
       const { row } = props;
       const event = row.original;
-      return <p className="text-sm text-left">{formatDate(event.date)}</p>;
+      return (
+        <p className="text-sm text-left">
+          {typeof event.date === "string"
+            ? formatDate(event.date)
+            : formatDate(event.date.month + " " + event.date.day)}
+        </p>
+      );
     },
   },
 
