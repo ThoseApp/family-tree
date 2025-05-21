@@ -13,7 +13,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { UploadCloud, EyeOff, Eye, CheckCircle } from "lucide-react";
+import {
+  UploadCloud,
+  EyeOff,
+  Eye,
+  CheckCircle,
+  CalendarIcon,
+} from "lucide-react";
 import { useUserStore } from "@/stores/user-store";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -27,12 +33,21 @@ import {
   FormField,
   FormItem,
   FormMessage,
+  FormLabel,
 } from "@/components/ui/form";
 import { createClient } from "@/lib/supabase/client";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import Image from "next/image";
 import { BucketFolderEnum } from "@/lib/constants/enums";
 import { BUCKET_NAME } from "@/lib/constants";
 import { uploadImage } from "@/lib/file-upload";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
 
 const profileSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -108,8 +123,8 @@ const SettingsPage = () => {
             bio: profile.bio || "",
           });
 
-          if (profile.avatar_url) {
-            setAvatarUrl(profile.avatar_url);
+          if (profile.image) {
+            setAvatarUrl(profile.image);
           }
         }
       } catch (error) {
@@ -332,21 +347,44 @@ const SettingsPage = () => {
                   name="dateOfBirth"
                   render={({ field }) => (
                     <FormItem>
-                      <Label
-                        htmlFor="dateOfBirth"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                      >
-                        Date of Birth
-                      </Label>
-                      <FormControl>
-                        <Input
-                          id="dateOfBirth"
-                          type="date"
-                          className="bg-yellow-50/30 border-gray-200 rounded-lg"
-                          disabled={isLoading}
-                          {...field}
-                        />
-                      </FormControl>
+                      <FormLabel>Date of Birth</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                              disabled={isLoading}
+                            >
+                              {field.value ? (
+                                format(new Date(field.value), "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={
+                              field.value ? new Date(field.value) : undefined
+                            }
+                            onSelect={(date) => {
+                              field.onChange(date);
+                              profileForm.clearErrors("dateOfBirth");
+                            }}
+                            disabled={(date) =>
+                              date > new Date() || date < new Date("1900-01-01")
+                            }
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}

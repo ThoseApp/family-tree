@@ -28,9 +28,9 @@ const UpcomingEventsSection = () => {
               {category.items.map((item, itemIndex) => (
                 <EventCard
                   key={itemIndex}
-                  imageUrl={item.imageUrl}
+                  image={item.imageUrl}
                   date={item.date}
-                  alt={`${category.title} event ${itemIndex + 1}`}
+                  description={`${category.title} event ${itemIndex + 1}`}
                 />
               ))}
             </div>

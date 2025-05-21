@@ -6,10 +6,13 @@ import { Event } from "@/lib/types";
 
 interface EventsState {
   events: Event[];
+  userEvents: Event[];
   loading: boolean;
   error: string | null;
 
   fetchEvents: () => Promise<Event[]>;
+  fetchUserEvents: (user_id: string) => Promise<Event[]>;
+  fetchUpcomingEvents: () => Promise<Event[]>;
   createEvent: (event: Omit<Event, "id">) => Promise<Event | null>;
   updateEvent: (
     id: string,
@@ -20,6 +23,7 @@ interface EventsState {
 
 export const useEventsStore = create<EventsState>((set, get) => ({
   events: [],
+  userEvents: [],
   loading: false,
   error: null,
 
@@ -37,6 +41,54 @@ export const useEventsStore = create<EventsState>((set, get) => ({
 
       const events = data as Event[];
       set({ events, loading: false });
+      return events;
+    } catch (error: any) {
+      const errorMessage = error?.message || "Failed to fetch events";
+      set({ error: errorMessage, loading: false });
+      toast.error(errorMessage);
+      return [];
+    }
+  },
+
+  fetchUpcomingEvents: async () => {
+    set({ loading: true, error: null });
+    const supabase = createClient();
+
+    try {
+      const { data, error } = await supabase
+        .from("events")
+        .select("*")
+        .order("date", { ascending: true })
+        .gte("date", new Date().toISOString());
+
+      if (error) throw error;
+
+      const events = data as Event[];
+      set({ events, loading: false });
+      return events;
+    } catch (error: any) {
+      const errorMessage = error?.message || "Failed to fetch events";
+      set({ error: errorMessage, loading: false });
+      toast.error(errorMessage);
+      return [];
+    }
+  },
+
+  fetchUserEvents: async (user_id: string) => {
+    set({ loading: true, error: null });
+    const supabase = createClient();
+
+    try {
+      const { data, error } = await supabase
+        .from("events")
+        .select("*")
+        .eq("user_id", user_id)
+        .order("date", { ascending: true });
+
+      if (error) throw error;
+
+      const events = data as Event[];
+      set({ userEvents: events, loading: false });
       return events;
     } catch (error: any) {
       const errorMessage = error?.message || "Failed to fetch events";
@@ -67,7 +119,7 @@ export const useEventsStore = create<EventsState>((set, get) => ({
 
       const newEvent = data as Event;
       set((state) => ({
-        events: [...state.events, newEvent],
+        userEvents: [...state.userEvents, newEvent],
         loading: false,
       }));
 

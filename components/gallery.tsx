@@ -1,16 +1,14 @@
 "use client";
 
-import { cn, formatDate } from "@/lib/utils";
+import { GalleryImage as GalleryImageType } from "@/lib/types";
+import { cn } from "@/lib/utils";
 import Image from "next/image";
-import React from "react";
+import React, { useState } from "react";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { ImagePreviewModal } from "@/components/modals/image-preview-modal";
 
 export interface GalleryProps {
-  images: {
-    url: string;
-    date: string;
-    title: string;
-    id?: string;
-  }[];
+  images: GalleryImageType[];
   onImageClick?: (image: any) => void;
 }
 
@@ -38,50 +36,86 @@ export const GalleryImage = ({
   };
 
   return (
-    <div
+    <Card
       className={cn(
-        "relative w-full h-full cursor-pointer hover:opacity-90 transition-opacity",
-        index === 1 && "row-span-2",
+        "overflow-hidden cursor-pointer hover:opacity-90 transition-opacity flex flex-col",
         index === 2 && "col-span-2",
         index === 8 && "col-span-2"
       )}
       onClick={handleClick}
     >
-      <div className="relative h-[40vh] w-full">
-        <Image
-          src={url}
-          alt={title}
-          fill
-          className="object-cover w-full h-full"
-        />
-      </div>
-      <div className="absolute bottom-0 bg-foreground/90 flex py-2 w-full">
-        <div className="text-background text-xs font-normal  ">
-          <div className="text-sm inline-block border-b border-background py-2 pl-6 pr-2 ">
-            {formatDate(date)}
-          </div>
-          <h3 className=" pl-6 py-2 ">{title}</h3>
+      <CardContent className=" p-0">
+        <div className="relative h-[40dvh] w-full">
+          <Image
+            src={url}
+            alt={title}
+            fill
+            className="object-cover w-full h-full rounded-t-md"
+          />
         </div>
+      </CardContent>
+      <div className="p-2 text-center">
+        <h3 className="text-sm font-medium truncate">{title}</h3>
       </div>
-    </div>
+    </Card>
   );
 };
 
+const formatDate = (date: string) => {
+  const dateObj = new Date(date);
+  return dateObj.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+  });
+};
+
+interface SelectedImageData {
+  url: string;
+  date: string;
+  title: string;
+  id?: string;
+}
+
 const GalleryGrid = ({ images, onImageClick }: GalleryProps) => {
+  console.log(images);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<SelectedImageData | null>(
+    null
+  );
+
+  const handleImagePreviewOpen = (image: SelectedImageData) => {
+    setSelectedImage(image);
+    setIsModalOpen(true);
+    if (onImageClick) {
+      onImageClick(image);
+    }
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedImage(null);
+  };
+
+  const handleModalConfirm = () => {
+    handleModalClose();
+  };
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-8">
-      {images.slice(0, 9).map((image, index) => (
-        <GalleryImage
-          key={index}
-          index={index}
-          url={image.url}
-          date={image.date}
-          title={image.title}
-          id={image.id}
-          onClick={onImageClick}
-        />
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-6">
+        {images.slice(0, 9).map((image, index) => (
+          <GalleryImage
+            key={image.id || index}
+            index={index}
+            url={image.url}
+            date={image.uploaded_at || image.created_at || ""}
+            title={image.caption || image.file_name || "Untitled"}
+            id={image.id}
+            onClick={onImageClick}
+          />
+        ))}
+      </div>
+    </>
   );
 };
 

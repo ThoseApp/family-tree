@@ -18,12 +18,14 @@ import {
 } from "@/components/ui/dialog";
 import GalleryGrid from "@/components/gallery";
 import { Input } from "@/components/ui/input";
+import { useUserStore } from "@/stores/user-store";
 
 const Page = () => {
+  const { user } = useUserStore();
   const {
-    images,
+    userImages,
     isLoading,
-    fetchImages,
+    fetchUserImages,
     uploadImage,
     deleteImage,
     updateImageDetails,
@@ -38,8 +40,10 @@ const Page = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    fetchImages();
-  }, [fetchImages]);
+    if (user) {
+      fetchUserImages(user.id);
+    }
+  }, [user]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -78,10 +82,19 @@ const Page = () => {
   };
 
   const handleUploadConfirm = async () => {
+    if (!user) {
+      toast.error("User not authenticated");
+      return;
+    }
+
     if (!selectedImage?.file) return;
 
     try {
-      await uploadImage(selectedImage.file, captionInput || selectedImage.name);
+      await uploadImage(
+        selectedImage.file,
+        captionInput || selectedImage.name,
+        user?.id
+      );
       toast.success("Image uploaded successfully");
       setIsPreviewOpen(false);
       setSelectedImage(null);
@@ -143,7 +156,7 @@ const Page = () => {
   };
 
   // Convert gallery store images to the format expected by the GalleryTable component
-  const tableData = images.map((img) => ({
+  const tableData = userImages.map((img) => ({
     id: img.id,
     name: img.caption || `Image-${img.id}`,
     image: img.url,
@@ -154,11 +167,16 @@ const Page = () => {
   }));
 
   // Format for GalleryGrid component
-  const gridData = images.map((img) => ({
-    url: img.url,
-    date: img.uploaded_at || img.created_at || "Unknown date",
-    title: img.caption || `Image-${img.id}`,
+  const gridData = userImages.map((img) => ({
     id: img.id,
+    url: img.url,
+    caption: img.caption || `Image-${img.id}`,
+    uploaded_at: img.uploaded_at,
+    created_at: img.created_at || new Date().toISOString(),
+    updated_at: img.updated_at,
+    user_id: img.user_id || (user?.id ?? ""),
+    file_name: img.file_name || img.caption || `Image-${img.id}`,
+    file_size: img.file_size || 0,
   }));
 
   // Filter images based on search query
@@ -167,7 +185,7 @@ const Page = () => {
   );
 
   const filteredGridData = gridData.filter((img) =>
-    img.title.toLowerCase().includes(searchQuery.toLowerCase())
+    (img.caption || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -219,7 +237,7 @@ const Page = () => {
       </div>
 
       {/* Search input */}
-      {/* <div className="relative w-full max-w-md">
+      <div className="relative w-full max-w-md">
         <Input
           placeholder="Search by caption..."
           value={searchQuery}
@@ -227,15 +245,15 @@ const Page = () => {
           className="pl-10"
         />
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-      </div> */}
+      </div>
 
-      {isLoading && tableData.length === 0 ? (
+      {isLoading && (userImages.length === 0 || gridData.length === 0) ? (
         <div className="flex items-center justify-center h-40">
           <LoadingIcon className="size-8" />
         </div>
       ) : viewMode === "table" ? (
         <GalleryTable
-          data={filteredTableData}
+          data={filteredTableData as any}
           onUserClick={handlePreviewImage}
           deleteImage={handleDeleteImage}
           previewImage={handlePreviewImage}
@@ -248,7 +266,7 @@ const Page = () => {
               // Convert the grid image format to the format expected by handlePreviewImage
               const formattedImage = {
                 id: image.id,
-                name: image.title,
+                name: image.caption,
                 image: image.url,
               };
               handlePreviewImage(formattedImage);

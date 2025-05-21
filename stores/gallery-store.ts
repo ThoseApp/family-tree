@@ -5,22 +5,13 @@ import { v4 as uuidv4 } from "uuid";
 import { uploadImage } from "@/lib/file-upload";
 import { BucketFolderEnum } from "@/lib/constants/enums";
 import { BUCKET_NAME } from "@/lib/constants";
+import { GalleryImage } from "@/lib/types";
 
 // Define GalleryImage type
-interface GalleryImage {
-  id: string;
-  url: string;
-  caption?: string;
-  uploaded_at?: string;
-  created_at: string;
-  updated_at?: string;
-  user_id: string;
-  file_name: string;
-  file_size: number;
-}
 
 interface GalleryState {
   images: GalleryImage[];
+  userImages: GalleryImage[];
   isLoading: boolean;
   error: string | null;
   selectedImage: GalleryImage | null;
@@ -28,7 +19,8 @@ interface GalleryState {
 
 interface GalleryActions {
   fetchImages: () => Promise<void>;
-  uploadImage: (file: File, caption?: string) => Promise<void>;
+  fetchUserImages: (userId: string) => Promise<void>;
+  uploadImage: (file: File, caption?: string, userId?: string) => Promise<void>;
   deleteImage: (imageId: string) => Promise<void>;
   updateImageDetails: (
     imageId: string,
@@ -39,6 +31,7 @@ interface GalleryActions {
 
 const initialState: GalleryState = {
   images: [],
+  userImages: [],
   isLoading: false,
   error: null,
   selectedImage: null,
@@ -53,14 +46,6 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
       const supabase = createClient();
 
       try {
-        // Get current user
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) {
-          throw new Error("User not authenticated");
-        }
-
         // Get images from the gallery table
         const { data, error } = await supabase
           .from("galleries")
@@ -80,19 +65,34 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
       }
     },
 
-    uploadImage: async (file, caption) => {
+    fetchUserImages: async (userId) => {
       set({ isLoading: true, error: null });
       const supabase = createClient();
 
       try {
-        // Get current user
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) {
-          throw new Error("User not authenticated");
-        }
+        const { data, error } = await supabase
+          .from("galleries")
+          .select("*")
+          .eq("user_id", userId)
+          .order("updated_at", { ascending: false });
 
+        if (error) throw error;
+
+        set({ userImages: data || [], isLoading: false });
+      } catch (err: any) {
+        console.error("Error fetching user images:", err);
+        set({
+          error: err.message || "Failed to fetch user images",
+          isLoading: false,
+        });
+      }
+    },
+
+    uploadImage: async (file, caption, userId) => {
+      set({ isLoading: true, error: null });
+      const supabase = createClient();
+
+      try {
         // Upload the file directly to avoid issues with the utility function
         // Create a unique file_name
         const fileExt = file.name.split(".").pop();
@@ -138,7 +138,7 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
           uploaded_at: now,
           created_at: now,
           updated_at: now,
-          user_id: user.id,
+          user_id: userId || "",
           file_name: file_name,
           file_size: file.size,
         };
@@ -151,6 +151,7 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
 
         // Update local state
         set((state) => ({
+          userImages: [newImage, ...state.userImages],
           images: [newImage, ...state.images],
           isLoading: false,
         }));

@@ -19,6 +19,7 @@ interface UserStore {
     dateOfBirth?: Date;
     relative?: string;
     relationshipToRelative?: string;
+    isAdmin?: boolean;
   }) => Promise<any>;
   login: (email: string, password: string, nextRoute: string) => Promise<any>;
   logout: () => Promise<void>;
@@ -90,6 +91,7 @@ export const useUserStore = create(
           dateOfBirth,
           relative,
           relationshipToRelative,
+          isAdmin = false,
         } = userData;
         set({ loading: true, success: null, error: null });
         const supabase = createClient();
@@ -107,7 +109,6 @@ export const useUserStore = create(
                   full_name: `${firstName} ${lastName}`,
                   phone_number: phoneNumber || null,
                   date_of_birth: dateOfBirth ? dateOfBirth.toISOString() : null,
-                  relationship_to_relative: relationshipToRelative || null,
                 },
               },
             });
@@ -127,6 +128,7 @@ export const useUserStore = create(
                 date_of_birth: dateOfBirth ? dateOfBirth.toISOString() : null,
                 relative: relative || null,
                 relationship_to_relative: relationshipToRelative || null,
+                is_admin: isAdmin,
               });
 
             if (profileError) {
@@ -287,6 +289,8 @@ export const useUserStore = create(
             .select("*")
             .eq("user_id", user.id)
             .single();
+
+          console.log("[getUserProfile] data", data);
 
           if (error) throw error;
 

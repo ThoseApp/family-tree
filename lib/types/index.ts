@@ -18,6 +18,11 @@ export interface UserProfile {
   image: string;
   bio: string;
   email: string;
+  is_admin?: boolean;
+  gender?: string;
+  timeline?: any; // JSONB type
+  marital_status?: string;
+  occupation?: string;
 
   created_at: string;
   updated_at: string;
@@ -40,9 +45,13 @@ export interface FamilyMember {
 export interface Event {
   id: string;
   name: string;
-  date: string;
+  user_id: string;
+  date: string | { month: string; day: string };
   category: string;
   description?: string;
+  image?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Notification {
@@ -53,14 +62,17 @@ export interface Notification {
   image: string;
 }
 
-export interface Gallery {
+export interface GalleryImage {
   id: string;
-  name: string;
-  image: string;
-  fileSize: number;
-  uploadDate: string;
-  uploadTime: string;
-  uploader: string;
+  url: string;
+  caption?: string;
+  album?: string;
+  uploaded_at?: string;
+  created_at: string;
+  updated_at?: string;
+  user_id: string;
+  file_name: string;
+  file_size: number;
 }
 
 export interface NoticeBoard {
@@ -90,4 +102,26 @@ export interface ApiResponse<T> {
   success: boolean;
   errors: string[];
   message: string;
+}
+
+export interface MediaItem {
+  id: string;
+  type: "image" | "video";
+  url: string;
+  thumbnailUrl?: string;
+  caption?: string;
+  uploadedBy: string;
+  uploadedAt: string;
+  albumId?: string;
+  tags?: string[];
+}
+
+export interface Album {
+  id: string;
+  name: string;
+  description?: string;
+  createdBy: string;
+  createdAt: string;
+  coverImageUrl?: string;
+  mediaItems: MediaItem[];
 }
