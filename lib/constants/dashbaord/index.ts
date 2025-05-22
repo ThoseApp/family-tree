@@ -1,7 +1,7 @@
 import {
   Event,
   FamilyMember,
-  GalleryImage,
+  GalleryType,
   NavLink,
   NoticeBoard,
   Notification,
@@ -311,7 +311,7 @@ export const dummyEvents: Event[] = [
   },
 ];
 
-export const dummyGallery: GalleryImage[] = [
+export const dummyGallery: GalleryType[] = [
   {
     id: "1",
     caption: "Gallery 1",

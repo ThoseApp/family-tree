@@ -10,11 +10,11 @@ import { MoveRight } from "lucide-react";
 import React, { useEffect } from "react";
 
 const GalleryPage = () => {
-  const { images, fetchImages } = useGalleryStore();
+  const { gallery, fecthGallery } = useGalleryStore();
 
   useEffect(() => {
-    fetchImages();
-  }, [fetchImages]);
+    fecthGallery();
+  }, [fecthGallery]);
 
   return (
     <div className="pb-20">
@@ -26,7 +26,7 @@ const GalleryPage = () => {
       />
 
       {/* GALLERY GRID */}
-      <GalleryGrid images={images} />
+      <GalleryGrid gallery={gallery} />
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import { LucideIcon } from "lucide-react";
+import { NotificationTypeEnum } from "../constants/enums";
 
 export type NavLink = {
   label: string;
@@ -18,7 +19,7 @@ export interface UserProfile {
   image: string;
   bio: string;
   email: string;
-  is_admin?: boolean;
+
   gender?: string;
   timeline?: any; // JSONB type
   marital_status?: string;
@@ -57,22 +58,24 @@ export interface Event {
 export interface Notification {
   id: string;
   title: string;
+  type?: keyof typeof NotificationTypeEnum;
   body: string;
   read: boolean;
   image: string;
 }
 
-export interface GalleryImage {
+export interface GalleryType {
   id: string;
   url: string;
   caption?: string;
   album?: string;
   uploaded_at?: string;
-  created_at: string;
-  updated_at?: string;
   user_id: string;
   file_name: string;
   file_size: number;
+  approved?: boolean;
+  created_at: string;
+  updated_at?: string;
 }
 
 export interface NoticeBoard {

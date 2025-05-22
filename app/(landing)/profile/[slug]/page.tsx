@@ -1,6 +1,6 @@
 "use client";
 
-import { GalleryImage } from "@/components/gallery";
+import { GalleryType } from "@/components/gallery";
 import PageHeader from "@/components/page-header";
 import { dummyProfileImage } from "@/lib/constants";
 import Image from "next/image";
@@ -231,7 +231,7 @@ export default function ProfilePage({ params }: { params: { slug: string } }) {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {profileData.gallery.map((photo, index) => (
-              <GalleryImage
+              <GalleryType
                 key={index}
                 url={photo.imageUrl}
                 date={photo.date}

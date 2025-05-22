@@ -19,16 +19,17 @@ import {
 import GalleryGrid from "@/components/gallery";
 import { Input } from "@/components/ui/input";
 import { useUserStore } from "@/stores/user-store";
+import { MAX_IMAGE_SIZE_MB, MAX_VIDEO_SIZE_MB } from "@/lib/constants";
 
 const Page = () => {
   const { user } = useUserStore();
   const {
-    userImages,
+    userGallery,
     isLoading,
-    fetchUserImages,
-    uploadImage,
-    deleteImage,
-    updateImageDetails,
+    fetchUserGallery,
+    uploadToGallery,
+    deleteFromGallery,
+    updateGalleryDetails,
   } = useGalleryStore();
   const [viewMode, setViewMode] = useState<"grid" | "table">("table");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -41,9 +42,15 @@ const Page = () => {
 
   useEffect(() => {
     if (user) {
-      fetchUserImages(user.id);
+      fetchUserGallery(user.id);
     }
   }, [user]);
+
+  /**
+   * Handle Upload of image of video
+   * @param e Input on Chaage Event
+   * @returns
+   */
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -52,15 +59,21 @@ const Page = () => {
     const file = files[0];
 
     // Basic validation
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please select an image file");
+    if (!file.type.startsWith("image/") || !file.type.startsWith("video/")) {
+      toast.error("Please select an image or video file");
       return;
     }
 
-    // Check file size (5MB limit)
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const fileType = file.type.startsWith("image/") ? "image" : "video";
+
+    const maxSize =
+      (fileType === "image" ? MAX_IMAGE_SIZE_MB : MAX_VIDEO_SIZE_MB) *
+      1024 *
+      1024; // 5MB
     if (file.size > maxSize) {
-      toast.error("Image size must be less than 5MB");
+      toast.error(
+        `${fileType.charAt(0).toUpperCase()} size must be less than ${maxSize}`
+      );
       return;
     }
 
@@ -90,12 +103,12 @@ const Page = () => {
     if (!selectedImage?.file) return;
 
     try {
-      await uploadImage(
+      await uploadToGallery(
         selectedImage.file,
         captionInput || selectedImage.name,
         user?.id
       );
-      toast.success("Image uploaded successfully");
+      toast.success("Gallery uploaded successfully");
       setIsPreviewOpen(false);
       setSelectedImage(null);
     } catch (error) {
@@ -121,7 +134,7 @@ const Page = () => {
     if (!imageToDelete) return;
 
     try {
-      await deleteImage(imageToDelete);
+      await deleteFromGallery(imageToDelete);
       toast.success("Image deleted successfully");
       // If we're previewing the image that was deleted, close the preview
       if (selectedImage?.id === imageToDelete) {
@@ -156,7 +169,7 @@ const Page = () => {
   };
 
   // Convert gallery store images to the format expected by the GalleryTable component
-  const tableData = userImages.map((img) => ({
+  const tableData = userGallery.map((img) => ({
     id: img.id,
     name: img.caption || `Image-${img.id}`,
     image: img.url,
@@ -167,7 +180,7 @@ const Page = () => {
   }));
 
   // Format for GalleryGrid component
-  const gridData = userImages.map((img) => ({
+  const gridData = userGallery.map((img) => ({
     id: img.id,
     url: img.url,
     caption: img.caption || `Image-${img.id}`,
@@ -224,13 +237,13 @@ const Page = () => {
             onClick={() => fileInputRef.current?.click()}
           >
             <Plus className="size-5 mr-2" />
-            Upload File
+            Upload File (Image/Video)
           </Button>
           <input
             type="file"
             ref={fileInputRef}
             className="hidden"
-            accept="image/*"
+            accept="image/*,video/*"
             onChange={handleFileUpload}
           />
         </div>
@@ -247,7 +260,7 @@ const Page = () => {
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
       </div>
 
-      {isLoading && (userImages.length === 0 || gridData.length === 0) ? (
+      {isLoading && (userGallery.length === 0 || gridData.length === 0) ? (
         <div className="flex items-center justify-center h-40">
           <LoadingIcon className="size-8" />
         </div>
@@ -261,7 +274,7 @@ const Page = () => {
       ) : (
         <div className="mt-4">
           <GalleryGrid
-            images={filteredGridData}
+            gallery={filteredGridData}
             onImageClick={(image) => {
               // Convert the grid image format to the format expected by handlePreviewImage
               const formattedImage = {

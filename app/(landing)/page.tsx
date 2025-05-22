@@ -83,7 +83,7 @@ export default function Home() {
           </div>
 
           {/* GALLERY GRID */}
-          <GalleryGrid images={galleryImages} />
+          <GalleryGrid gallery={galleryImages} />
 
           <div className="flex justify-center">
             <Button
