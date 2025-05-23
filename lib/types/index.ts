@@ -18,7 +18,6 @@ export interface UserProfile {
   image: string;
   bio: string;
   email: string;
-  is_admin?: boolean;
   gender?: string;
   timeline?: any; // JSONB type
   marital_status?: string;

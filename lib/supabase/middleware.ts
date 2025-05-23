@@ -2,88 +2,95 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
+  // Create a response object that we can mutate
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
   });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
+  try {
+    // Create the Supabase client with proper cookie handling
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name) {
+            return request.cookies.get(name)?.value;
+          },
+          set(name, value, options) {
+            // If the cookie is updated, update the response headers
+            response.cookies.set({
+              name,
+              value,
+              ...options,
+            });
+          },
+          remove(name, options) {
+            // If the cookie is removed, update the response headers
+            response.cookies.delete({
+              name,
+              ...options,
+            });
+          },
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            request.cookies.set(name, value)
-          );
-          supabaseResponse = NextResponse.next({
-            request,
-          });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
-        },
-      },
+      }
+    );
+
+    // Fetch the authenticated user
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    // Get the current path
+    const path = request.nextUrl.pathname;
+
+    // Check if the route is private (dashboard or admin)
+    const isPrivateRoute =
+      path.startsWith("/dashboard") || path.startsWith("/admin");
+
+    // Check if the route is an auth route
+    const isAuthRoute =
+      path === "/sign-in" ||
+      path === "/sign-up" ||
+      path === "/forgot-password" ||
+      path === "/reset-password" ||
+      path === "/otp-verification" ||
+      path.includes("/(auth)");
+
+    // Handle redirections based on authentication status
+    if (!user && isPrivateRoute) {
+      // Redirect unauthenticated users away from private routes
+      const redirectUrl = new URL("/sign-in", request.url);
+      redirectUrl.searchParams.set("message", "Please sign in to proceed");
+      redirectUrl.searchParams.set("next", path);
+      return NextResponse.redirect(redirectUrl);
     }
-  );
 
-  // Fetch the authenticated user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    if (user && isAuthRoute) {
+      // Redirect authenticated users away from auth routes
+      const redirectPath =
+        user.user_metadata?.is_admin === true ? "/admin" : "/dashboard";
+      const redirectUrl = new URL(redirectPath, request.url);
+      return NextResponse.redirect(redirectUrl);
+    }
 
-  /**
-   * Authentication Handling
-   *
-   * - Redirect unauthenticated users trying to access private pages to the login page.
-   * - Redirect authenticated users away from authentication pages.
-   */
+    // Only redirect admin users if they're on the home page or dashboard
+    if (
+      user &&
+      user.user_metadata?.is_admin === true &&
+      (path === "/" || path.startsWith("/dashboard"))
+    ) {
+      const redirectUrl = new URL("/admin", request.url);
+      return NextResponse.redirect(redirectUrl);
+    }
 
-  const isPrivateRoute =
-    request.nextUrl.pathname.startsWith("/dashboard") ||
-    request.nextUrl.pathname.startsWith("/admin");
-
-  const isAuthRoute =
-    request.nextUrl.pathname === "/sign-in" ||
-    request.nextUrl.pathname === "/sign-up" ||
-    request.nextUrl.pathname === "/forgot-password" ||
-    request.nextUrl.pathname === "/reset-password" ||
-    request.nextUrl.pathname === "/otp-verification" ||
-    request.nextUrl.pathname.includes("/(auth)"); // For route groups
-
-  // USER NOT LOGGED IN - Handle protected routes
-  if (!user && isPrivateRoute) {
-    // User is not logged in and tries to access protected route
-    const url = request.nextUrl.clone();
-    url.pathname = "/sign-in";
-    url.searchParams.set("message", "Please sign in to proceed");
-    url.searchParams.set("next", request.nextUrl.pathname); // Save current path for redirect after login
-    return NextResponse.redirect(url);
+    // Return the response with updated cookies
+    return response;
+  } catch (error) {
+    // If there's an error, just continue without redirecting
+    console.error("Middleware error:", error);
+    return response;
   }
-
-  // USER LOGGED IN - Handle auth routes
-  if (user && isAuthRoute) {
-    // User is logged in but tries to access auth pages
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
-  }
-
-  // IMPORTANT: You *must* return the supabaseResponse object as it is.
-  // If you're creating a new response object with NextResponse.next() make sure to:
-  // 1. Pass the request in it, like so:
-  //    const myNewResponse = NextResponse.next({ request })
-  // 2. Copy over the cookies, like so:
-  //    myNewResponse.cookies.setAll(supabaseResponse.cookies.getAll())
-  // 3. Change the myNewResponse object to fit your needs, but avoid changing
-  //    the cookies!
-  // 4. Finally:
-  //    return myNewResponse
-  // If this is not done, you may be causing the browser and server to go out
-  // of sync and terminate the user's session prematurely!
-
-  // Return the updated response with session cookies
-  return supabaseResponse;
 }

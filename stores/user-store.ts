@@ -107,8 +107,9 @@ export const useUserStore = create(
                   first_name: firstName,
                   last_name: lastName,
                   full_name: `${firstName} ${lastName}`,
-                  phone_number: phoneNumber || null,
                   date_of_birth: dateOfBirth ? dateOfBirth.toISOString() : null,
+                  // is_admin: isAdmin,
+                  is_admin: true,
                 },
               },
             });
@@ -128,7 +129,6 @@ export const useUserStore = create(
                 date_of_birth: dateOfBirth ? dateOfBirth.toISOString() : null,
                 relative: relative || null,
                 relationship_to_relative: relationshipToRelative || null,
-                is_admin: isAdmin,
               });
 
             if (profileError) {
@@ -163,7 +163,7 @@ export const useUserStore = create(
 
           set({ user: null, success: true, loading: false });
           toast.success("Logged out successfully");
-          window.location.reload();
+          window.location.href = "/sign-in";
         } catch (error: any) {
           const errorMessage = error.message || "Logout failed";
           set({ error: errorMessage, loading: false });

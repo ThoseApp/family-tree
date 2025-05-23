@@ -89,10 +89,10 @@ const OtpVerificationDetails = () => {
         return;
       }
 
-      toast.success("Email verification successful! You can now log in.");
-      router.push(
-        "/sign-in?message=Email verified successfully. Please log in."
-      );
+      toast.success("Email verification successful!");
+      // router.push(
+      //   "/sign-in?message=Email verified successfully. Please log in."
+      // );
     } catch (error: any) {
       toast.error("An unexpected error occurred. Please try again.");
       console.error("OTP verification error:", error);
