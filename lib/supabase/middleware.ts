@@ -43,6 +43,44 @@ export async function updateSession(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
+    // If we have a user, ensure they have a profile
+    if (user) {
+      // Check if this user has a profile already
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      // If no profile exists and there was no error besides "not found", create one
+      if (
+        !profile &&
+        (profileError?.code === "PGRST116" ||
+          profileError?.message?.includes("not found"))
+      ) {
+        // Extract user information from metadata or email
+        const firstName =
+          user.user_metadata?.first_name ||
+          user.user_metadata?.name?.split(" ")[0] ||
+          "";
+        const lastName =
+          user.user_metadata?.last_name ||
+          (user.user_metadata?.name?.split(" ").length > 1
+            ? user.user_metadata?.name?.split(" ").slice(1).join(" ")
+            : "");
+
+        // Create a profile for this user
+        await supabase.from("profiles").insert({
+          user_id: user.id,
+          email: user.email,
+          first_name: firstName,
+          last_name: lastName,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+      }
+    }
+
     // Get the current path
     const path = request.nextUrl.pathname;
 

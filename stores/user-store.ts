@@ -22,6 +22,7 @@ interface UserStore {
     isAdmin?: boolean;
   }) => Promise<any>;
   login: (email: string, password: string, nextRoute: string) => Promise<any>;
+  loginWithGoogle: (redirectTo?: string) => Promise<any>;
   logout: () => Promise<void>;
   passwordReset: (email: string) => Promise<any>;
   emailVerification: (email: string) => Promise<any>;
@@ -50,6 +51,7 @@ const initialState = {
   updatePassword: async (password: string) => {},
   getUserProfile: async () => {},
   resetPasswordWithToken: async (token: string, password: string) => {},
+  loginWithGoogle: async (redirectTo?: string) => {},
 };
 
 export const useUserStore = create(
@@ -78,6 +80,39 @@ export const useUserStore = create(
           return null;
         } finally {
           set({ loading: false });
+        }
+      },
+
+      loginWithGoogle: async (redirectTo) => {
+        set({ loading: true, success: null, error: null });
+        const supabase = createClient();
+
+        try {
+          // Determine redirect URL
+          const redirectURL =
+            redirectTo || `${window.location.origin}/dashboard`;
+
+          const { data, error } = await supabase.auth.signInWithOAuth({
+            provider: "google",
+            options: {
+              redirectTo: redirectURL,
+              queryParams: {
+                access_type: "offline",
+                prompt: "consent",
+              },
+            },
+          });
+
+          if (error) throw error;
+
+          // Note: This won't actually set the user since the page will redirect to Google
+          // The user will be set when they return from the OAuth flow in the auth callback
+          return { data, success: true };
+        } catch (error: any) {
+          const errorMessage = error?.message || "Google sign-in failed";
+          set({ error: errorMessage, success: null, loading: false });
+          toast.error(errorMessage);
+          return null;
         }
       },
 

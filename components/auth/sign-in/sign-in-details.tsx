@@ -36,11 +36,12 @@ const SignInDetails = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   // const isMounted = useMountedState();
-  const { login, loading } = useUserStore();
+  const { login, loginWithGoogle, loading } = useUserStore();
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [remember, setRemember] = useState<string>("off");
   const [displayRouteMessage, setDisplayRouteMessage] = useState<boolean>(true);
   const [compLoader, setCompLoader] = useState<boolean>(false);
+  const [googleLoading, setGoogleLoading] = useState<boolean>(false);
 
   const message = searchParams!.get("message");
   const next = searchParams!.get("next") || "/dashboard";
@@ -79,6 +80,19 @@ const SignInDetails = () => {
       console.error("Login error:", error);
     } finally {
       setCompLoader(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    try {
+      await loginWithGoogle(next);
+      // Note: No need to redirect here as the OAuth flow will handle it
+    } catch (error: any) {
+      toast.error("Google sign-in failed");
+      console.error("Google sign-in error:", error);
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -218,17 +232,22 @@ const SignInDetails = () => {
           {/* GOOGLE AND FACEBOOK BUTTONS */}
           <div className="flex w-full flex-col items-center space-y-4 ">
             <Button
-              // onClick={signInWithGoogle}
+              onClick={handleGoogleSignIn}
               variant="outline"
               size="lg"
               className="w-full rounded-full"
+              disabled={isLoading || googleLoading}
             >
-              <Image
-                src="/icons/google.svg"
-                width={25}
-                height={25}
-                alt="google-button"
-              />
+              {googleLoading ? (
+                <LoadingIcon className="mr-2" />
+              ) : (
+                <Image
+                  src="/icons/google.svg"
+                  width={25}
+                  height={25}
+                  alt="google-button"
+                />
+              )}
               <span className="text-sm font-normal ">Continue with Google</span>
             </Button>
           </div>
