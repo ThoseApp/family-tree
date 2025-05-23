@@ -71,7 +71,13 @@ const DashboardNavbar = () => {
               className="rounded-full"
               asChild
             >
-              <Link href="/dashboard/notifications">
+              <Link
+                href={
+                  user?.user_metadata?.is_admin === true
+                    ? "/admin/notifications"
+                    : "/dashboard/notifications"
+                }
+              >
                 <Bell className="size-6" />
               </Link>
             </Button>
