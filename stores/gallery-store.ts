@@ -7,8 +7,9 @@ import { BucketFolderEnum } from "@/lib/constants/enums";
 import { BUCKET_NAME } from "@/lib/constants";
 import { GalleryType } from "@/lib/types";
 
-// Define GalleryType type
+const ADMIN_ID = process.env.NEXT_PUBLIC_ADMIN_ID;
 
+// Define GalleryType type
 interface GalleryState {
   gallery: GalleryType[];
   userGallery: GalleryType[];
@@ -97,7 +98,6 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
       const supabase = createClient();
 
       try {
-        // Upload the file directly to avoid issues with the utility function
         // Create a unique file_name
         const fileExt = file.name.split(".").pop();
         const file_name = `${
@@ -145,7 +145,10 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
           user_id: userId || "",
           file_name: file_name,
           file_size: file.size,
+          approved: false,
         };
+
+        // TODO: Send notification (gallery request) to admin
 
         const { error: insertError } = await supabase
           .from("galleries")
