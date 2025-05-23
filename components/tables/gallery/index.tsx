@@ -1,15 +1,15 @@
 "use client";
 
-import { GalleryImage } from "@/lib/types";
+import { GalleryType } from "@/lib/types";
 import React from "react";
 import { columns } from "./columns";
 import { DataTable } from "@/components/ui/data-table";
 
 interface GalleryTableProps {
-  data: GalleryImage[];
-  onUserClick?: (user: GalleryImage) => void;
+  data: GalleryType[];
+  onUserClick?: (user: GalleryType) => void;
   deleteImage?: (id: string) => Promise<void>;
-  previewImage?: (image: GalleryImage) => void;
+  previewImage?: (image: GalleryType) => void;
 }
 
 const GalleryTable = ({

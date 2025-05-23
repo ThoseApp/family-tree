@@ -1,14 +1,14 @@
 "use client";
 
-import { GalleryImage as GalleryImageType } from "@/lib/types";
+import { GalleryType as GalleryGlobalType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { ImagePreviewModal } from "@/components/modals/image-preview-modal";
 
 export interface GalleryProps {
-  images: GalleryImageType[];
+  gallery: GalleryGlobalType[];
   onImageClick?: (image: any) => void;
 }
 
@@ -21,7 +21,7 @@ interface GalleryImageProps {
   onClick?: (image: any) => void;
 }
 
-export const GalleryImage = ({
+export const GalleryType = ({
   url,
   date,
   title,
@@ -34,6 +34,12 @@ export const GalleryImage = ({
       onClick({ url, date, title, id });
     }
   };
+
+  const isImg = useMemo(() => {
+    return (
+      url.endsWith(".jpg") || url.endsWith(".png") || url.endsWith(".jpeg")
+    );
+  }, [url]);
 
   return (
     <Card
@@ -76,8 +82,7 @@ interface SelectedImageData {
   id?: string;
 }
 
-const GalleryGrid = ({ images, onImageClick }: GalleryProps) => {
-  console.log(images);
+const GalleryGrid = ({ gallery, onImageClick }: GalleryProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<SelectedImageData | null>(
     null
@@ -103,14 +108,14 @@ const GalleryGrid = ({ images, onImageClick }: GalleryProps) => {
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-6">
-        {images.slice(0, 9).map((image, index) => (
-          <GalleryImage
-            key={image.id || index}
+        {gallery.slice(0, 9).map((gallery, index) => (
+          <GalleryType
+            key={gallery.id || index}
             index={index}
-            url={image.url}
-            date={image.uploaded_at || image.created_at || ""}
-            title={image.caption || image.file_name || "Untitled"}
-            id={image.id}
+            url={gallery.url}
+            date={gallery.uploaded_at || gallery.created_at || ""}
+            title={gallery.caption || gallery.file_name || "Untitled"}
+            id={gallery.id}
             onClick={onImageClick}
           />
         ))}

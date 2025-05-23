@@ -414,14 +414,14 @@ const SignUpDetails = () => {
           </div>
 
           {/* OR WITH GOOGLE/FACEBOOK */}
-          <div className="w-full  py-4  text-center text-black/70 items-center flex space-x-4 md:space-x-0">
+          {/* <div className="w-full  py-4  text-center text-black/70 items-center flex space-x-4 md:space-x-0">
             <Separator className="w-1/3" />
             <div className="text-sm w-1/3">Or sign up with</div>
             <Separator className="w-1/3" />
-          </div>
+          </div> */}
 
           {/* GOOGLE AND S */}
-          <div className="flex w-full flex-col items-center space-y-4 ">
+          {/* <div className="flex w-full flex-col items-center space-y-4 ">
             <Button
               // onClick={signInWithGoogle}
               variant="outline"
@@ -436,7 +436,7 @@ const SignUpDetails = () => {
               />
               <span className="text-sm font-normal ">Continue with Google</span>
             </Button>
-          </div>
+          </div> */}
 
           <p className="text-center text-xs font-medium mt-4">
             By signing up to create an account, I accept Company&apos;s Terms of

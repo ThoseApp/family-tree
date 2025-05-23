@@ -76,7 +76,7 @@ const FamilyMember = ({
 const Page = () => {
   const { user, getUserProfile } = useUserStore();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const { fetchUserImages, userImages } = useGalleryStore();
+  const { fetchUserGallery, userGallery } = useGalleryStore();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -87,7 +87,7 @@ const Page = () => {
     }
 
     (async () => {
-      fetchUserImages(user.id);
+      fetchUserGallery(user.id);
       const profile = await getUserProfile();
       setUserProfile(profile);
     })();
@@ -224,7 +224,7 @@ const Page = () => {
             <h2 className="text-xl font-semibold mb-2">Gallery</h2>
             <p className="text-gray-600 mb-4">Personal photos uploaded</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {userImages.map((imgSrc, index) => (
+              {userGallery.map((imgSrc, index) => (
                 <div
                   key={index}
                   className="aspect-square overflow-hidden rounded"

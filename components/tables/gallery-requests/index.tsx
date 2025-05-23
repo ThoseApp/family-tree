@@ -1,11 +1,11 @@
-import { GalleryImage } from "@/lib/types";
+import { GalleryType } from "@/lib/types";
 import React from "react";
 import { columns } from "./columns";
 import { DataTable } from "@/components/ui/data-table";
 
 interface GalleryRequestsTableProps {
-  data: GalleryImage[];
-  onUserClick?: (user: GalleryImage) => void;
+  data: GalleryType[];
+  onUserClick?: (user: GalleryType) => void;
 }
 
 const GalleryRequestsTable = ({

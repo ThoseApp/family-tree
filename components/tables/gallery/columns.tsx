@@ -1,6 +1,6 @@
 "use client";
 
-import { GalleryImage } from "@/lib/types";
+import { GalleryType } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 
 import Image from "next/image";
@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2, Eye } from "lucide-react";
 
-export const columns: ColumnDef<GalleryImage>[] = [
+export const columns: ColumnDef<GalleryType>[] = [
   {
     id: "s/n",
     header: "S/N",
