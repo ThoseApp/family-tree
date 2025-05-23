@@ -22,14 +22,14 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { X, ArrowLeft, ChevronLeft } from "lucide-react";
 import Logo from "@/components/logo";
-// TODO: Potentially a different store or function for password reset
-// import { useUserStore } from "@/stores/user-store";
+import { useUserStore } from "@/stores/user-store";
 import AuthWrapper from "@/components/wrappers/auth-wrapper";
 import { LoadingIcon } from "@/components/loading-icon";
 
 const ForgotPasswordDetails = () => {
   const router = useRouter();
-  const [loading, setLoading] = useState<boolean>(false); // Local loading state for submission
+  const { passwordReset, loading: storeLoading } = useUserStore();
+  const [loading, setLoading] = useState<boolean>(false);
   const [displayRouteMessage, setDisplayRouteMessage] = useState<boolean>(true);
 
   const toggleDisplayRouteMessage = () => {
@@ -43,25 +43,34 @@ const ForgotPasswordDetails = () => {
     },
   });
 
-  const isLoading = form.formState.isSubmitting || loading;
+  const isLoading = form.formState.isSubmitting || loading || storeLoading;
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setLoading(true);
     try {
       form.clearErrors();
-      console.log("Forgot password for email:", values.email);
 
-      // TODO: Implement actual password reset logic
-      // For example:
-      // await sendPasswordResetEmail(values.email);
-      // router.push("/forgot-password/success"); // or a page indicating email sent
+      const result = await passwordReset(values.email);
 
+      if (result.success) {
+        toast.success(
+          "If an account exists with this email, a reset link has been sent."
+        );
+        form.reset();
+        // Optional: redirect to a confirmation page
+        // router.push("/forgot-password/confirmation");
+      } else {
+        // We don't want to reveal if an email exists or not for security
+        // So we still show a success message even if there was an error
+        toast.success(
+          "If an account exists with this email, a reset link has been sent."
+        );
+      }
+    } catch (error: any) {
+      // For security reasons, we still show a success message
       toast.success(
         "If an account exists with this email, a reset link has been sent."
       );
-      form.reset(); // Reset form after submission
-    } catch (error: any) {
-      toast.error("Something went wrong. Please try again.");
       console.error("Forgot password error:", error);
     } finally {
       setLoading(false);
@@ -125,7 +134,7 @@ const ForgotPasswordDetails = () => {
             </Form>
             <div className="text-center">
               <Button
-                onClick={() => router.push("/login")}
+                onClick={() => router.push("/sign-in")}
                 variant="outline"
                 type="button"
                 className="text-sm text-muted-foreground hover:text-foreground border-none rounded-full"

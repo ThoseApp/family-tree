@@ -21,8 +21,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { X, ChevronLeft } from "lucide-react"; // Eye, EyeOff might be used by PasswordInput
 import Logo from "@/components/logo";
-// TODO: Import your actual password reset function/store action
-// import { useAuthStore } from "@/stores/auth-store";
+import { useUserStore } from "@/stores/user-store";
 import PasswordInput from "@/components/ui/password-input";
 import AuthWrapper from "@/components/wrappers/auth-wrapper";
 import { LoadingIcon } from "@/components/loading-icon";
@@ -30,8 +29,8 @@ import { LoadingIcon } from "@/components/loading-icon";
 const ResetPasswordDetails = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  // const { resetPassword, isLoadingReset } = useAuthStore(); // Example usage
-  const [loading, setLoading] = useState<boolean>(false); // Local loading state
+  const { resetPasswordWithToken, loading: storeLoading } = useUserStore();
+  const [loading, setLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] =
     useState<boolean>(false);
@@ -45,9 +44,11 @@ const ResetPasswordDetails = () => {
     if (token) {
       setResetToken(token);
     } else {
-      // Optional: Redirect or show error if token is missing
+      // If token is missing, show error and redirect after a delay
       toast.error("Password reset token is missing or invalid.");
-      // router.push("/login"); // Example redirect
+      setTimeout(() => {
+        router.push("/sign-in?message=Invalid or expired reset link");
+      }, 3000);
     }
   }, [searchParams, router]);
 
@@ -63,7 +64,7 @@ const ResetPasswordDetails = () => {
     },
   });
 
-  const isLoading = form.formState.isSubmitting || loading;
+  const isLoading = form.formState.isSubmitting || loading || storeLoading;
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -83,26 +84,20 @@ const ResetPasswordDetails = () => {
     setLoading(true);
     try {
       form.clearErrors();
-      console.log(
-        "Resetting password with token:",
-        resetToken,
-        "and new password:",
-        values.password
-      );
 
-      // TODO: Implement actual password reset logic
-      // For example:
-      // const result = await resetPassword(resetToken, values.password);
-      // if (result.success) {
-      //   toast.success("Password reset successfully! You can now log in with your new password.");
-      //   router.push("/login?message=Password reset successful");
-      // } else {
-      //   toast.error(result.message || "Failed to reset password. The link may have expired or been used.");
-      // }
+      const result = await resetPasswordWithToken(resetToken, values.password);
 
-      // Placeholder logic
-      toast.success("Password reset successfully! (Placeholder)");
-      router.push("/login?message=Password reset successfully");
+      if (result.success) {
+        toast.success(
+          "Password reset successfully! You can now log in with your new password."
+        );
+        form.reset();
+        router.push("/sign-in?message=Password reset successfully");
+      } else {
+        toast.error(
+          result.error || "Failed to reset password. The link may have expired."
+        );
+      }
     } catch (error: any) {
       toast.error("An unexpected error occurred. Please try again.");
       console.error("Reset password error:", error);
@@ -190,7 +185,7 @@ const ResetPasswordDetails = () => {
                   size="lg"
                   type="submit"
                   className="w-full !mt-8 bg-foreground text-background rounded-full hover:bg-foreground/80 transition-all duration-300"
-                  disabled={isLoading || !resetToken} // Disable if token is missing
+                  disabled={isLoading || !resetToken}
                 >
                   {isLoading && <LoadingIcon className="mr-2" />}Set New
                   Password
@@ -203,7 +198,7 @@ const ResetPasswordDetails = () => {
               <Button
                 type="button"
                 variant="link"
-                onClick={() => router.push("/login")}
+                onClick={() => router.push("/sign-in")}
                 disabled={isLoading}
                 className={` text-sm ease-in pl-0  cursor-pointer hover:scale-105 transition `}
               >

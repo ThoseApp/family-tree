@@ -3,8 +3,9 @@ import Image from "next/image";
 import Link from "next/link";
 
 interface EventCardProps {
-  imageUrl: string;
-  alt?: string;
+  image: string;
+  name?: string;
+  description?: string;
   className?: string;
   date?: {
     month: string;
@@ -13,8 +14,9 @@ interface EventCardProps {
 }
 
 const EventCard: React.FC<EventCardProps> = ({
-  imageUrl,
-  alt = "Event image",
+  image,
+  name = "Event image",
+  description = "Event description",
   className = "",
   date,
 }) => {
@@ -25,10 +27,10 @@ const EventCard: React.FC<EventCardProps> = ({
       >
         <div className="aspect-square w-full relative">
           <Image
-            src={imageUrl}
-            alt={alt}
+            src={image}
+            alt={name}
             fill
-            className="object-cover"
+            className="object-cover bg-background"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
 

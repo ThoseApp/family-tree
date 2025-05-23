@@ -44,6 +44,7 @@ interface DataTableProps<TData, TValue> {
   statusFilter?: boolean;
   dateFilter?: boolean;
   onRowClick?: (row: TData) => void;
+  [key: string]: any; // Allow for additional custom props
 }
 
 export function DataTable<TData, TValue>({
@@ -56,6 +57,7 @@ export function DataTable<TData, TValue>({
   statusFilter,
   dateFilter,
   onRowClick,
+  ...customProps // Spread the rest of the props
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -73,6 +75,8 @@ export function DataTable<TData, TValue>({
       sorting,
       columnFilters,
     },
+    // Pass all custom props to the table options so they can be accessed in column definitions
+    ...customProps,
   });
 
   return (

@@ -1,12 +1,21 @@
+"use client";
+
 import GalleryGrid from "@/components/gallery";
 import PageHeader from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import FrameWrapper from "@/components/wrappers/frame-wrapper";
 import { galleryImages } from "@/lib/constants/landing";
+import { useGalleryStore } from "@/stores/gallery-store";
 import { MoveRight } from "lucide-react";
-import React from "react";
+import React, { useEffect } from "react";
 
 const GalleryPage = () => {
+  const { gallery, fecthGallery } = useGalleryStore();
+
+  useEffect(() => {
+    fecthGallery();
+  }, [fecthGallery]);
+
   return (
     <div className="pb-20">
       {/* HEADER SECTION */}
@@ -17,7 +26,7 @@ const GalleryPage = () => {
       />
 
       {/* GALLERY GRID */}
-      <GalleryGrid images={galleryImages} />
+      <GalleryGrid gallery={gallery} />
     </div>
   );
 };

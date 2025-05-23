@@ -1,14 +1,14 @@
 "use client";
 
-import { Gallery } from "@/lib/types";
+import { GalleryType } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Eye } from "lucide-react";
 
-export const columns: ColumnDef<Gallery>[] = [
+export const columns: ColumnDef<GalleryType>[] = [
   {
     id: "s/n",
     header: "S/N",
@@ -24,13 +24,16 @@ export const columns: ColumnDef<Gallery>[] = [
       const event = row.original;
 
       return (
-        <Image
-          src={event.image}
-          alt={event.name}
-          width={100}
-          height={100}
-          className="rounded-md"
-        />
+        <div className="relative w-[100px] h-[100px] overflow-hidden rounded-md cursor-pointer">
+          <Image
+            src={event.url}
+            alt={event.caption || "Gallery Image"}
+            width={100}
+            height={100}
+            className="rounded-md object-cover"
+            style={{ width: "100%", height: "100%" }}
+          />
+        </div>
       );
     },
   },
@@ -41,7 +44,7 @@ export const columns: ColumnDef<Gallery>[] = [
     cell({ row }) {
       const event = row.original;
 
-      return <p className="text-sm text-left ">{event.name}</p>;
+      return <p className="text-sm text-left ">{event.caption}</p>;
     },
   },
 
@@ -54,7 +57,16 @@ export const columns: ColumnDef<Gallery>[] = [
       const { row } = props;
       const event = row.original;
 
-      return <p className="text-sm text-left ">{event.fileSize}</p>;
+      // Format file size to KB or MB
+      const formatFileSize = (bytes: number) => {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+        return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+      };
+
+      return (
+        <p className="text-sm text-left ">{formatFileSize(event.file_size)}</p>
+      );
     },
   },
 
@@ -66,7 +78,7 @@ export const columns: ColumnDef<Gallery>[] = [
       const event = row.original;
       return (
         <div className={cn("text-left text-xs md:text-sm ")}>
-          {event.uploadDate}
+          {event.uploaded_at}
         </div>
       );
     },
@@ -78,7 +90,7 @@ export const columns: ColumnDef<Gallery>[] = [
     accessorKey: "uploadTime",
     cell: ({ row }) => {
       const event = row.original;
-      return <p className="text-sm text-left ">{event.uploadTime}</p>;
+      return <p className="text-sm text-left ">{event.uploaded_at}</p>;
     },
   },
 
@@ -88,23 +100,46 @@ export const columns: ColumnDef<Gallery>[] = [
     accessorKey: "uploader",
     cell: ({ row }) => {
       const event = row.original;
-      return <p className="text-sm text-left ">{event.uploader}</p>;
+      return <p className="text-sm text-left ">{event.user_id}</p>;
     },
   },
 
   {
     id: "action",
     header: "Action",
-    cell: ({ row }) => (
-      <div className="flex items-center gap-2">
-        <Button variant="outline" size="icon">
-          <Trash2 />
-        </Button>
+    cell: ({ row, table }) => {
+      const event = row.original;
 
-        <Button className="flex justify-end" variant="outline">
-          Preview
-        </Button>
-      </div>
-    ),
+      // Access custom props from table.options
+      const { deleteImage, previewImage } = table.options as any;
+
+      return (
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            className="rounded-full"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (deleteImage) deleteImage(event.id);
+            }}
+          >
+            <Trash2 className="size-4" />
+          </Button>
+
+          <Button
+            variant="outline"
+            className="rounded-full flex justify-end"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (previewImage) previewImage(event);
+            }}
+          >
+            <Eye className="size-4 mr-2" />
+            Preview
+          </Button>
+        </div>
+      );
+    },
   },
 ];

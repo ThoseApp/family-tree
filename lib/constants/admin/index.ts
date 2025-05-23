@@ -1,7 +1,7 @@
 import {
   Event,
   FamilyMember,
-  Gallery,
+  GalleryType,
   NavLink,
   NoticeBoard,
   Notification,

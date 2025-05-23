@@ -1,3 +1,5 @@
+"use client";
+
 import DashboardOverviewCard from "@/components/cards/dashboard-overview-card";
 import UpcomingEventCard from "@/components/cards/upcoming-event-card";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -6,18 +8,74 @@ import {
   dummyNewAlbumCreation,
   dummyUpcomingEvents,
 } from "@/lib/constants/dashbaord";
-import { cn } from "@/lib/utils";
+import { cn, ensureDateAsObject } from "@/lib/utils";
+import { useEventsStore } from "@/stores/events-store";
 import Image from "next/image";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { Event } from "@/lib/types";
+
+// Helper function to convert event date to a Date object for sorting
+const getSortableDate = (dateInput: any): Date => {
+  if (typeof dateInput === "string") {
+    // Handles "Month Day, Year" or "Month Day" (defaults to current year if year is omitted)
+    return new Date(dateInput);
+  } else if (
+    dateInput &&
+    typeof dateInput.month === "string" &&
+    typeof dateInput.day === "string"
+  ) {
+    // Handles { month: "May", day: "12" }
+    // new Date("May 12") defaults to the current year.
+    return new Date(`${dateInput.month} ${dateInput.day}`);
+  }
+  // Fallback for unparseable dates; sorts them to the past.
+  return new Date(0); // Corresponds to "Thu Jan 01 1970 ..."
+};
+
+// Helper function to format event date as a string (e.g., for DashboardOverviewCard)
+const formatDateAsString = (dateInput: any): string => {
+  if (typeof dateInput === "string") {
+    return dateInput; // Assumes it's already in a displayable string format
+  } else if (
+    dateInput &&
+    typeof dateInput.month === "string" &&
+    typeof dateInput.day === "string"
+  ) {
+    return `${dateInput.month} ${dateInput.day}`; // e.g., "May 12"
+  }
+  return "Date not set"; // Fallback display string
+};
+
+// Helper function to ensure date is in { month: string; day: string } format (for UpcomingEventCard)
 
 const DashboardPage = () => {
+  const { fetchUpcomingEvents } = useEventsStore();
+  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
+  const sortedUpcomingEvents = [...upcomingEvents].sort((a, b) => {
+    return (
+      getSortableDate(a.date).getTime() - getSortableDate(b.date).getTime()
+    );
+  });
+
+  const latestUpcomingEvent =
+    sortedUpcomingEvents.length > 0 ? sortedUpcomingEvents[0] : null;
+
+  useEffect(() => {
+    (async () => {
+      const events = await fetchUpcomingEvents();
+      setUpcomingEvents(events);
+    })();
+  }, [fetchUpcomingEvents]);
+
   return (
     <div className="flex flex-col  gap-y-8 lg:gap-y-12">
       <DashboardOverviewCard
-        imageSrc={dummyProfileImage}
-        title="Grandma Beth’s 80th Birthday Celebration "
-        date="May 12, 2025, 4:00 PM -6:00 PM"
-        description="Grandma’s House, 123 Family Lane, Lagos."
+        imageSrc={latestUpcomingEvent?.image || dummyProfileImage}
+        title={latestUpcomingEvent?.name || "No Major Upcoming Event"}
+        date={formatDateAsString(latestUpcomingEvent?.date)}
+        description={
+          latestUpcomingEvent?.description || "No description available."
+        }
         routePath="/family-tree"
       />
 
@@ -29,15 +87,21 @@ const DashboardPage = () => {
 
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {dummyUpcomingEvents.map((event, index) => (
-              <UpcomingEventCard
-                key={index}
-                imageSrc={event.imageUrl}
-                name={event.name}
-                description={event.description}
-                date={event.date}
-              />
-            ))}
+            {sortedUpcomingEvents.length > 0 ? (
+              sortedUpcomingEvents.map((event, index) => (
+                <UpcomingEventCard
+                  key={index}
+                  imageSrc={event.image || dummyProfileImage}
+                  name={event.name}
+                  description={event.description || "No description available."}
+                  date={ensureDateAsObject(event.date)}
+                />
+              ))
+            ) : (
+              <p className="col-span-full text-center text-muted-foreground">
+                No upcoming events scheduled at the moment.
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>

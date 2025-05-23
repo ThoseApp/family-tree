@@ -1,122 +1,283 @@
 import { create } from "zustand";
+import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
+import { v4 as uuidv4 } from "uuid";
+import { uploadImage, uploadVideo } from "@/lib/file-upload";
+import { BucketFolderEnum } from "@/lib/constants/enums";
+import { BUCKET_NAME } from "@/lib/constants";
+import { GalleryType } from "@/lib/types";
 
-// TODO: Define a more specific type for GalleryImage if available
-interface GalleryImage {
-  id: string;
-  url: string;
-  caption?: string;
-  uploadedAt: string; // Or Date object
-  // Add other relevant properties, e.g., uploaderId, tags, etc.
-}
+const ADMIN_ID = process.env.NEXT_PUBLIC_ADMIN_ID;
 
+// Define GalleryType type
 interface GalleryState {
-  images: GalleryImage[];
+  gallery: GalleryType[];
+  userGallery: GalleryType[];
   isLoading: boolean;
   error: string | null;
-  selectedImage: GalleryImage | null;
+  selectedImage: GalleryType | null;
 }
 
 interface GalleryActions {
-  fetchImages: () => Promise<void>;
-  uploadImage: (file: File, caption?: string) => Promise<void>; // Example: takes a File object
-  deleteImage: (imageId: string) => Promise<void>;
-  updateImageDetails: (
+  fecthGallery: () => Promise<void>;
+  fetchUserGallery: (userId: string) => Promise<void>;
+  uploadToGallery: (
+    file: File,
+    caption?: string,
+    userId?: string
+  ) => Promise<void>;
+  deleteFromGallery: (imageId: string) => Promise<void>;
+  updateGalleryDetails: (
     imageId: string,
-    updates: Partial<Pick<GalleryImage, "caption">>
-  ) => Promise<void>; // Example: only caption updatable
-  selectImage: (image: GalleryImage | null) => void;
+    updates: Partial<Pick<GalleryType, "caption">>
+  ) => Promise<void>;
+  selectGalleryItem: (image: GalleryType | null) => void;
 }
 
 const initialState: GalleryState = {
-  images: [],
+  gallery: [],
+  userGallery: [],
   isLoading: false,
   error: null,
   selectedImage: null,
 };
 
-export const useGalleryStore = create<GalleryState & GalleryActions>((set) => ({
-  ...initialState,
-  fetchImages: async () => {
-    set({ isLoading: true, error: null });
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      const mockImages: GalleryImage[] = [
-        {
-          id: "1",
-          url: "https://via.placeholder.com/150/0000FF/808080?Text=Image1",
-          caption: "First image",
-          uploadedAt: new Date().toISOString(),
-        },
-        {
-          id: "2",
-          url: "https://via.placeholder.com/150/FF0000/FFFFFF?Text=Image2",
-          caption: "Second image",
-          uploadedAt: new Date().toISOString(),
-        },
-      ]; // Replace with actual API call
-      set({ images: mockImages, isLoading: false });
-    } catch (err: any) {
-      set({ error: err.message || "Failed to fetch images", isLoading: false });
-    }
-  },
-  uploadImage: async (file, caption) => {
-    set({ isLoading: true });
-    try {
-      // Simulate API call & file upload
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      // In a real app, you would upload the file to a server/storage and get back a URL
-      const newImage: GalleryImage = {
-        id: Date.now().toString(),
-        url: URL.createObjectURL(file), // This is a temporary local URL, replace with actual uploaded URL
-        caption: caption,
-        uploadedAt: new Date().toISOString(),
-      };
-      set((state) => ({
-        images: [...state.images, newImage],
-        isLoading: false,
-      }));
-    } catch (err: any) {
-      set({ error: err.message || "Failed to upload image", isLoading: false });
-    }
-  },
-  deleteImage: async (imageId) => {
-    set({ isLoading: true });
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      set((state) => ({
-        images: state.images.filter((image) => image.id !== imageId),
-        isLoading: false,
-        selectedImage:
-          state.selectedImage?.id === imageId ? null : state.selectedImage, // Clear selection if deleted
-      }));
-    } catch (err: any) {
-      set({ error: err.message || "Failed to delete image", isLoading: false });
-    }
-  },
-  updateImageDetails: async (imageId, updates) => {
-    set({ isLoading: true });
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      set((state) => ({
-        images: state.images.map((image) =>
-          image.id === imageId ? { ...image, ...updates } : image
-        ),
-        isLoading: false,
-      }));
-    } catch (err: any) {
-      set({
-        error: err.message || "Failed to update image details",
-        isLoading: false,
-      });
-    }
-  },
-  selectImage: (image) => {
-    set({ selectedImage: image });
-  },
-}));
+export const useGalleryStore = create<GalleryState & GalleryActions>(
+  (set, get) => ({
+    ...initialState,
+
+    fecthGallery: async () => {
+      set({ isLoading: true, error: null });
+      const supabase = createClient();
+
+      try {
+        // Get gallery from the gallery table
+        const { data, error } = await supabase
+          .from("galleries")
+          .select("*")
+          .order("updated_at", { ascending: false });
+
+        if (error) throw error;
+
+        // Set the gallery in the store
+        set({ gallery: data || [], isLoading: false });
+      } catch (err: any) {
+        console.error("Error fetching gallery:", err);
+        set({
+          error: err.message || "Failed to fetch gallery",
+          isLoading: false,
+        });
+      }
+    },
+
+    fetchUserGallery: async (userId) => {
+      set({ isLoading: true, error: null });
+      const supabase = createClient();
+
+      try {
+        const { data, error } = await supabase
+          .from("galleries")
+          .select("*")
+          .eq("user_id", userId)
+          .order("updated_at", { ascending: false });
+
+        if (error) throw error;
+
+        set({ userGallery: data || [], isLoading: false });
+      } catch (err: any) {
+        console.error("Error fetching user gallery:", err);
+        set({
+          error: err.message || "Failed to fetch user gallery",
+          isLoading: false,
+        });
+      }
+    },
+
+    uploadToGallery: async (file, caption, userId) => {
+      set({ isLoading: true, error: null });
+      const supabase = createClient();
+
+      try {
+        // Create a unique file_name
+        const fileExt = file.name.split(".").pop();
+        const file_name = `${
+          BucketFolderEnum.gallery
+        }/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+
+        // Upload to Supabase Storage
+        const { error: uploadError, data: uploadData } = await supabase.storage
+          .from(BUCKET_NAME)
+          .upload(file_name, file, {
+            cacheControl: "3600",
+            upsert: false, // Prevent overwriting
+          });
+
+        if (uploadError) throw uploadError;
+
+        // Get the public URL
+        const { data: urlData } = supabase.storage
+          .from(BUCKET_NAME)
+          .getPublicUrl(file_name);
+
+        if (!urlData || !urlData.publicUrl) {
+          throw new Error("Failed to get gallert item URL");
+        }
+
+        const imageUrl = urlData.publicUrl;
+
+        // Log successful upload info for debugging
+        console.log("Image uploaded successfully:", {
+          path: file_name,
+          url: imageUrl,
+          size: file.size,
+        });
+
+        const now = new Date().toISOString();
+
+        // Insert image data into the galleries table
+        const newImage: GalleryType = {
+          id: uuidv4(), // Generate ID client-side
+          url: imageUrl,
+          caption: caption || file.name,
+          uploaded_at: now,
+          created_at: now,
+          updated_at: now,
+          user_id: userId || "",
+          file_name: file_name,
+          file_size: file.size,
+          approved: false,
+        };
+
+        // TODO: Send notification (gallery request) to admin
+
+        const { error: insertError } = await supabase
+          .from("galleries")
+          .insert(newImage);
+
+        if (insertError) throw insertError;
+
+        // Update local state
+        set((state) => ({
+          userGallery: [newImage, ...state.userGallery],
+          gallery: [newImage, ...state.gallery],
+          isLoading: false,
+        }));
+      } catch (err: any) {
+        console.error("Error uploading image:", err);
+        set({
+          error: err.message || "Failed to upload image",
+          isLoading: false,
+        });
+        throw err; // Re-throw to allow caller to handle
+      }
+    },
+
+    deleteFromGallery: async (imageId) => {
+      set({ isLoading: true, error: null });
+      const supabase = createClient();
+
+      try {
+        // Get current user
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) {
+          throw new Error("User not authenticated");
+        }
+
+        // Find the image to get its file name
+        const imageToDelete = get().gallery.find((img) => img.id === imageId);
+        if (!imageToDelete) {
+          throw new Error("Image not found");
+        }
+
+        // Delete from Supabase Storage
+        const { error: storageError } = await supabase.storage
+          .from(BUCKET_NAME)
+          .remove([imageToDelete.file_name]);
+
+        // Even if storage deletion fails, try to remove from the database
+        if (storageError) {
+          console.warn(
+            "Storage delete error, continuing with database delete:",
+            storageError
+          );
+        }
+
+        // Delete from the galleries table
+        const { error: dbError } = await supabase
+          .from("galleries")
+          .delete()
+          .match({ id: imageId });
+
+        if (dbError) throw dbError;
+
+        // Update local state
+        set((state) => ({
+          gallery: state.gallery.filter((image) => image.id !== imageId),
+          isLoading: false,
+          selectedImage:
+            state.selectedImage?.id === imageId ? null : state.selectedImage,
+        }));
+      } catch (err: any) {
+        console.error("Error deleting image:", err);
+        set({
+          error: err.message || "Failed to delete image",
+          isLoading: false,
+        });
+        throw err; // Re-throw to allow caller to handle
+      }
+    },
+
+    updateGalleryDetails: async (imageId, updates) => {
+      set({ isLoading: true, error: null });
+      const supabase = createClient();
+
+      try {
+        // Get current user
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) {
+          throw new Error("User not authenticated");
+        }
+
+        // Add updated_at timestamp to updates
+        const updatesWithTimestamp = {
+          ...updates,
+          updated_at: new Date().toISOString(),
+        };
+
+        // Update the galleries table
+        const { error } = await supabase
+          .from("galleries")
+          .update(updatesWithTimestamp)
+          .match({ id: imageId });
+
+        if (error) throw error;
+
+        // Update local state
+        set((state) => ({
+          gallery: state.gallery.map((image) =>
+            image.id === imageId ? { ...image, ...updatesWithTimestamp } : image
+          ),
+          isLoading: false,
+        }));
+      } catch (err: any) {
+        console.error("Error updating image:", err);
+        set({
+          error: err.message || "Failed to update image details",
+          isLoading: false,
+        });
+        throw err;
+      }
+    },
+
+    selectGalleryItem: (image) => {
+      set({ selectedImage: image });
+    },
+  })
+);
 
 // Optional: Persist store (if needed)
 // import { persist, createJSONStorage } from 'zustand/middleware';

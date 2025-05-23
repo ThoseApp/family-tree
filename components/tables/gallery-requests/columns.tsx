@@ -1,6 +1,6 @@
 "use client";
 
-import { Gallery } from "@/lib/types";
+import { GalleryType } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 
 import Image from "next/image";
@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 
-export const columns: ColumnDef<Gallery>[] = [
+export const columns: ColumnDef<GalleryType>[] = [
   {
     id: "s/n",
     header: "S/N",
@@ -25,8 +25,8 @@ export const columns: ColumnDef<Gallery>[] = [
 
       return (
         <Image
-          src={event.image}
-          alt={event.name}
+          src={event.url}
+          alt={event.caption || "Gallery Image"}
           width={100}
           height={100}
           className="rounded-md"
@@ -41,7 +41,7 @@ export const columns: ColumnDef<Gallery>[] = [
     cell({ row }) {
       const event = row.original;
 
-      return <p className="text-sm text-left ">{event.name}</p>;
+      return <p className="text-sm text-left ">{event.caption}</p>;
     },
   },
 
@@ -54,7 +54,7 @@ export const columns: ColumnDef<Gallery>[] = [
       const { row } = props;
       const event = row.original;
 
-      return <p className="text-sm text-left ">{event.fileSize}</p>;
+      return <p className="text-sm text-left ">{event.file_size}</p>;
     },
   },
 
@@ -66,7 +66,7 @@ export const columns: ColumnDef<Gallery>[] = [
       const event = row.original;
       return (
         <div className={cn("text-left text-xs md:text-sm ")}>
-          {event.uploadDate}
+          {event.uploaded_at}
         </div>
       );
     },
@@ -78,7 +78,7 @@ export const columns: ColumnDef<Gallery>[] = [
     accessorKey: "uploadTime",
     cell: ({ row }) => {
       const event = row.original;
-      return <p className="text-sm text-left ">{event.uploadTime}</p>;
+      return <p className="text-sm text-left ">{event.uploaded_at}</p>;
     },
   },
 
@@ -88,7 +88,7 @@ export const columns: ColumnDef<Gallery>[] = [
     accessorKey: "uploader",
     cell: ({ row }) => {
       const event = row.original;
-      return <p className="text-sm text-left ">{event.uploader}</p>;
+      return <p className="text-sm text-left ">{event.user_id}</p>;
     },
   },
 

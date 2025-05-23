@@ -20,8 +20,10 @@ import Image from "next/image";
 import { dummyProfileImage } from "@/lib/constants";
 import Link from "next/link";
 import AdminMobileSidebar from "../admin/admin-mobile-sidebar";
+import { useUserStore } from "@/stores/user-store";
 
 const DashboardNavbar = () => {
+  const { user, logout } = useUserStore();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -69,7 +71,13 @@ const DashboardNavbar = () => {
               className="rounded-full"
               asChild
             >
-              <Link href="/dashboard/notifications">
+              <Link
+                href={
+                  user?.user_metadata?.is_admin === true
+                    ? "/admin/notifications"
+                    : "/dashboard/notifications"
+                }
+              >
                 <Bell className="size-6" />
               </Link>
             </Button>
@@ -80,10 +88,13 @@ const DashboardNavbar = () => {
               <Button variant="outline" size="icon" className="rounded-full">
                 <Avatar className="size-10">
                   <AvatarImage
-                    src={dummyProfileImage}
+                    src={user?.user_metadata?.avatar_url}
                     className="object-cover"
                   />
-                  <AvatarFallback>AB</AvatarFallback>
+                  <AvatarFallback className="bg-muted-foreground/10">
+                    {user?.user_metadata?.first_name?.charAt(0)}
+                    {user?.user_metadata?.last_name?.charAt(0)}
+                  </AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
@@ -98,7 +109,7 @@ const DashboardNavbar = () => {
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="cursor-pointer flex items-center gap-2 rounded-md text-destructive hover:bg-destructive/20 hover:text-destructive"
-                // onClick={toggleLogoutDialog}
+                onClick={logout}
               >
                 <LogOut className="size-5" />
                 <span>Log out</span>
