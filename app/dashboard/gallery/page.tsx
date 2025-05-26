@@ -58,8 +58,12 @@ const Page = () => {
 
     const file = files[0];
 
+    console.log("[ADMIN_ID]", process.env.NEXT_PUBLIC_ADMIN_ID);
+
+    console.log(file);
+
     // Basic validation
-    if (!file.type.startsWith("image/") || !file.type.startsWith("video/")) {
+    if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
       toast.error("Please select an image or video file");
       return;
     }
@@ -160,46 +164,13 @@ const Page = () => {
   };
 
   const formatTime = (dateString?: string) => {
-    if (!dateString) return "Unknown time";
     try {
+      if (!dateString) return "";
       return new Date(dateString).toLocaleTimeString();
     } catch (error) {
       return "Invalid time";
     }
   };
-
-  // Convert gallery store images to the format expected by the GalleryTable component
-  const tableData = userGallery.map((img) => ({
-    id: img.id,
-    name: img.caption || `Image-${img.id}`,
-    image: img.url,
-    fileSize: img.file_size,
-    uploadDate: formatDate(img.uploaded_at || img.created_at),
-    uploadTime: formatTime(img.uploaded_at || img.created_at),
-    uploader: "Me", // Placeholder - would come from user data
-  }));
-
-  // Format for GalleryGrid component
-  const gridData = userGallery.map((img) => ({
-    id: img.id,
-    url: img.url,
-    caption: img.caption || `Image-${img.id}`,
-    uploaded_at: img.uploaded_at,
-    created_at: img.created_at || new Date().toISOString(),
-    updated_at: img.updated_at,
-    user_id: img.user_id || (user?.id ?? ""),
-    file_name: img.file_name || img.caption || `Image-${img.id}`,
-    file_size: img.file_size || 0,
-  }));
-
-  // Filter images based on search query
-  const filteredTableData = tableData.filter((img) =>
-    img.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const filteredGridData = gridData.filter((img) =>
-    (img.caption || "").toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   return (
     <div className="flex flex-col gap-y-8 lg:gap-y-12">
@@ -249,24 +220,25 @@ const Page = () => {
         </div>
       </div>
 
-      {/* Search input */}
-      <div className="relative w-full max-w-md">
-        <Input
-          placeholder="Search by caption..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
-        />
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-      </div>
+      {viewMode === "grid" && (
+        <div className="relative w-full max-w-md">
+          <Input
+            placeholder="Search by caption..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        </div>
+      )}
 
-      {isLoading && (userGallery.length === 0 || gridData.length === 0) ? (
+      {isLoading && userGallery.length === 0 ? (
         <div className="flex items-center justify-center h-40">
           <LoadingIcon className="size-8" />
         </div>
       ) : viewMode === "table" ? (
         <GalleryTable
-          data={filteredTableData as any}
+          data={userGallery}
           onUserClick={handlePreviewImage}
           deleteImage={handleDeleteImage}
           previewImage={handlePreviewImage}
@@ -274,12 +246,16 @@ const Page = () => {
       ) : (
         <div className="mt-4">
           <GalleryGrid
-            gallery={filteredGridData}
+            gallery={userGallery.filter((img) =>
+              (img.caption || img.file_name || "")
+                .toLowerCase()
+                .includes(searchQuery.toLowerCase())
+            )}
             onImageClick={(image) => {
               // Convert the grid image format to the format expected by handlePreviewImage
               const formattedImage = {
                 id: image.id,
-                name: image.caption,
+                name: image.caption || image.file_name,
                 image: image.url,
               };
               handlePreviewImage(formattedImage);
@@ -290,9 +266,13 @@ const Page = () => {
 
       {/* Show a message when no results are found */}
       {!isLoading &&
+        viewMode === "grid" &&
         searchQuery &&
-        ((viewMode === "table" && filteredTableData.length === 0) ||
-          (viewMode === "grid" && filteredGridData.length === 0)) && (
+        userGallery.filter((img) =>
+          (img.caption || img.file_name || "")
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase())
+        ).length === 0 && (
           <div className="text-center py-10">
             <p className="text-muted-foreground">
               No images found matching &quot;{searchQuery}&quot;

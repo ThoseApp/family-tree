@@ -95,16 +95,42 @@ export const columns: ColumnDef<GalleryType>[] = [
   {
     id: "action",
     header: "Action",
-    cell: ({ row }) => (
-      <div className="flex items-center gap-2">
-        <Button className="flex justify-end" variant="destructive">
-          Decline
-        </Button>
+    cell: ({ row, table }) => {
+      const gallery = row.original;
 
-        <Button className="flex justify-end bg-green-500 hover:bg-green-500/80 text-background">
-          Approve
-        </Button>
-      </div>
-    ),
+      // Access custom props from table.options
+      const { onApprove, onDecline, isProcessing } = table.options as any;
+
+      return (
+        <div className="flex items-center gap-2">
+          <Button
+            variant="destructive"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onDecline && gallery.id) {
+                onDecline(gallery.id);
+              }
+            }}
+            disabled={isProcessing}
+            className="flex justify-end"
+          >
+            {isProcessing ? "Processing..." : "Decline"}
+          </Button>
+
+          <Button
+            className="flex justify-end bg-green-500 hover:bg-green-500/80 text-background"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onApprove && gallery.id) {
+                onApprove(gallery.id);
+              }
+            }}
+            disabled={isProcessing}
+          >
+            {isProcessing ? "Processing..." : "Approve"}
+          </Button>
+        </div>
+      );
+    },
   },
 ];
