@@ -37,7 +37,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
+import { EnhancedCalendar } from "@/components/ui/enhanced-calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import {
@@ -275,7 +275,7 @@ const SignUpDetails = () => {
                           </FormControl>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
+                          <EnhancedCalendar
                             mode="single"
                             selected={field.value}
                             onSelect={(date) => {
