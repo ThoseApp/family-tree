@@ -25,3 +25,9 @@ export enum GalleryStatusEnum {
   approved = "approved",
   rejected = "rejected",
 }
+
+export enum UserStatusEnum {
+  pending = "pending",
+  approved = "approved",
+  rejected = "rejected",
+}

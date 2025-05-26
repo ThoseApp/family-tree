@@ -7,6 +7,7 @@ import Image from "next/image";
 import { cn, formatFileSize } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
+import { getUserProfile } from "@/lib/user";
 
 export const columns: ColumnDef<GalleryType>[] = [
   {
@@ -24,13 +25,16 @@ export const columns: ColumnDef<GalleryType>[] = [
       const gallery = row.original;
 
       return (
-        <Image
-          src={gallery.url}
-          alt={gallery.caption || "Gallery Image"}
-          width={100}
-          height={100}
-          className="rounded-md"
-        />
+        <div className="relative w-[100px] h-[100px] overflow-hidden rounded-md cursor-pointer">
+          <Image
+            src={gallery.url}
+            alt={gallery.caption || "Gallery Image"}
+            width={100}
+            height={100}
+            className="rounded-md object-cover"
+            style={{ width: "100%", height: "100%" }}
+          />
+        </div>
       );
     },
   },
@@ -98,9 +102,14 @@ export const columns: ColumnDef<GalleryType>[] = [
     id: "uploader",
     header: "Uploader",
     accessorKey: "uploader",
-    cell: ({ row }) => {
+    cell: async ({ row }) => {
       const gallery = row.original;
-      return <p className="text-sm text-left ">{gallery.user_id}</p>;
+      const userProfile = await getUserProfile(gallery.user_id);
+      return (
+        <p className="text-sm text-left ">
+          {userProfile?.first_name} {userProfile?.last_name}
+        </p>
+      );
     },
   },
 
