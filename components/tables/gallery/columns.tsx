@@ -4,7 +4,7 @@ import { GalleryType } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 
 import Image from "next/image";
-import { cn } from "@/lib/utils";
+import { cn, formatFileSize } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2, Eye } from "lucide-react";
 
@@ -55,14 +55,6 @@ export const columns: ColumnDef<GalleryType>[] = [
     cell(props) {
       const { row } = props;
       const gallery = row.original;
-
-      // Format file size to KB or MB
-      const formatFileSize = (bytes: number) => {
-        if (!bytes || bytes === 0) return "0 B";
-        if (bytes < 1024) return bytes + " B";
-        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-        return (bytes / (1024 * 1024)).toFixed(1) + " MB";
-      };
 
       return (
         <p className="text-sm text-left ">
