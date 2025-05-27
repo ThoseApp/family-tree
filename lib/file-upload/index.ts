@@ -1,14 +1,12 @@
 import { toast } from "sonner";
 import { BucketFolderEnum } from "@/lib/constants/enums";
-import { createClient } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import {
   BUCKET_NAME,
   MAX_IMAGE_SIZE_MB,
   MAX_VIDEO_SIZE_MB,
   MAX_DOCUMENT_SIZE_MB,
 } from "@/lib/constants";
-
-const supabase = createClient();
 
 export const uploadImage = async (
   file: File,

@@ -1,4 +1,5 @@
 import { Notification } from "@/lib/types";
+import { useNotificationsStore } from "@/stores/notifications-store";
 import Image from "next/image";
 import React from "react";
 import { Button } from "../ui/button";
@@ -9,6 +10,18 @@ interface NotificationCardProps {
 }
 
 const NotificationCard = ({ notification }: NotificationCardProps) => {
+  const { markAsRead, deleteNotification } = useNotificationsStore();
+
+  const handleMarkAsRead = async () => {
+    if (!notification.read) {
+      await markAsRead(notification.id);
+    }
+  };
+
+  const handleDelete = async () => {
+    await deleteNotification(notification.id);
+  };
+
   return (
     <div
       className={cn(
@@ -17,21 +30,38 @@ const NotificationCard = ({ notification }: NotificationCardProps) => {
           "bg-primary/30 border-primary/30 shadow-inner shadow-primary/30"
       )}
     >
-      <Image
-        src={notification.image}
-        alt={notification.title}
-        width={32}
-        height={32}
-      />
+      {notification.image && (
+        <Image
+          src={notification.image}
+          alt={notification.title}
+          width={32}
+          height={32}
+          className="rounded-full object-cover"
+        />
+      )}
       <div className="flex-1 flex flex-col gap-1">
         <p className="text-sm font-medium">{notification.title}</p>
         <p className="text-sm text-gray-500">{notification.body}</p>
+        {notification.created_at && (
+          <p className="text-xs text-gray-400">
+            {new Date(notification.created_at).toLocaleString()}
+          </p>
+        )}
       </div>
 
       {/* ACTION BUTTONS */}
       <div className="flex items-center gap-2">
-        <Button className="rounded-full">Mark as read</Button>
-        <Button variant="destructive" className="rounded-full">
+        {!notification.read && (
+          <Button className="rounded-full" onClick={handleMarkAsRead} size="sm">
+            Mark as read
+          </Button>
+        )}
+        <Button
+          variant="destructive"
+          className="rounded-full"
+          onClick={handleDelete}
+          size="sm"
+        >
           Delete
         </Button>
       </div>

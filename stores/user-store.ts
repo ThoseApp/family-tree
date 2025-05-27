@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist, StorageValue } from "zustand/middleware";
 import { User } from "@supabase/supabase-js";
 import { toast } from "sonner";
-import { createClient } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 
 interface UserStore {
   user: User | null;
@@ -60,7 +60,6 @@ export const useUserStore = create(
       ...initialState,
       login: async (email, password, nextRoute) => {
         set({ loading: true, success: null, error: null });
-        const supabase = createClient();
 
         try {
           const { data, error } = await supabase.auth.signInWithPassword({
@@ -85,7 +84,6 @@ export const useUserStore = create(
 
       loginWithGoogle: async (redirectTo) => {
         set({ loading: true, success: null, error: null });
-        const supabase = createClient();
 
         try {
           // Determine redirect URL
@@ -129,7 +127,6 @@ export const useUserStore = create(
           isAdmin = false,
         } = userData;
         set({ loading: true, success: null, error: null });
-        const supabase = createClient();
 
         try {
           // First register the user with Supabase Auth
@@ -189,7 +186,6 @@ export const useUserStore = create(
 
       logout: async () => {
         set({ loading: true, success: null, error: null });
-        const supabase = createClient();
 
         try {
           const { error } = await supabase.auth.signOut();
@@ -210,7 +206,6 @@ export const useUserStore = create(
 
       passwordReset: async (email) => {
         set({ loading: true, success: null, error: null });
-        const supabase = createClient();
 
         try {
           const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -234,7 +229,6 @@ export const useUserStore = create(
 
       resetPasswordWithToken: async (token, password) => {
         set({ loading: true, success: null, error: null });
-        const supabase = createClient();
 
         try {
           // For Supabase, the token is already handled in the URL parameters automatically
@@ -261,7 +255,6 @@ export const useUserStore = create(
 
       emailVerification: async (email) => {
         set({ loading: true, success: null, error: null });
-        const supabase = createClient();
 
         try {
           const { error } = await supabase.auth.resend({
@@ -286,7 +279,6 @@ export const useUserStore = create(
 
       verifyOtp: async (email, code) => {
         set({ loading: true, success: null, error: null });
-        const supabase = createClient();
 
         try {
           const { data, error } = await supabase.auth.verifyOtp({
@@ -315,7 +307,7 @@ export const useUserStore = create(
         }
 
         set({ loading: true, error: null });
-        const supabase = createClient();
+
         console.log("get profile with id", user.id);
 
         try {
@@ -349,7 +341,6 @@ export const useUserStore = create(
         }
 
         set({ loading: true, success: null, error: null });
-        const supabase = createClient();
 
         try {
           // Update user metadata in auth
@@ -404,7 +395,6 @@ export const useUserStore = create(
         }
 
         set({ loading: true, success: null, error: null });
-        const supabase = createClient();
 
         try {
           const { error } = await supabase.auth.updateUser({

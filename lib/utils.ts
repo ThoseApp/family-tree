@@ -67,3 +67,15 @@ export const ensureDateAsObject = (
   // Fallback if conversion fails or input is not recognized
   return { month: "Invalid", day: "Date" };
 };
+
+/**
+ * Formats a file size to a string with the format "B", "KB", "MB", etc.
+ * @param bytes - The file size in bytes
+ * @returns A string with the format "B", "KB", "MB", etc.
+ */
+export const formatFileSize = (bytes: number) => {
+  if (!bytes || bytes === 0) return "0 B";
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+};

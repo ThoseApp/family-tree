@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { createClient } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
 
 export interface HistoryItem {
@@ -42,7 +42,6 @@ export const useHistoryStore = create(
       ...initialState,
       fetchHistory: async () => {
         set({ isLoading: true, error: null });
-        const supabase = createClient();
 
         try {
           const { data, error } = await supabase
@@ -68,7 +67,6 @@ export const useHistoryStore = create(
 
       addHistoryItem: async (item) => {
         set({ isLoading: true, error: null });
-        const supabase = createClient();
 
         try {
           const { data, error } = await supabase
@@ -100,7 +98,6 @@ export const useHistoryStore = create(
 
       updateHistoryItem: async (id, updates) => {
         set({ isLoading: true, error: null });
-        const supabase = createClient();
 
         try {
           const { data, error } = await supabase
@@ -135,7 +132,6 @@ export const useHistoryStore = create(
 
       deleteHistoryItem: async (id) => {
         set({ isLoading: true, error: null });
-        const supabase = createClient();
 
         try {
           const { error } = await supabase

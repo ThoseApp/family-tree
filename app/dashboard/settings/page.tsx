@@ -35,7 +35,7 @@ import {
   FormMessage,
   FormLabel,
 } from "@/components/ui/form";
-import { createClient } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import {
   Popover,
   PopoverContent,
@@ -194,7 +194,7 @@ const SettingsPage = () => {
       }
 
       // Update profile with new avatar URL
-      const supabase = createClient();
+
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ image: avatarUrl })
