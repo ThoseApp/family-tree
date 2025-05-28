@@ -167,7 +167,7 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
               resource_id: newImage.id,
               user_id: ADMIN_ID,
               read: false,
-              // image: imageUrl,
+              image: imageUrl,
             };
 
             const { error: notificationError } = await supabase

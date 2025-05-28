@@ -210,10 +210,6 @@ export default function ProfilePage({ params }: { params: { slug: string } }) {
               </li>
             ))}
           </ul>
-          {/* Placeholder for the floating icon - adjust positioning as needed */}
-          <div className="absolute top-10 right-0 bg-green-600 text-white rounded-full h-10 w-10 flex items-center justify-center font-bold text-xl shadow-md">
-            B
-          </div>
         </section>
 
         {/* Gallery Section */}

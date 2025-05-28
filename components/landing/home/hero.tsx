@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -5,8 +7,22 @@ import { motion } from "framer-motion";
 import { fadeInUp, scaleIn, slideIn, staggerContainer } from "@/lib/animaitons";
 import { Separator } from "../../ui/separator";
 import { Box } from "lucide-react";
+import { useLandingPageContent } from "@/hooks/use-landing-page-content";
 
 const Hero = () => {
+  const { sections, loading, error } = useLandingPageContent();
+  const heroSection = sections.hero;
+
+  // Fallback content while loading or if error
+  const defaultContent = {
+    title: "THE MOSURO FAMILY",
+    subtitle: "The Story Behind the Mosuro Name",
+    description:
+      "Discover our rich family heritage, share precious moments, and stay connected with family members across the world.",
+  };
+
+  const content = heroSection || defaultContent;
+
   return (
     <div className="flex items-center justify-center text-background  ">
       {/* Optional overlay for better text visibility */}
@@ -28,7 +44,7 @@ const Hero = () => {
               className="text-4xl lg:text-5xl xl:text-6xl  sm:text-center font-bold relative"
               variants={fadeInUp}
             >
-              THE MOSURO FAMILY
+              {loading ? "THE MOSURO FAMILY" : content.title}
             </motion.div>
 
             <div className="flex -mt-5 items-center gap-x-6 justify-center">
@@ -38,14 +54,21 @@ const Hero = () => {
             </div>
 
             <div className="flex flex-col gap-y-2 text-2xl font-medium leading-8">
-              {/* <motion.p className=" sm:text-center " variants={slideIn}>
-                This Story Begins in 1892,
-              </motion.p> */}
-
               <motion.p className=" sm:text-center " variants={slideIn}>
-                The Story Behind the Mosuro Name
+                {loading
+                  ? "The Story Behind the Mosuro Name"
+                  : content.subtitle}
               </motion.p>
             </div>
+
+            {content.description && (
+              <motion.p
+                className="text-lg sm:text-center max-w-4xl mx-auto"
+                variants={fadeInUp}
+              >
+                {content.description}
+              </motion.p>
+            )}
 
             <motion.div
               className="flex md:items-center md:justify-center flex-row flex-wrap gap-2 md:gap-4"
