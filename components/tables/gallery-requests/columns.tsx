@@ -8,6 +8,49 @@ import { cn, formatFileSize } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 import { getUserProfile } from "@/lib/user";
+import { useEffect, useState } from "react";
+import { UserProfile } from "@/lib/types";
+
+// Component to handle async user profile fetching
+const UploaderCell = ({ userId }: { userId: string }) => {
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const profile = await getUserProfile(userId);
+        setUserProfile(profile);
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (userId) {
+      fetchProfile();
+    } else {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  if (loading) {
+    return (
+      <p className="text-sm text-left text-muted-foreground">Loading...</p>
+    );
+  }
+
+  if (!userProfile) {
+    return <p className="text-sm text-left text-muted-foreground">Unknown</p>;
+  }
+
+  return (
+    <p className="text-sm text-left">
+      {userProfile.first_name} {userProfile.last_name}
+    </p>
+  );
+};
 
 export const columns: ColumnDef<GalleryType>[] = [
   {
@@ -40,12 +83,17 @@ export const columns: ColumnDef<GalleryType>[] = [
   },
 
   {
-    id: "name",
+    id: "caption",
     header: "Caption",
+    accessorKey: "caption",
     cell({ row }) {
       const gallery = row.original;
 
-      return <p className="text-sm text-left ">{gallery.caption}</p>;
+      return (
+        <p className="text-sm text-left ">
+          {gallery.caption || gallery.file_name || "Untitled"}
+        </p>
+      );
     },
   },
 
@@ -102,14 +150,9 @@ export const columns: ColumnDef<GalleryType>[] = [
     id: "uploader",
     header: "Uploader",
     accessorKey: "uploader",
-    cell: async ({ row }) => {
+    cell: ({ row }) => {
       const gallery = row.original;
-      const userProfile = await getUserProfile(gallery.user_id);
-      return (
-        <p className="text-sm text-left ">
-          {userProfile?.first_name} {userProfile?.last_name}
-        </p>
-      );
+      return <UploaderCell userId={gallery.user_id} />;
     },
   },
 
@@ -120,7 +163,8 @@ export const columns: ColumnDef<GalleryType>[] = [
       const gallery = row.original;
 
       // Access custom props from table.options
-      const { onApprove, onDecline, isProcessing } = table.options as any;
+      const { onApprove, onDecline, processingItems } = table.options as any;
+      const isProcessing = processingItems?.has(gallery.id) || false;
 
       return (
         <div className="flex items-center gap-2">

@@ -18,7 +18,9 @@ const GalleryRequestsPage = () => {
   const { user } = useUserStore();
   const { isLoading } = useGalleryStore();
   const [pendingGalleries, setPendingGalleries] = useState<GalleryType[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingItems, setProcessingItems] = useState<Set<string>>(
+    new Set()
+  );
   const [selectedImage, setSelectedImage] = useState<GalleryType | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
@@ -111,7 +113,9 @@ const GalleryRequestsPage = () => {
       return;
     }
 
-    setIsProcessing(true);
+    // Set this item as processing
+    setProcessingItems((prev) => new Set(prev).add(galleryId));
+
     try {
       const { error } = await supabase
         .from("galleries")
@@ -131,7 +135,7 @@ const GalleryRequestsPage = () => {
         const notificationData = {
           title: "Gallery Request Approved",
           body: `Your gallery item "${
-            approvedGallery.caption || approvedGallery.file_name
+            approvedGallery.caption || approvedGallery.file_name || "Untitled"
           }" has been approved and is now visible to everyone.`,
           type: NotificationTypeEnum.gallery_approved,
           resource_id: galleryId,
@@ -140,7 +144,13 @@ const GalleryRequestsPage = () => {
           image: approvedGallery.url,
         };
 
-        await supabase.from("notifications").insert(notificationData);
+        const { error: notificationError } = await supabase
+          .from("notifications")
+          .insert(notificationData);
+
+        if (notificationError) {
+          console.warn("Failed to create notification:", notificationError);
+        }
       }
 
       // Remove from pending list
@@ -150,7 +160,12 @@ const GalleryRequestsPage = () => {
       console.error("Error approving gallery:", err);
       toast.error("Failed to approve gallery request");
     } finally {
-      setIsProcessing(false);
+      // Remove from processing
+      setProcessingItems((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(galleryId);
+        return newSet;
+      });
     }
   };
 
@@ -161,7 +176,9 @@ const GalleryRequestsPage = () => {
       return;
     }
 
-    setIsProcessing(true);
+    // Set this item as processing
+    setProcessingItems((prev) => new Set(prev).add(galleryId));
+
     try {
       // Find the gallery to get user info for notification
       const declinedGallery = pendingGalleries.find((g) => g.id === galleryId);
@@ -171,7 +188,7 @@ const GalleryRequestsPage = () => {
         const notificationData = {
           title: "Gallery Request Declined",
           body: `Your gallery item "${
-            declinedGallery.caption || declinedGallery.file_name
+            declinedGallery.caption || declinedGallery.file_name || "Untitled"
           }" has been declined. Please check if it meets our community guidelines.`,
           type: NotificationTypeEnum.gallery_declined,
           resource_id: galleryId,
@@ -180,7 +197,13 @@ const GalleryRequestsPage = () => {
           image: declinedGallery.url,
         };
 
-        await supabase.from("notifications").insert(notificationData);
+        const { error: notificationError } = await supabase
+          .from("notifications")
+          .insert(notificationData);
+
+        if (notificationError) {
+          console.warn("Failed to create notification:", notificationError);
+        }
 
         // Delete the gallery from storage
         if (declinedGallery.file_name) {
@@ -209,7 +232,12 @@ const GalleryRequestsPage = () => {
       console.error("Error declining gallery:", err);
       toast.error("Failed to decline gallery request");
     } finally {
-      setIsProcessing(false);
+      // Remove from processing
+      setProcessingItems((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(galleryId);
+        return newSet;
+      });
     }
   };
 
@@ -307,7 +335,7 @@ const GalleryRequestsPage = () => {
                 onUserClick={handlePreviewImage}
                 onApprove={handleApprove}
                 onDecline={handleDecline}
-                isProcessing={isProcessing}
+                processingItems={processingItems}
               />
             </CardContent>
           </Card>

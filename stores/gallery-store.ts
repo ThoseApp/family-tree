@@ -23,7 +23,7 @@ interface GalleryState {
 }
 
 interface GalleryActions {
-  fecthGallery: () => Promise<void>;
+  fetchGallery: () => Promise<void>;
   fetchUserGallery: (userId: string) => Promise<void>;
   uploadToGallery: (
     file: File,
@@ -50,7 +50,7 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
   (set, get) => ({
     ...initialState,
 
-    fecthGallery: async () => {
+    fetchGallery: async () => {
       set({ isLoading: true, error: null });
 
       try {
