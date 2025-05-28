@@ -4,6 +4,7 @@ export enum BucketFolderEnum {
   notice_boards = "notice_boards",
   avatars = "avatars",
   EVENT_IMAGES = "event_images",
+  landing_page = "landing_page",
 
   // TODO: ADD MORE FOLDER NAMES
 }

@@ -136,3 +136,31 @@ export interface Album {
   coverImageUrl?: string;
   mediaItems: MediaItem[];
 }
+
+export interface LandingPageSection {
+  id?: string;
+  section_type:
+    | "hero"
+    | "gallery_preview"
+    | "upcoming_events"
+    | "history"
+    | "family_members"
+    | "family_tree";
+  title: string;
+  subtitle?: string;
+  description?: string;
+  image_url?: string;
+  content?: any; // JSON content for flexible data
+  is_published: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface LandingPageContent {
+  hero: LandingPageSection;
+  gallery_preview: LandingPageSection;
+  upcoming_events: LandingPageSection;
+  history: LandingPageSection;
+  family_members: LandingPageSection;
+  family_tree: LandingPageSection;
+}
