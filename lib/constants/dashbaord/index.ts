@@ -40,11 +40,7 @@ export const navLinksTopSection: NavLink[] = [
     href: "/dashboard/notice-board",
     icon: ClipboardList,
   },
-  {
-    label: "Family Members",
-    href: "/dashboard/family-members",
-    icon: UsersIcon,
-  },
+
   {
     label: "Events",
     href: "/dashboard/events",

@@ -1,3 +1,5 @@
+"use client";
+
 import DashboardOverviewCard from "@/components/cards/dashboard-overview-card";
 import UpcomingEventCard from "@/components/cards/upcoming-event-card";
 import {
@@ -13,20 +15,142 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 import { cn } from "@/lib/utils";
 import Image from "next/image";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase/client";
+import { GalleryStatusEnum } from "@/lib/constants/enums";
+import { useEventsStore } from "@/stores/events-store";
+import { toast } from "sonner";
+import { LoadingIcon } from "@/components/loading-icon";
 
 const DashboardPage = () => {
+  const router = useRouter();
+  const { events, fetchUpcomingEvents } = useEventsStore();
+
+  // State for dashboard data
+  const [galleryRequests, setGalleryRequests] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [featuredEvent, setFeaturedEvent] = useState<any>(null);
+
   // Placeholder data - replace with actual data fetching
   const pendingMembers = 4;
-  const galleryRequests = 2;
   const landingPageImageUrl = dummyProfileImage; // Replace with actual image path
-  const eventHighlightImageUrl = dummyProfileImage; // Replace with actual image path
+
+  // Fetch dashboard data
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch pending gallery requests count
+        const { count, error: galleryError } = await supabase
+          .from("galleries")
+          .select("*", { count: "exact", head: true })
+          .eq("status", GalleryStatusEnum.pending);
+
+        if (galleryError) {
+          console.error("Error fetching gallery requests:", galleryError);
+        } else {
+          setGalleryRequests(count || 0);
+        }
+
+        // Fetch upcoming events
+        const upcomingEvents = await fetchUpcomingEvents();
+        if (upcomingEvents && upcomingEvents.length > 0) {
+          setFeaturedEvent(upcomingEvents[0]); // Get the next upcoming event
+        }
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [fetchUpcomingEvents]);
+
+  // Navigation handlers
+  const handleViewGalleryRequests = () => {
+    router.push("/admin/gallery-requests");
+  };
+
+  const handleAcceptGalleryRequests = async () => {
+    try {
+      // Get pending galleries and approve them in bulk
+      const { data: pendingGalleries, error } = await supabase
+        .from("galleries")
+        .select("*")
+        .eq("status", GalleryStatusEnum.pending)
+        .limit(5); // Approve up to 5 at a time
+
+      if (error) {
+        throw error;
+      }
+
+      if (pendingGalleries && pendingGalleries.length > 0) {
+        const { error: updateError } = await supabase
+          .from("galleries")
+          .update({
+            status: GalleryStatusEnum.approved,
+            updated_at: new Date().toISOString(),
+          })
+          .in(
+            "id",
+            pendingGalleries.map((g) => g.id)
+          );
+
+        if (updateError) {
+          throw updateError;
+        }
+
+        toast.success(
+          `Approved ${pendingGalleries.length} gallery request${
+            pendingGalleries.length === 1 ? "" : "s"
+          }`
+        );
+
+        // Refresh the count
+        const { count } = await supabase
+          .from("galleries")
+          .select("*", { count: "exact", head: true })
+          .eq("status", GalleryStatusEnum.pending);
+
+        setGalleryRequests(count || 0);
+      } else {
+        toast.info("No pending gallery requests to approve");
+      }
+    } catch (error) {
+      console.error("Error approving gallery requests:", error);
+      toast.error("Failed to approve gallery requests");
+    }
+  };
+
+  const handleEditLandingPage = () => {
+    router.push("/admin/manage-landing-page");
+  };
+
+  const handleViewAllEvents = () => {
+    router.push("/admin/events");
+  };
+
+  const handleAddEvent = () => {
+    router.push("/admin/events");
+  };
+
+  const handleAddMember = () => {
+    router.push("/admin/family-members");
+  };
 
   return (
     <div className="flex flex-col gap-y-8 lg:gap-y-12">
       {/* HEADER SECTION */}
       <div className="flex md:items-center md:flex-row flex-col md:justify-between gap-y-4">
         <h1 className="text-2xl font-semibold">Welcome back, Admin</h1>
+        {isLoading && (
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <LoadingIcon className="size-4" />
+            <span className="text-sm">Loading dashboard data...</span>
+          </div>
+        )}
       </div>
 
       {/* Dashboard Grid */}
@@ -47,12 +171,18 @@ const DashboardPage = () => {
                 variant="outline"
                 className="w-full rounded-full"
                 size="lg"
+                onClick={() => router.push("/admin/member-requests")}
               >
                 View All
               </Button>
               <Button
                 className="w-full rounded-full bg-foreground text-background hover:bg-foreground/80"
                 size="lg"
+                onClick={() =>
+                  toast.info(
+                    "Member request functionality will be implemented soon"
+                  )
+                }
               >
                 Accept
               </Button>
@@ -68,7 +198,13 @@ const DashboardPage = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="flex items-center justify-between">
-            <span className="text-6xl font-bold">{galleryRequests}</span>
+            <span className="text-6xl font-bold">
+              {isLoading ? (
+                <LoadingIcon className="size-16" />
+              ) : (
+                galleryRequests
+              )}
+            </span>
           </CardContent>
 
           <CardFooter>
@@ -77,12 +213,16 @@ const DashboardPage = () => {
                 variant="outline"
                 className="w-full rounded-full"
                 size="lg"
+                onClick={handleViewGalleryRequests}
+                disabled={isLoading}
               >
                 View All
               </Button>
               <Button
                 className="w-full rounded-full bg-foreground text-background hover:bg-foreground/80"
                 size="lg"
+                onClick={handleAcceptGalleryRequests}
+                disabled={isLoading || galleryRequests === 0}
               >
                 Accept
               </Button>
@@ -113,6 +253,7 @@ const DashboardPage = () => {
               <Button
                 className="w-full rounded-full bg-foreground text-background hover:bg-foreground/80"
                 size="lg"
+                onClick={handleEditLandingPage}
               >
                 Edit
               </Button>
@@ -128,18 +269,45 @@ const DashboardPage = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div>
-              <p className="font-semibold">Smith Family Reunion</p>
-              <p className="text-sm text-muted-foreground">April 15</p>
-            </div>
-            <div className="relative aspect-video">
-              <Image
-                src={eventHighlightImageUrl}
-                alt="Event Highlight"
-                fill
-                className="object-cover rounded-xl"
-              />
-            </div>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <LoadingIcon className="size-8" />
+              </div>
+            ) : featuredEvent ? (
+              <>
+                <div>
+                  <p className="font-semibold">{featuredEvent.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(featuredEvent.date).toLocaleDateString()}
+                  </p>
+                </div>
+                <div className="relative aspect-video">
+                  <Image
+                    src={featuredEvent.image || dummyProfileImage}
+                    alt="Event Highlight"
+                    fill
+                    className="object-cover rounded-xl"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <p className="font-semibold">No upcoming events</p>
+                  <p className="text-sm text-muted-foreground">
+                    Create an event to see it here
+                  </p>
+                </div>
+                <div className="relative aspect-video">
+                  <Image
+                    src={dummyProfileImage}
+                    alt="Event Placeholder"
+                    fill
+                    className="object-cover rounded-xl opacity-50"
+                  />
+                </div>
+              </>
+            )}
           </CardContent>
           <CardFooter>
             <div className="flex items-center gap-4 w-full justify-end">
@@ -147,6 +315,7 @@ const DashboardPage = () => {
                 variant="outline"
                 className="w-full rounded-full"
                 size="lg"
+                onClick={handleViewAllEvents}
               >
                 View All
               </Button>
@@ -157,10 +326,20 @@ const DashboardPage = () => {
 
       {/* Action Buttons */}
       <div className="flex items-center gap-4">
-        <Button variant="outline" className=" rounded-full" size="lg">
+        <Button
+          variant="outline"
+          className="rounded-full"
+          size="lg"
+          onClick={handleAddEvent}
+        >
           Add Event
         </Button>
-        <Button variant="outline" className=" rounded-full" size="lg">
+        <Button
+          variant="outline"
+          className="rounded-full"
+          size="lg"
+          onClick={handleAddMember}
+        >
           Add Member
         </Button>
       </div>

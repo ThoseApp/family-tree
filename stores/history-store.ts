@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 export interface HistoryItem {
   id: string;
+  user_id: string;
   year: string;
   title: string;
   description: string;
@@ -14,12 +15,14 @@ export interface HistoryItem {
 
 interface HistoryState {
   historyItems: HistoryItem[];
+  userHistoryItems: HistoryItem[];
   isLoading: boolean;
   error: string | null;
 }
 
 interface HistoryActions {
   fetchHistory: () => Promise<HistoryItem[]>;
+  fetchUserHistory: (userId: string) => Promise<HistoryItem[]>;
   addHistoryItem: (
     item: Omit<HistoryItem, "id">
   ) => Promise<HistoryItem | null>;
@@ -32,6 +35,7 @@ interface HistoryActions {
 
 const initialState: HistoryState = {
   historyItems: [],
+  userHistoryItems: [],
   isLoading: false,
   error: null,
 };
@@ -64,6 +68,31 @@ export const useHistoryStore = create(
           return [];
         }
       },
+      fetchUserHistory: async (userId: string) => {
+        set({ isLoading: true, error: null });
+
+        try {
+          const { data, error } = await supabase
+            .from("history")
+            .select("*")
+            .eq("user_id", userId)
+            .order("year", { ascending: false });
+
+          if (error) throw error;
+
+          const userHistoryItems = data as HistoryItem[];
+          set({ userHistoryItems, isLoading: false });
+          return userHistoryItems;
+        } catch (err: any) {
+          const errorMessage = err?.message || "Failed to fetch user history";
+          set({
+            error: errorMessage,
+            isLoading: false,
+          });
+          toast.error(errorMessage);
+          return [];
+        }
+      },
 
       addHistoryItem: async (item) => {
         set({ isLoading: true, error: null });
@@ -79,7 +108,7 @@ export const useHistoryStore = create(
 
           const newItem = data as HistoryItem;
           set((state) => ({
-            historyItems: [...state.historyItems, newItem],
+            userHistoryItems: [...state.userHistoryItems, newItem],
             isLoading: false,
           }));
 
@@ -111,7 +140,7 @@ export const useHistoryStore = create(
 
           const updatedItem = data as HistoryItem;
           set((state) => ({
-            historyItems: state.historyItems.map((item) =>
+            userHistoryItems: state.userHistoryItems.map((item) =>
               item.id === id ? updatedItem : item
             ),
             isLoading: false,
@@ -142,7 +171,9 @@ export const useHistoryStore = create(
           if (error) throw error;
 
           set((state) => ({
-            historyItems: state.historyItems.filter((item) => item.id !== id),
+            userHistoryItems: state.userHistoryItems.filter(
+              (item) => item.id !== id
+            ),
             isLoading: false,
           }));
 

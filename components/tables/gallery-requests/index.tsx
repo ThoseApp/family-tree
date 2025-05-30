@@ -8,7 +8,7 @@ interface GalleryRequestsTableProps {
   onUserClick?: (gallery: GalleryType) => void;
   onApprove?: (galleryId: string) => Promise<void>;
   onDecline?: (galleryId: string) => Promise<void>;
-  isProcessing?: boolean;
+  processingItems?: Set<string>;
 }
 
 const GalleryRequestsTable = ({
@@ -16,7 +16,7 @@ const GalleryRequestsTable = ({
   onUserClick,
   onApprove,
   onDecline,
-  isProcessing,
+  processingItems,
 }: GalleryRequestsTableProps) => {
   return (
     <DataTable
@@ -25,7 +25,7 @@ const GalleryRequestsTable = ({
       onRowClick={onUserClick}
       onApprove={onApprove}
       onDecline={onDecline}
-      isProcessing={isProcessing}
+      processingItems={processingItems}
       showSearchInput
       // exportData
       // statusFilter

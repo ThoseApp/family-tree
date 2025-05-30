@@ -23,7 +23,7 @@ interface GalleryState {
 }
 
 interface GalleryActions {
-  fecthGallery: () => Promise<void>;
+  fetchGallery: () => Promise<void>;
   fetchUserGallery: (userId: string) => Promise<void>;
   uploadToGallery: (
     file: File,
@@ -50,7 +50,7 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
   (set, get) => ({
     ...initialState,
 
-    fecthGallery: async () => {
+    fetchGallery: async () => {
       set({ isLoading: true, error: null });
 
       try {
@@ -128,17 +128,6 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
 
         const imageUrl = urlData.publicUrl;
 
-        // Log successful upload info for debugging
-        console.log(
-          "Image uploaded successfully:",
-          {
-            path: file_name,
-            url: imageUrl,
-            size: file.size,
-          },
-          ADMIN_ID
-        );
-
         const now = new Date().toISOString();
 
         // Insert image data into the galleries table
@@ -178,7 +167,7 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
               resource_id: newImage.id,
               user_id: ADMIN_ID,
               read: false,
-              // image: imageUrl,
+              image: imageUrl,
             };
 
             const { error: notificationError } = await supabase
@@ -198,13 +187,6 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
             // Don't throw here as the main gallery upload was successful
           }
         }
-
-        // Update local state
-        set((state) => ({
-          userGallery: [newImage, ...state.userGallery],
-          gallery: [newImage, ...state.gallery],
-          isLoading: false,
-        }));
       } catch (err: any) {
         console.error("Error uploading image:", err);
         set({

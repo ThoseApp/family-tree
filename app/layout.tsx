@@ -1,8 +1,7 @@
 "use client";
 
-import { Inter, Montserrat } from "next/font/google";
+import { Montserrat } from "next/font/google";
 import "./globals.css";
-import { Toaster as UIToaster } from "@/components/ui/toaster";
 import { Toaster } from "sonner";
 import { ConnectionStatusBanner } from "@/components/connection-status-banner";
 import { useEffect } from "react";
