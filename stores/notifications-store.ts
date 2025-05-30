@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 import { NotificationTypeEnum } from "@/lib/constants/enums";
+import { getNotificationRoute } from "@/lib/utils/notification-router";
 
 interface NotificationsState {
   notifications: Notification[];
@@ -24,6 +25,11 @@ interface NotificationsActions {
   deleteNotification: (notificationId: string) => Promise<void>;
   subscribeToNotifications: (userId: string) => void;
   unsubscribeFromNotifications: () => void;
+  navigateToNotification: (
+    notification: Notification,
+    isAdmin: boolean,
+    router: any
+  ) => Promise<void>;
 }
 
 const initialState: NotificationsState = {
@@ -179,9 +185,26 @@ export const useNotificationsStore = create(
               // Add to local state
               get().addNotification(newNotification);
 
-              // Show toast notification
+              // Show clickable toast notification with navigation
               toast.success(newNotification.title, {
                 description: newNotification.body,
+                action: newNotification.type
+                  ? {
+                      label: "View",
+                      onClick: () => {
+                        // We'll handle navigation in the component that has access to router
+                        // For now, just store the notification to navigate to
+                        (window as any).pendingNotificationNavigation =
+                          newNotification;
+                        // Dispatch a custom event that components can listen to
+                        window.dispatchEvent(
+                          new CustomEvent("navigateToNotification", {
+                            detail: newNotification,
+                          })
+                        );
+                      },
+                    }
+                  : undefined,
               });
             }
           )
@@ -237,6 +260,26 @@ export const useNotificationsStore = create(
         if (realtimeChannel) {
           supabase.removeChannel(realtimeChannel);
           set({ realtimeChannel: null });
+        }
+      },
+
+      navigateToNotification: async (
+        notification: Notification,
+        isAdmin: boolean,
+        router: any
+      ) => {
+        try {
+          // Mark as read when navigating
+          if (!notification.read) {
+            await get().markAsRead(notification.id);
+          }
+
+          // Navigate to the appropriate route
+          const route = getNotificationRoute(notification, { isAdmin });
+          router.push(route);
+        } catch (error) {
+          console.error("Error navigating to notification:", error);
+          toast.error("Failed to navigate to notification");
         }
       },
     }),

@@ -68,6 +68,7 @@ export interface Notification {
   body: string;
   read: boolean;
   image?: string;
+  user_id?: string;
   created_at?: string;
   updated_at?: string;
 }
