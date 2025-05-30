@@ -7,9 +7,9 @@ import { DataTable } from "@/components/ui/data-table";
 
 interface GalleryTableProps {
   data: GalleryType[];
-  onUserClick?: (user: GalleryType) => void;
+  onUserClick?: (gallery: GalleryType) => void;
   deleteImage?: (id: string) => Promise<void>;
-  previewImage?: (image: GalleryType) => void;
+  previewImage?: (gallery: GalleryType) => void;
 }
 
 const GalleryTable = ({
@@ -25,7 +25,7 @@ const GalleryTable = ({
       onRowClick={onUserClick}
       deleteImage={deleteImage}
       previewImage={previewImage}
-      // showSearchInput
+      showSearchInput={true}
       // exportData
       // statusFilter
       // dateFilter

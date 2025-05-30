@@ -1,17 +1,34 @@
+"use client";
+
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { fadeInUp } from "@/lib/animaitons";
 import ProfileHistoryCard from "@/components/cards/profile-history-card";
 import { historyCards } from "@/lib/constants/landing";
 import { Button } from "@/components/ui/button";
+import { useLandingPageContent } from "@/hooks/use-landing-page-content";
 
 const HistorySection = () => {
+  const { sections, loading, error } = useLandingPageContent();
+  const historySection = sections.history;
+
+  // Fallback content
+  const defaultContent = {
+    title: "Every Person Makes His Own History",
+    subtitle: "The Legacy of the Mosuro Family",
+    description:
+      "Explore the rich heritage and stories that shaped our family through generations.",
+    image_url: "/images/landing/makes_history.webp",
+  };
+
+  const content = historySection || defaultContent;
+
   return (
     <section className="relative">
       {/* Background Image Section */}
       <div className="relative h-[585px] w-full z-0">
         <Image
-          src="/images/landing/makes_history.webp"
+          src={content.image_url || defaultContent.image_url}
           alt="Family Background"
           fill
           className="object-cover"
@@ -21,9 +38,21 @@ const HistorySection = () => {
 
         {/* Centered Heading */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <h2 className="text-4xl md:text-6xl font-bold text-center text-background px-4">
-            Every Person Makes His Own History
-          </h2>
+          <div className="text-center px-4">
+            <h2 className="text-4xl md:text-6xl font-bold text-background mb-4">
+              {loading ? "Every Person Makes His Own History" : content.title}
+            </h2>
+            {content.subtitle && (
+              <p className="text-xl md:text-2xl text-background/90 font-medium">
+                {content.subtitle}
+              </p>
+            )}
+            {content.description && (
+              <p className="text-lg text-background/80 max-w-4xl mx-auto mt-4">
+                {content.description}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 

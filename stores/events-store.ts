@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { toast } from "sonner";
-import { createClient } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { Event } from "@/lib/types";
 // import { v4 as uuidv4 } from "uuid";
 
@@ -29,7 +29,6 @@ export const useEventsStore = create<EventsState>((set, get) => ({
 
   fetchEvents: async () => {
     set({ loading: true, error: null });
-    const supabase = createClient();
 
     try {
       const { data, error } = await supabase
@@ -52,7 +51,6 @@ export const useEventsStore = create<EventsState>((set, get) => ({
 
   fetchUpcomingEvents: async () => {
     set({ loading: true, error: null });
-    const supabase = createClient();
 
     try {
       const { data, error } = await supabase
@@ -76,7 +74,6 @@ export const useEventsStore = create<EventsState>((set, get) => ({
 
   fetchUserEvents: async (user_id: string) => {
     set({ loading: true, error: null });
-    const supabase = createClient();
 
     try {
       const { data, error } = await supabase
@@ -100,7 +97,6 @@ export const useEventsStore = create<EventsState>((set, get) => ({
 
   createEvent: async (event) => {
     set({ loading: true, error: null });
-    const supabase = createClient();
 
     try {
       // Format date for consistency if it's not already formatted
@@ -135,7 +131,6 @@ export const useEventsStore = create<EventsState>((set, get) => ({
 
   updateEvent: async (id, eventUpdates) => {
     set({ loading: true, error: null });
-    const supabase = createClient();
 
     try {
       const { data, error } = await supabase
@@ -167,7 +162,6 @@ export const useEventsStore = create<EventsState>((set, get) => ({
 
   deleteEvent: async (id) => {
     set({ loading: true, error: null });
-    const supabase = createClient();
 
     try {
       const { error } = await supabase.from("events").delete().eq("id", id);

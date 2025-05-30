@@ -85,9 +85,13 @@ export function DataTable<TData, TValue>({
         {showSearchInput && (
           <div className="flex flex-1 items-center py-4 ">
             <Input
-              placeholder="Search..."
-              value={table.getState().globalFilter || ""}
-              onChange={(event) => table.setGlobalFilter(event.target.value)}
+              placeholder="Search by caption..."
+              value={
+                (table.getColumn("caption")?.getFilterValue() as string) ?? ""
+              }
+              onChange={(event) =>
+                table.getColumn("caption")?.setFilterValue(event.target.value)
+              }
             />
           </div>
         )}

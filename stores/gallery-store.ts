@@ -1,9 +1,13 @@
 import { create } from "zustand";
-import { createClient } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 import { uploadImage, uploadVideo } from "@/lib/file-upload";
-import { BucketFolderEnum } from "@/lib/constants/enums";
+import {
+  BucketFolderEnum,
+  GalleryStatusEnum,
+  NotificationTypeEnum,
+} from "@/lib/constants/enums";
 import { BUCKET_NAME } from "@/lib/constants";
 import { GalleryType } from "@/lib/types";
 
@@ -19,7 +23,7 @@ interface GalleryState {
 }
 
 interface GalleryActions {
-  fecthGallery: () => Promise<void>;
+  fetchGallery: () => Promise<void>;
   fetchUserGallery: (userId: string) => Promise<void>;
   uploadToGallery: (
     file: File,
@@ -46,15 +50,15 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
   (set, get) => ({
     ...initialState,
 
-    fecthGallery: async () => {
+    fetchGallery: async () => {
       set({ isLoading: true, error: null });
-      const supabase = createClient();
 
       try {
         // Get gallery from the gallery table
         const { data, error } = await supabase
           .from("galleries")
           .select("*")
+          .eq("status", GalleryStatusEnum.approved)
           .order("updated_at", { ascending: false });
 
         if (error) throw error;
@@ -72,13 +76,13 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
 
     fetchUserGallery: async (userId) => {
       set({ isLoading: true, error: null });
-      const supabase = createClient();
 
       try {
         const { data, error } = await supabase
           .from("galleries")
           .select("*")
           .eq("user_id", userId)
+          .eq("status", GalleryStatusEnum.approved)
           .order("updated_at", { ascending: false });
 
         if (error) throw error;
@@ -95,7 +99,6 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
 
     uploadToGallery: async (file, caption, userId) => {
       set({ isLoading: true, error: null });
-      const supabase = createClient();
 
       try {
         // Create a unique file_name
@@ -125,13 +128,6 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
 
         const imageUrl = urlData.publicUrl;
 
-        // Log successful upload info for debugging
-        console.log("Image uploaded successfully:", {
-          path: file_name,
-          url: imageUrl,
-          size: file.size,
-        });
-
         const now = new Date().toISOString();
 
         // Insert image data into the galleries table
@@ -145,10 +141,11 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
           user_id: userId || "",
           file_name: file_name,
           file_size: file.size,
-          approved: false,
+          status:
+            userId === ADMIN_ID
+              ? GalleryStatusEnum.approved
+              : GalleryStatusEnum.pending,
         };
-
-        // TODO: Send notification (gallery request) to admin
 
         const { error: insertError } = await supabase
           .from("galleries")
@@ -156,12 +153,40 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
 
         if (insertError) throw insertError;
 
-        // Update local state
-        set((state) => ({
-          userGallery: [newImage, ...state.userGallery],
-          gallery: [newImage, ...state.gallery],
-          isLoading: false,
-        }));
+        console.log("[ADMIN_ID]", ADMIN_ID);
+
+        if (userId !== ADMIN_ID) {
+          // Create notification for admin about the gallery request
+          try {
+            const notificationData = {
+              title: "New Gallery Request",
+              body: `A new gallery item "${
+                caption || file.name
+              }" has been uploaded and is pending approval.`,
+              type: NotificationTypeEnum.gallery_request,
+              resource_id: newImage.id,
+              user_id: ADMIN_ID,
+              read: false,
+              image: imageUrl,
+            };
+
+            const { error: notificationError } = await supabase
+              .from("notifications")
+              .insert(notificationData);
+
+            if (notificationError) {
+              console.error("Error creating notification:", notificationError);
+              // Don't throw here as the main gallery upload was successful
+            } else {
+              console.log(
+                "Notification created for admin about gallery request"
+              );
+            }
+          } catch (notificationErr) {
+            console.error("Failed to create notification:", notificationErr);
+            // Don't throw here as the main gallery upload was successful
+          }
+        }
       } catch (err: any) {
         console.error("Error uploading image:", err);
         set({
@@ -174,7 +199,6 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
 
     deleteFromGallery: async (imageId) => {
       set({ isLoading: true, error: null });
-      const supabase = createClient();
 
       try {
         // Get current user
@@ -231,7 +255,6 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
 
     updateGalleryDetails: async (imageId, updates) => {
       set({ isLoading: true, error: null });
-      const supabase = createClient();
 
       try {
         // Get current user

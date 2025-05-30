@@ -4,7 +4,7 @@ import { GalleryType } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 
 import Image from "next/image";
-import { cn } from "@/lib/utils";
+import { cn, formatFileSize } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2, Eye } from "lucide-react";
 
@@ -21,13 +21,13 @@ export const columns: ColumnDef<GalleryType>[] = [
     id: "image",
     header: "Image",
     cell({ row }) {
-      const event = row.original;
+      const gallery = row.original;
 
       return (
         <div className="relative w-[100px] h-[100px] overflow-hidden rounded-md cursor-pointer">
           <Image
-            src={event.url}
-            alt={event.caption || "Gallery Image"}
+            src={gallery.url}
+            alt={gallery.caption || "Gallery Image"}
             width={100}
             height={100}
             className="rounded-md object-cover"
@@ -39,33 +39,27 @@ export const columns: ColumnDef<GalleryType>[] = [
   },
 
   {
-    id: "name",
+    id: "caption",
     header: "Name",
     cell({ row }) {
-      const event = row.original;
+      const gallery = row.original;
 
-      return <p className="text-sm text-left ">{event.caption}</p>;
+      return <p className="text-sm text-left ">{gallery.caption}</p>;
     },
   },
 
   {
     id: "fileSize",
     header: "File Size",
-
-    accessorKey: "fileSize",
+    accessorKey: "file_size",
     cell(props) {
       const { row } = props;
-      const event = row.original;
-
-      // Format file size to KB or MB
-      const formatFileSize = (bytes: number) => {
-        if (bytes < 1024) return bytes + " B";
-        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-        return (bytes / (1024 * 1024)).toFixed(1) + " MB";
-      };
+      const gallery = row.original;
 
       return (
-        <p className="text-sm text-left ">{formatFileSize(event.file_size)}</p>
+        <p className="text-sm text-left ">
+          {formatFileSize(gallery.file_size)}
+        </p>
       );
     },
   },
@@ -73,34 +67,44 @@ export const columns: ColumnDef<GalleryType>[] = [
   {
     id: "uploadedDate",
     header: "Uploaded Date",
-    accessorKey: "uploadDate",
+    accessorKey: "uploaded_at",
     cell: ({ row }) => {
-      const event = row.original;
-      return (
-        <div className={cn("text-left text-xs md:text-sm ")}>
-          {event.uploaded_at}
-        </div>
-      );
+      const gallery = row.original;
+      const dateString = gallery.uploaded_at || gallery.created_at;
+      try {
+        if (!dateString) return "N/A";
+        return new Date(dateString).toLocaleDateString();
+      } catch {
+        return "Invalid date";
+      }
     },
   },
 
   {
     id: "uploadedTime",
     header: "Uploaded Time",
-    accessorKey: "uploadTime",
+    accessorKey: "uploaded_at",
     cell: ({ row }) => {
-      const event = row.original;
-      return <p className="text-sm text-left ">{event.uploaded_at}</p>;
+      const gallery = row.original;
+      const dateString = gallery.uploaded_at || gallery.created_at;
+      try {
+        if (!dateString) return "N/A";
+        return new Date(dateString).toLocaleTimeString();
+      } catch {
+        return "Invalid time";
+      }
     },
   },
 
   {
     id: "uploader",
     header: "Uploader",
-    accessorKey: "uploader",
+    accessorKey: "user_id",
     cell: ({ row }) => {
-      const event = row.original;
-      return <p className="text-sm text-left ">{event.user_id}</p>;
+      const gallery = row.original;
+      // For now, show "You" since this is typically the user's own gallery
+      // In the future, this could be enhanced to show actual user names
+      return <p className="text-sm text-left ">You</p>;
     },
   },
 
@@ -108,7 +112,7 @@ export const columns: ColumnDef<GalleryType>[] = [
     id: "action",
     header: "Action",
     cell: ({ row, table }) => {
-      const event = row.original;
+      const gallery = row.original;
 
       // Access custom props from table.options
       const { deleteImage, previewImage } = table.options as any;
@@ -121,7 +125,7 @@ export const columns: ColumnDef<GalleryType>[] = [
             className="rounded-full"
             onClick={(e) => {
               e.stopPropagation();
-              if (deleteImage) deleteImage(event.id);
+              if (deleteImage) deleteImage(gallery.id);
             }}
           >
             <Trash2 className="size-4" />
@@ -132,7 +136,7 @@ export const columns: ColumnDef<GalleryType>[] = [
             className="rounded-full flex justify-end"
             onClick={(e) => {
               e.stopPropagation();
-              if (previewImage) previewImage(event);
+              if (previewImage) previewImage(gallery);
             }}
           >
             <Eye className="size-4 mr-2" />

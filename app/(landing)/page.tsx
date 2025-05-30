@@ -14,8 +14,29 @@ import FrameWrapper from "@/components/wrappers/frame-wrapper";
 import GalleryGrid from "@/components/gallery";
 import { galleryImages } from "@/lib/constants/landing";
 import { MoveRight } from "lucide-react";
+import { useLandingPageContent } from "@/hooks/use-landing-page-content";
 
 export default function Home() {
+  const { sections, loading, error } = useLandingPageContent();
+  const familyTreeSection = sections.family_tree;
+  const gallerySection = sections.gallery_preview;
+
+  // Fallback content
+  const defaultFamilyTree = {
+    title: "Mosuro's Family Tree",
+    description:
+      "The informality of family life is a blessed condition that allows us all to become our best while looking our worst.",
+    image_url: "/images/landing/makes_history.webp",
+  };
+
+  const defaultGallery = {
+    title: "GALLERY",
+    subtitle: "Remembering Our Golden Days",
+  };
+
+  const familyTreeContent = familyTreeSection || defaultFamilyTree;
+  const galleryContent = gallerySection || defaultGallery;
+
   return (
     <motion.div
       className="min-h-screen flex flex-col relative"
@@ -38,10 +59,10 @@ export default function Home() {
           <HistorySection />
         </section>
 
-        {/* MOSURO'S FAMILY TREE */}
+        {/* FAMILY TREE SECTION */}
         <section className="relative h-[585px] w-full mt-8 lg:mt-12 ">
           <Image
-            src="/images/landing/makes_history.webp"
+            src={familyTreeContent.image_url || defaultFamilyTree.image_url}
             alt="Family Tree"
             fill
             className="object-cover"
@@ -53,11 +74,17 @@ export default function Home() {
           {/* Centered Heading */}
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-y-8">
             <h2 className="text-4xl md:text-6xl font-bold text-center text-background px-4">
-              Mosuro&apos;s Family Tree
+              {loading ? "Mosuro's Family Tree" : familyTreeContent.title}
             </h2>
-            <p className="text-background text-center text-lg md:max-w-2xl">
-              The informality of family life is a blessed condition that allows
-              us all to become our best while looking our worst.
+            {familyTreeContent.subtitle && (
+              <h3 className="text-xl md:text-2xl text-background/90 font-medium text-center px-4">
+                {familyTreeContent.subtitle}
+              </h3>
+            )}
+            <p className="text-background text-center text-lg md:max-w-2xl px-4">
+              {loading
+                ? defaultFamilyTree.description
+                : familyTreeContent.description}
             </p>
 
             <Button className="rounded-full text-lg " size={"lg"} asChild>
@@ -76,10 +103,19 @@ export default function Home() {
         <FrameWrapper className="py-8 lg:py-12">
           {/* HEADER SECTION */}
           <div className="text-center  items-center space-y-6">
-            <h2 className="text-xl md:text-2xl font-semibold ">GALLERY</h2>
+            <h2 className="text-xl md:text-2xl font-semibold ">
+              {loading ? "GALLERY" : galleryContent.title}
+            </h2>
             <p className=" font-bold text-base md:text-xl tracking-wider">
-              Remembering Our Golden Days
+              {loading
+                ? "Remembering Our Golden Days"
+                : galleryContent.subtitle}
             </p>
+            {galleryContent.description && (
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                {galleryContent.description}
+              </p>
+            )}
           </div>
 
           {/* GALLERY GRID */}

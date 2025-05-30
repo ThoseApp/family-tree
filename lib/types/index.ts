@@ -1,5 +1,9 @@
 import { LucideIcon } from "lucide-react";
-import { NotificationTypeEnum } from "../constants/enums";
+import {
+  NotificationTypeEnum,
+  GalleryStatusEnum,
+  UserStatusEnum,
+} from "../constants/enums";
 
 export type NavLink = {
   label: string;
@@ -19,6 +23,7 @@ export interface UserProfile {
   image: string;
   bio: string;
   email: string;
+  status?: keyof typeof UserStatusEnum;
 
   gender?: string;
   timeline?: any; // JSONB type
@@ -58,14 +63,18 @@ export interface Event {
 export interface Notification {
   id: string;
   title: string;
+  resource_id?: string;
   type?: keyof typeof NotificationTypeEnum;
   body: string;
   read: boolean;
-  image: string;
+  image?: string;
+  user_id?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface GalleryType {
-  id: string;
+  id?: string;
   url: string;
   caption?: string;
   album?: string;
@@ -73,7 +82,7 @@ export interface GalleryType {
   user_id: string;
   file_name: string;
   file_size: number;
-  approved?: boolean;
+  status?: keyof typeof GalleryStatusEnum;
   created_at: string;
   updated_at?: string;
 }
@@ -127,4 +136,32 @@ export interface Album {
   createdAt: string;
   coverImageUrl?: string;
   mediaItems: MediaItem[];
+}
+
+export interface LandingPageSection {
+  id?: string;
+  section_type:
+    | "hero"
+    | "gallery_preview"
+    | "upcoming_events"
+    | "history"
+    | "family_members"
+    | "family_tree";
+  title: string;
+  subtitle?: string;
+  description?: string;
+  image_url?: string;
+  content?: any; // JSON content for flexible data
+  is_published: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface LandingPageContent {
+  hero: LandingPageSection;
+  gallery_preview: LandingPageSection;
+  upcoming_events: LandingPageSection;
+  history: LandingPageSection;
+  family_members: LandingPageSection;
+  family_tree: LandingPageSection;
 }

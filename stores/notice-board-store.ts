@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { toast } from "sonner";
-import { createClient } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { NoticeBoard } from "@/lib/types";
 
 interface NoticeBoardState {
@@ -27,7 +27,6 @@ export const useNoticeBoardStore = create<NoticeBoardState>((set, get) => ({
 
   fetchNoticeBoards: async () => {
     set({ loading: true, error: null });
-    const supabase = createClient();
 
     try {
       const { data, error } = await supabase
@@ -51,7 +50,6 @@ export const useNoticeBoardStore = create<NoticeBoardState>((set, get) => ({
 
   createNoticeBoard: async (noticeBoard) => {
     set({ loading: true, error: null });
-    const supabase = createClient();
 
     try {
       // Add current date and time if not provided
@@ -90,7 +88,6 @@ export const useNoticeBoardStore = create<NoticeBoardState>((set, get) => ({
 
   updateNoticeBoard: async (id, noticeBoardUpdates) => {
     set({ loading: true, error: null });
-    const supabase = createClient();
 
     try {
       const { data, error } = await supabase
@@ -122,7 +119,6 @@ export const useNoticeBoardStore = create<NoticeBoardState>((set, get) => ({
 
   deleteNoticeBoard: async (id) => {
     set({ loading: true, error: null });
-    const supabase = createClient();
 
     try {
       const { error } = await supabase
@@ -151,7 +147,6 @@ export const useNoticeBoardStore = create<NoticeBoardState>((set, get) => ({
 
   togglePinned: async (id, pinned) => {
     set({ loading: true, error: null });
-    const supabase = createClient();
 
     try {
       const { data, error } = await supabase
