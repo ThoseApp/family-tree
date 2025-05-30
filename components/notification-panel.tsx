@@ -94,7 +94,7 @@ const NotificationPanel = () => {
         </h1>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
-          <Button
+          {/* <Button
             size="lg"
             variant="outline"
             className=" bg-blue-500 text-white rounded-full text-sm sm:text-base px-4 sm:px-6 h-10 sm:h-12"
@@ -107,7 +107,7 @@ const NotificationPanel = () => {
             <span className="sm:hidden">
               {isCreatingTest ? "Creating..." : "Test Notifications"}
             </span>
-          </Button>
+          </Button> */}
 
           <Button
             size="lg"
