@@ -151,7 +151,7 @@ const ManageLandingPagePage = () => {
         <div>
           <h1 className="text-2xl font-semibold">Manage Landing Page</h1>
           <p className="text-muted-foreground">
-            Customize your family website's content and appearance
+            Customize your family website&apos;s content and appearance
           </p>
         </div>
 
