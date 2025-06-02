@@ -140,8 +140,7 @@ export const useUserStore = create(
                   last_name: lastName,
                   full_name: `${firstName} ${lastName}`,
                   date_of_birth: dateOfBirth ? dateOfBirth.toISOString() : null,
-                  // is_admin: isAdmin,
-                  is_admin: true,
+                  is_admin: isAdmin,
                 },
               },
             });
