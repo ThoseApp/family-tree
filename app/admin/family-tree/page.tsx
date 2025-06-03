@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -30,6 +30,10 @@ import {
   XCircle,
   AlertTriangle,
   Download,
+  Database,
+  RefreshCw,
+  Table as TableIcon,
+  GitBranch,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 
@@ -53,6 +57,7 @@ interface FamilyMember {
 }
 
 interface ProcessedMember {
+  id?: number;
   picture_link: string;
   unique_id: string;
   gender: string;
@@ -96,6 +101,9 @@ const FamilyTreeUploadPage = () => {
     errors: string[];
     failedRecords: FailedRecord[];
   } | null>(null);
+  const [existingData, setExistingData] = useState<ProcessedMember[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+  const [viewMode, setViewMode] = useState<"table" | "tree">("table");
 
   // Required columns mapping
   const requiredColumns = [
@@ -381,6 +389,8 @@ const FamilyTreeUploadPage = () => {
 
       if (successCount > 0) {
         toast.success(`Successfully uploaded ${successCount} family members`);
+        // Refresh the existing data to show newly uploaded records
+        refreshData();
       }
       if (failedCount > 0) {
         toast.error(`Failed to upload ${failedCount} records`);
@@ -406,6 +416,50 @@ const FamilyTreeUploadPage = () => {
     window.URL.revokeObjectURL(url);
   };
 
+  const refreshData = async () => {
+    setIsLoadingData(true);
+    try {
+      const { data, error } = await supabase
+        .from("family-tree")
+        .select()
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching data:", error);
+        toast.error("Failed to refresh data");
+      } else {
+        setExistingData(data as ProcessedMember[]);
+        toast.success("Data refreshed successfully");
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast.error("Failed to refresh data");
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchExistingData = async () => {
+      try {
+        const { data, error } = await supabase.from("family-tree").select();
+
+        if (error) {
+          console.error("Error fetching existing data:", error);
+          toast.error("Failed to fetch existing data");
+        } else {
+          setExistingData(data as ProcessedMember[]);
+          setIsLoadingData(false);
+        }
+      } catch (error) {
+        console.error("Error fetching existing data:", error);
+        toast.error("Failed to fetch existing data");
+      }
+    };
+
+    fetchExistingData();
+  }, []);
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -424,6 +478,140 @@ const FamilyTreeUploadPage = () => {
           Download Template
         </Button>
       </div>
+
+      {/* Existing Data Display */}
+      {!isLoadingData && existingData.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <Database className="h-5 w-5 text-blue-600" />
+                Existing Family Tree Data ({existingData.length} records)
+              </span>
+              <div className="flex items-center gap-2">
+                {/* View Toggle Buttons */}
+                <div className="flex rounded-lg border p-1">
+                  <Button
+                    variant={viewMode === 'table' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('table')}
+                    className="flex items-center gap-1"
+                  >
+                    <TableIcon className="h-4 w-4" />
+                    Table
+                  </Button>
+                  <Button
+                    variant={viewMode === 'tree' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('tree')}
+                    className="flex items-center gap-1"
+                  >
+                    <GitBranch className="h-4 w-4" />
+                    Tree
+                  </Button>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={refreshData}
+                  disabled={isLoadingData}
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw className={`h-4 w-4 ${isLoadingData ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+              </div>
+            </CardTitle>
+            <CardDescription>
+              Current family members in the database
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {viewMode === 'table' ? (
+              <div className="border rounded-lg overflow-hidden">
+                <div className="max-h-96 overflow-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="min-w-[100px]">Unique ID</TableHead>
+                        <TableHead className="min-w-[150px]">First Name</TableHead>
+                        <TableHead className="min-w-[150px]">Last Name</TableHead>
+                        <TableHead className="min-w-[80px]">Gender</TableHead>
+                        <TableHead className="min-w-[120px]">Date of Birth</TableHead>
+                        <TableHead className="min-w-[150px]">Father's First Name</TableHead>
+                        <TableHead className="min-w-[150px]">Father's Last Name</TableHead>
+                        <TableHead className="min-w-[150px]">Mother's First Name</TableHead>
+                        <TableHead className="min-w-[150px]">Mother's Last Name</TableHead>
+                        <TableHead className="min-w-[100px]">Order of Birth</TableHead>
+                        <TableHead className="min-w-[120px]">Order of Marriage</TableHead>
+                        <TableHead className="min-w-[120px]">Marital Status</TableHead>
+                        <TableHead className="min-w-[150px]">Spouse's First Name</TableHead>
+                        <TableHead className="min-w-[150px]">Spouse's Last Name</TableHead>
+                        <TableHead className="min-w-[200px]">Picture Link</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {existingData.map((member, index) => (
+                        <TableRow key={member.id || index}>
+                          <TableCell className="font-medium">
+                            {member.unique_id}
+                          </TableCell>
+                          <TableCell>{member.first_name}</TableCell>
+                          <TableCell>{member.last_name}</TableCell>
+                          <TableCell>{member.gender}</TableCell>
+                          <TableCell>
+                            {member.date_of_birth ? new Date(member.date_of_birth).toLocaleDateString() : ''}
+                          </TableCell>
+                          <TableCell>{member.fathers_first_name}</TableCell>
+                          <TableCell>{member.fathers_last_name}</TableCell>
+                          <TableCell>{member.mothers_first_name}</TableCell>
+                          <TableCell>{member.mothers_last_name}</TableCell>
+                          <TableCell>{member.order_of_birth}</TableCell>
+                          <TableCell>{member.order_of_marriage}</TableCell>
+                          <TableCell>{member.marital_status}</TableCell>
+                          <TableCell>{member.spouses_first_name}</TableCell>
+                          <TableCell>{member.spouses_last_name}</TableCell>
+                          <TableCell>
+                            {member.picture_link && (
+                              <a 
+                                href={member.picture_link} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 underline truncate block max-w-[180px]"
+                              >
+                                {member.picture_link}
+                              </a>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            ) : (
+              <div className="border rounded-lg p-8 text-center">
+                <GitBranch className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Tree View Coming Soon</h3>
+                <p className="text-gray-500">
+                  The family tree visualization will be implemented here.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {isLoadingData && (
+        <Card>
+          <CardContent className="flex items-center justify-center py-8">
+            <div className="flex items-center gap-2">
+              <RefreshCw className="h-4 w-4 animate-spin" />
+              <span>Loading existing data...</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* File Upload Section */}
       <Card>
