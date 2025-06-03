@@ -492,18 +492,18 @@ const FamilyTreeUploadPage = () => {
                 {/* View Toggle Buttons */}
                 <div className="flex rounded-lg border p-1">
                   <Button
-                    variant={viewMode === 'table' ? 'default' : 'ghost'}
+                    variant={viewMode === "table" ? "default" : "ghost"}
                     size="sm"
-                    onClick={() => setViewMode('table')}
+                    onClick={() => setViewMode("table")}
                     className="flex items-center gap-1"
                   >
                     <TableIcon className="h-4 w-4" />
                     Table
                   </Button>
                   <Button
-                    variant={viewMode === 'tree' ? 'default' : 'ghost'}
+                    variant={viewMode === "tree" ? "default" : "ghost"}
                     size="sm"
-                    onClick={() => setViewMode('tree')}
+                    onClick={() => setViewMode("tree")}
                     className="flex items-center gap-1"
                   >
                     <GitBranch className="h-4 w-4" />
@@ -517,7 +517,9 @@ const FamilyTreeUploadPage = () => {
                   disabled={isLoadingData}
                   className="flex items-center gap-2"
                 >
-                  <RefreshCw className={`h-4 w-4 ${isLoadingData ? 'animate-spin' : ''}`} />
+                  <RefreshCw
+                    className={`h-4 w-4 ${isLoadingData ? "animate-spin" : ""}`}
+                  />
                   Refresh
                 </Button>
               </div>
@@ -527,27 +529,55 @@ const FamilyTreeUploadPage = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {viewMode === 'table' ? (
+            {viewMode === "table" ? (
               <div className="border rounded-lg overflow-hidden">
                 <div className="max-h-96 overflow-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="min-w-[100px]">Unique ID</TableHead>
-                        <TableHead className="min-w-[150px]">First Name</TableHead>
-                        <TableHead className="min-w-[150px]">Last Name</TableHead>
+                        <TableHead className="min-w-[100px]">
+                          Unique ID
+                        </TableHead>
+                        <TableHead className="min-w-[150px]">
+                          First Name
+                        </TableHead>
+                        <TableHead className="min-w-[150px]">
+                          Last Name
+                        </TableHead>
                         <TableHead className="min-w-[80px]">Gender</TableHead>
-                        <TableHead className="min-w-[120px]">Date of Birth</TableHead>
-                        <TableHead className="min-w-[150px]">Father's First Name</TableHead>
-                        <TableHead className="min-w-[150px]">Father's Last Name</TableHead>
-                        <TableHead className="min-w-[150px]">Mother's First Name</TableHead>
-                        <TableHead className="min-w-[150px]">Mother's Last Name</TableHead>
-                        <TableHead className="min-w-[100px]">Order of Birth</TableHead>
-                        <TableHead className="min-w-[120px]">Order of Marriage</TableHead>
-                        <TableHead className="min-w-[120px]">Marital Status</TableHead>
-                        <TableHead className="min-w-[150px]">Spouse's First Name</TableHead>
-                        <TableHead className="min-w-[150px]">Spouse's Last Name</TableHead>
-                        <TableHead className="min-w-[200px]">Picture Link</TableHead>
+                        <TableHead className="min-w-[120px]">
+                          Date of Birth
+                        </TableHead>
+                        <TableHead className="min-w-[150px]">
+                          Father&apos;s First Name
+                        </TableHead>
+                        <TableHead className="min-w-[150px]">
+                          Father&apos;s Last Name
+                        </TableHead>
+                        <TableHead className="min-w-[150px]">
+                          Mother&apos;s First Name
+                        </TableHead>
+                        <TableHead className="min-w-[150px]">
+                          Mother&apos;s Last Name
+                        </TableHead>
+                        <TableHead className="min-w-[100px]">
+                          Order of Birth
+                        </TableHead>
+                        <TableHead className="min-w-[120px]">
+                          Order of Marriage
+                        </TableHead>
+                        <TableHead className="min-w-[120px]">
+                          Marital Status
+                        </TableHead>
+                        <TableHead className="min-w-[150px]">
+                          Spouse&apos;s First Name
+                        </TableHead>
+                        <TableHead className="min-w-[150px]">
+                          Spouse&apos;s Last Name
+                        </TableHead>
+                        <TableHead className="min-w-[200px]">
+                          Picture Link
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -560,7 +590,11 @@ const FamilyTreeUploadPage = () => {
                           <TableCell>{member.last_name}</TableCell>
                           <TableCell>{member.gender}</TableCell>
                           <TableCell>
-                            {member.date_of_birth ? new Date(member.date_of_birth).toLocaleDateString() : ''}
+                            {member.date_of_birth
+                              ? new Date(
+                                  member.date_of_birth
+                                ).toLocaleDateString()
+                              : ""}
                           </TableCell>
                           <TableCell>{member.fathers_first_name}</TableCell>
                           <TableCell>{member.fathers_last_name}</TableCell>
@@ -573,9 +607,9 @@ const FamilyTreeUploadPage = () => {
                           <TableCell>{member.spouses_last_name}</TableCell>
                           <TableCell>
                             {member.picture_link && (
-                              <a 
-                                href={member.picture_link} 
-                                target="_blank" 
+                              <a
+                                href={member.picture_link}
+                                target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-blue-600 hover:text-blue-800 underline truncate block max-w-[180px]"
                               >
@@ -592,7 +626,9 @@ const FamilyTreeUploadPage = () => {
             ) : (
               <div className="border rounded-lg p-8 text-center">
                 <GitBranch className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Tree View Coming Soon</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Tree View Coming Soon
+                </h3>
                 <p className="text-gray-500">
                   The family tree visualization will be implemented here.
                 </p>
