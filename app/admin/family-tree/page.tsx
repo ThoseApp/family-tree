@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
+import * as d3 from "d3";
 import {
   Card,
   CardContent,
@@ -36,6 +37,10 @@ import {
   GitBranch,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
+
+// Import family-chart library
+// @ts-ignore - family-chart doesn't have type definitions
+import f3 from "family-chart";
 
 // Types for Excel data
 interface FamilyMember {
@@ -75,6 +80,33 @@ interface ProcessedMember {
   date_of_birth: string | null;
 }
 
+// Family Chart data format
+interface FamilyChartMember {
+  id: string;
+  data: {
+    first_name: string;
+    last_name: string;
+    birthday: string;
+    avatar: string;
+    gender: string;
+    unique_id: string;
+    order_of_birth?: number | null;
+    order_of_marriage?: number | null;
+    marital_status?: string;
+    isOriginator?: boolean;
+    isTwin?: boolean;
+    isPolygamous?: boolean;
+    isOutOfWedlock?: boolean;
+    lineageColor?: string;
+  };
+  rels: {
+    father?: string;
+    mother?: string;
+    spouses?: string[];
+    children?: string[];
+  };
+}
+
 interface ValidationError {
   row: number;
   field: string;
@@ -86,6 +118,17 @@ interface FailedRecord {
   error: string;
   originalRow: number;
 }
+
+// Color scheme for the 4 main lineages
+const LINEAGE_COLORS = {
+  LAKETU: "#8B4513", // Brown for originator
+  EGUNDEBI: "#2563EB", // Blue for first Mosuro
+  ADELAJA: "#DC2626", // Red for first child
+  CHILD2: "#059669", // Green for second child
+  CHILD3: "#7C3AED", // Purple for third child
+  CHILD4: "#EA580C", // Orange for fourth child
+  DEFAULT: "#6B7280", // Gray for others
+};
 
 const FamilyTreeUploadPage = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -104,6 +147,13 @@ const FamilyTreeUploadPage = () => {
   const [existingData, setExistingData] = useState<ProcessedMember[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [viewMode, setViewMode] = useState<"table" | "tree">("table");
+  const [familyChartData, setFamilyChartData] = useState<FamilyChartMember[]>(
+    []
+  );
+
+  // Ref for the family chart container
+  const familyTreeRef = useRef<HTMLDivElement>(null);
+  const familyChartInstance = useRef<any>(null);
 
   // Required columns mapping
   const requiredColumns = [
@@ -167,7 +217,6 @@ const FamilyTreeUploadPage = () => {
             return;
           }
 
-          // Parse CSV with basic quote handling
           const parseCSVLine = (line: string): string[] => {
             const result: string[] = [];
             let current = "";
@@ -224,10 +273,8 @@ const FamilyTreeUploadPage = () => {
       let jsonData: FamilyMember[] = [];
 
       if (file.name.endsWith(".csv") || file.type === "text/csv") {
-        // Parse CSV file
         jsonData = await parseCSVFile(file);
       } else {
-        // Parse Excel file
         const XLSX = await import("xlsx");
 
         const data = await file.arrayBuffer();
@@ -239,7 +286,6 @@ const FamilyTreeUploadPage = () => {
 
       setUploadProgress(50);
 
-      // Validate the data
       const errors = validateExcelData(jsonData);
       setValidationErrors(errors);
       setExcelData(jsonData);
@@ -271,7 +317,6 @@ const FamilyTreeUploadPage = () => {
     const errors: ValidationError[] = [];
 
     data.forEach((row, index) => {
-      // Check required fields - only unique_id is required now
       if (!row["Unique ID"]) {
         errors.push({
           row: index + 1,
@@ -280,7 +325,6 @@ const FamilyTreeUploadPage = () => {
         });
       }
 
-      // Validate date format if provided
       if (row["Date of Birth"] && !isValidDate(row["Date of Birth"])) {
         errors.push({
           row: index + 1,
@@ -289,7 +333,6 @@ const FamilyTreeUploadPage = () => {
         });
       }
 
-      // Validate gender values if provided
       if (
         row["Gender"] &&
         !["Male", "Female", "Other", "M", "F"].includes(row["Gender"])
@@ -352,7 +395,6 @@ const FamilyTreeUploadPage = () => {
     const failedRecords: FailedRecord[] = [];
 
     try {
-      // Upload in batches to avoid overwhelming the server
       const batchSize = 50;
       for (let i = 0; i < processedData.length; i += batchSize) {
         const batch = processedData.slice(i, i + batchSize);
@@ -389,7 +431,6 @@ const FamilyTreeUploadPage = () => {
 
       if (successCount > 0) {
         toast.success(`Successfully uploaded ${successCount} family members`);
-        // Refresh the existing data to show newly uploaded records
         refreshData();
       }
       if (failedCount > 0) {
@@ -406,14 +447,40 @@ const FamilyTreeUploadPage = () => {
   }, [excelData, validationErrors]);
 
   const downloadTemplate = () => {
-    const template = requiredColumns.join(",") + "\n";
-    const blob = new Blob([template], { type: "text/csv" });
+    const templateHeader = requiredColumns.join(",");
+    const sampleData = [
+      '"https://example.com/laketu.jpg","LAKETU","Male","LAKETU","MOSURO","","","","","0","0","Single","","","1850-01-01"',
+      '"https://example.com/egundebi.jpg","EGUNDEBI","Male","EGUNDEBI","MOSURO","LAKETU","MOSURO","","","1","1","Married","ABIKE","ADEBAYO","1875-03-15"',
+      '"https://example.com/abike.jpg","S001","Female","ABIKE","ADEBAYO","","","","","0","0","Married","EGUNDEBI","MOSURO","1878-06-20"',
+      '"https://example.com/adelaja.jpg","D001","Male","ADELAJA","MOSURO","EGUNDEBI","MOSURO","ABIKE","ADEBAYO","1","1","Married","FOLAKE","OGUNDIMU","1900-01-10"',
+      '"https://example.com/adunni.jpg","D002","Female","ADUNNI","MOSURO","EGUNDEBI","MOSURO","ABIKE","ADEBAYO","2","0","Married","BABATUNDE","OGUNDIMU","1902-05-18"',
+      '"https://example.com/adebayo.jpg","D003","Male","ADEBAYO","MOSURO","EGUNDEBI","MOSURO","ABIKE","ADEBAYO","3","1","Married","KEMI","ADEYEMI","1904-08-25"',
+      '"https://example.com/aduke.jpg","D004","Female","ADUKE","MOSURO","EGUNDEBI","MOSURO","ABIKE","ADEBAYO","4","0","Married","TAIWO","ADEYEMI","1906-12-30"',
+      '"https://example.com/folake.jpg","S002","Female","FOLAKE","OGUNDIMU","","","","","0","0","Married","ADELAJA","MOSURO","1903-02-14"',
+      '"https://example.com/babatunde.jpg","S003","Male","BABATUNDE","OGUNDIMU","","","","","0","0","Married","ADUNNI","MOSURO","1899-09-12"',
+      '"https://example.com/kemi.jpg","S004","Female","KEMI","ADEYEMI","","","","","0","0","Married","ADEBAYO","MOSURO","1907-04-03"',
+      '"https://example.com/taiwo.jpg","S005","Male","TAIWO","ADEYEMI","","","","","0","0","Married","ADUKE","MOSURO","1905-11-22"',
+      '"https://example.com/adeola.jpg","D005","Male","ADEOLA","MOSURO","ADELAJA","MOSURO","FOLAKE","OGUNDIMU","1","1","Single","","","1925-07-08"',
+      '"https://example.com/adebisi.jpg","D006","Female","ADEBISI","MOSURO","ADELAJA","MOSURO","FOLAKE","OGUNDIMU","2","0","Single","","","1927-11-15"',
+      '"https://example.com/kehinde.jpg","D007","Male","KEHINDE","OGUNDIMU","BABATUNDE","OGUNDIMU","ADUNNI","MOSURO","1","1","Single","","","1930-03-20"',
+      '"https://example.com/taiye.jpg","D008","Male","TAIYE","OGUNDIMU","BABATUNDE","OGUNDIMU","ADUNNI","MOSURO","1","1","Single","","","1930-03-20"',
+      '"https://example.com/adebayo_child1.jpg","D009","Male","ADEBAYO_JR","MOSURO","ADEBAYO","MOSURO","KEMI","ADEYEMI","1","1","Single","","","1932-01-12"',
+      '"https://example.com/second_wife.jpg","S006","Female","FUNMI","ADEYEMI","","","","","0","2","Married","ADEBAYO","MOSURO","1910-08-17"',
+      '"https://example.com/adebayo_child2.jpg","D010","Female","FUNMILAYO","MOSURO","ADEBAYO","MOSURO","FUNMI","ADEYEMI","1","0","Single","","","1935-06-05"',
+    ];
+
+    const csvContent = templateHeader + "\n" + sampleData.join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "family-tree-template.csv";
+    a.download = "family-tree-template-with-sample-data.csv";
     a.click();
     window.URL.revokeObjectURL(url);
+
+    toast.success(
+      "Downloaded CSV template with sample family tree data demonstrating all business rules"
+    );
   };
 
   const refreshData = async () => {
@@ -460,6 +527,806 @@ const FamilyTreeUploadPage = () => {
     fetchExistingData();
   }, []);
 
+  // Business Rules Logic (kept from original implementation)
+  const findParentLineage = (
+    member: ProcessedMember,
+    allMembers: ProcessedMember[]
+  ): string => {
+    const father = allMembers.find(
+      (m) =>
+        m.first_name === member.fathers_first_name &&
+        m.last_name === member.fathers_last_name
+    );
+
+    if (father) {
+      if (
+        father.unique_id === "LAKETU" ||
+        father.first_name?.toUpperCase() === "LAKETU"
+      ) {
+        return LINEAGE_COLORS.LAKETU;
+      } else if (
+        father.unique_id === "EGUNDEBI" ||
+        father.first_name?.toUpperCase() === "EGUNDEBI"
+      ) {
+        return LINEAGE_COLORS.EGUNDEBI;
+      } else if (father.first_name?.toUpperCase() === "ADELAJA") {
+        return LINEAGE_COLORS.ADELAJA;
+      }
+
+      const fatherParent = allMembers.find(
+        (m) =>
+          m.first_name === father.fathers_first_name &&
+          m.last_name === father.fathers_last_name &&
+          (m.unique_id === "EGUNDEBI" ||
+            m.first_name?.toUpperCase() === "EGUNDEBI")
+      );
+
+      if (fatherParent) {
+        const birthOrder = father.order_of_birth || 0;
+        switch (birthOrder) {
+          case 1:
+            return father.first_name?.toUpperCase() === "ADELAJA"
+              ? LINEAGE_COLORS.ADELAJA
+              : LINEAGE_COLORS.CHILD2;
+          case 2:
+            return LINEAGE_COLORS.CHILD2;
+          case 3:
+            return LINEAGE_COLORS.CHILD3;
+          case 4:
+            return LINEAGE_COLORS.CHILD4;
+          default:
+            if (father.first_name?.toUpperCase() === "ADELAJA")
+              return LINEAGE_COLORS.ADELAJA;
+            return LINEAGE_COLORS.CHILD2;
+        }
+      }
+    }
+
+    return LINEAGE_COLORS.DEFAULT;
+  };
+
+  const applyBusinessRules = (
+    member: ProcessedMember,
+    allMembers: ProcessedMember[]
+  ) => {
+    const uid = member.unique_id;
+
+    const isDescendant = uid?.charAt(0).toUpperCase() === "D";
+    const isSpouse = uid?.charAt(0).toUpperCase() === "S";
+    const isOriginator =
+      uid === "LAKETU" || member.first_name?.toUpperCase() === "LAKETU";
+
+    const isTwin =
+      allMembers.filter(
+        (m) =>
+          m.unique_id !== member.unique_id &&
+          m.fathers_first_name === member.fathers_first_name &&
+          m.fathers_last_name === member.fathers_last_name &&
+          m.mothers_first_name === member.mothers_first_name &&
+          m.mothers_last_name === member.mothers_last_name &&
+          m.order_of_birth === member.order_of_birth &&
+          m.order_of_birth !== null &&
+          m.order_of_birth !== 0
+      ).length > 0;
+
+    const isPolygamous =
+      member.gender?.toLowerCase() === "male" &&
+      member.order_of_marriage !== null &&
+      member.order_of_marriage > 1 &&
+      member.marital_status?.toLowerCase() === "married";
+
+    const isOutOfWedlock =
+      (!member.fathers_first_name || !member.fathers_last_name) &&
+      (!member.mothers_first_name || !member.mothers_last_name);
+
+    const isSpouseByRules =
+      (!isOriginator &&
+        (!member.fathers_first_name || !member.mothers_first_name)) ||
+      (!isOriginator &&
+        (member.order_of_birth === null || member.order_of_birth === 0));
+
+    let lineageColor = LINEAGE_COLORS.DEFAULT;
+
+    if (isOriginator) {
+      lineageColor = LINEAGE_COLORS.LAKETU;
+    } else if (
+      uid === "EGUNDEBI" ||
+      member.first_name?.toUpperCase() === "EGUNDEBI"
+    ) {
+      lineageColor = LINEAGE_COLORS.EGUNDEBI;
+    } else if (member.first_name?.toUpperCase() === "ADELAJA") {
+      lineageColor = LINEAGE_COLORS.ADELAJA;
+    } else {
+      const isEgundebisChild =
+        member.fathers_first_name?.toUpperCase() === "EGUNDEBI" ||
+        member.mothers_first_name?.toUpperCase() === "EGUNDEBI";
+
+      if (isEgundebisChild) {
+        const birthOrder = member.order_of_birth || 0;
+        switch (birthOrder) {
+          case 1:
+            lineageColor =
+              member.first_name?.toUpperCase() === "ADELAJA"
+                ? LINEAGE_COLORS.ADELAJA
+                : LINEAGE_COLORS.CHILD2;
+            break;
+          case 2:
+            lineageColor = LINEAGE_COLORS.CHILD2;
+            break;
+          case 3:
+            lineageColor = LINEAGE_COLORS.CHILD3;
+            break;
+          case 4:
+            lineageColor = LINEAGE_COLORS.CHILD4;
+            break;
+          default:
+            if (member.first_name?.toUpperCase() === "ADELAJA") {
+              lineageColor = LINEAGE_COLORS.ADELAJA;
+            } else {
+              lineageColor = LINEAGE_COLORS.CHILD2;
+            }
+        }
+      } else {
+        const parentLineage = findParentLineage(member, allMembers);
+        lineageColor = parentLineage || LINEAGE_COLORS.DEFAULT;
+      }
+    }
+
+    return {
+      isOriginator,
+      isDescendant: isDescendant || (!isSpouse && !isSpouseByRules),
+      isSpouse: isSpouse || isSpouseByRules,
+      isTwin,
+      isPolygamous,
+      isOutOfWedlock,
+      lineageColor,
+    };
+  };
+
+  // Convert ProcessedMember data to FamilyChart format
+  const convertToFamilyChartFormat = (
+    members: ProcessedMember[]
+  ): FamilyChartMember[] => {
+    console.log("Converting family data - total members:", members.length);
+    console.log("Sample member data:", members.slice(0, 2));
+
+    // Create a lookup map for faster searching
+    const memberMap = new Map<string, ProcessedMember>();
+    const nameMap = new Map<string, ProcessedMember>();
+
+    members.forEach((member) => {
+      memberMap.set(member.unique_id, member);
+      // Create name-based lookup for finding parents/spouses
+      const nameKey = `${member.first_name?.toLowerCase()}_${member.last_name?.toLowerCase()}`;
+      nameMap.set(nameKey, member);
+    });
+
+    const chartMembers = members.map((member) => {
+      const rules = applyBusinessRules(member, members);
+
+      // Find father - try multiple matching strategies
+      let father: ProcessedMember | undefined;
+      if (member.fathers_first_name && member.fathers_last_name) {
+        // First try exact name match
+        const fatherKey = `${member.fathers_first_name.toLowerCase()}_${member.fathers_last_name.toLowerCase()}`;
+        father = nameMap.get(fatherKey);
+
+        // If not found, try manual search with trim and case insensitive
+        if (!father) {
+          father = members.find(
+            (m) =>
+              m.first_name?.toLowerCase().trim() ===
+                member.fathers_first_name?.toLowerCase().trim() &&
+              m.last_name?.toLowerCase().trim() ===
+                member.fathers_last_name?.toLowerCase().trim()
+          );
+        }
+      }
+
+      // Find mother - try multiple matching strategies
+      let mother: ProcessedMember | undefined;
+      if (member.mothers_first_name && member.mothers_last_name) {
+        // First try exact name match
+        const motherKey = `${member.mothers_first_name.toLowerCase()}_${member.mothers_last_name.toLowerCase()}`;
+        mother = nameMap.get(motherKey);
+
+        // If not found, try manual search with trim and case insensitive
+        if (!mother) {
+          mother = members.find(
+            (m) =>
+              m.first_name?.toLowerCase().trim() ===
+                member.mothers_first_name?.toLowerCase().trim() &&
+              m.last_name?.toLowerCase().trim() ===
+                member.mothers_last_name?.toLowerCase().trim()
+          );
+        }
+      }
+
+      // Find spouses - try multiple matching strategies
+      const spouses: string[] = [];
+      if (member.spouses_first_name && member.spouses_last_name) {
+        const spouseKey = `${member.spouses_first_name.toLowerCase()}_${member.spouses_last_name.toLowerCase()}`;
+        let spouse = nameMap.get(spouseKey);
+
+        if (!spouse) {
+          spouse = members.find(
+            (m) =>
+              m.unique_id !== member.unique_id &&
+              m.first_name?.toLowerCase().trim() ===
+                member.spouses_first_name?.toLowerCase().trim() &&
+              m.last_name?.toLowerCase().trim() ===
+                member.spouses_last_name?.toLowerCase().trim()
+          );
+        }
+
+        if (spouse) {
+          spouses.push(spouse.unique_id);
+        }
+      }
+
+      // Also find people who list this person as their spouse
+      const backRefSpouses = members.filter(
+        (m) =>
+          m.unique_id !== member.unique_id &&
+          m.spouses_first_name?.toLowerCase().trim() ===
+            member.first_name?.toLowerCase().trim() &&
+          m.spouses_last_name?.toLowerCase().trim() ===
+            member.last_name?.toLowerCase().trim()
+      );
+
+      backRefSpouses.forEach((spouse) => {
+        if (!spouses.includes(spouse.unique_id)) {
+          spouses.push(spouse.unique_id);
+        }
+      });
+
+      // Find children - people who have this person as father or mother
+      const children = members
+        .filter((m) => {
+          const isFatherMatch =
+            m.fathers_first_name?.toLowerCase().trim() ===
+              member.first_name?.toLowerCase().trim() &&
+            m.fathers_last_name?.toLowerCase().trim() ===
+              member.last_name?.toLowerCase().trim();
+
+          const isMotherMatch =
+            m.mothers_first_name?.toLowerCase().trim() ===
+              member.first_name?.toLowerCase().trim() &&
+            m.mothers_last_name?.toLowerCase().trim() ===
+              member.last_name?.toLowerCase().trim();
+
+          return isFatherMatch || isMotherMatch;
+        })
+        .map((child) => child.unique_id);
+
+      const chartMember: FamilyChartMember = {
+        id: member.unique_id,
+        data: {
+          first_name: member.first_name || "",
+          last_name: member.last_name || "",
+          birthday: member.date_of_birth || "",
+          avatar: member.picture_link || "",
+          gender: member.gender?.toLowerCase() || "unknown",
+          unique_id: member.unique_id,
+          order_of_birth: member.order_of_birth,
+          order_of_marriage: member.order_of_marriage,
+          marital_status: member.marital_status,
+          ...rules,
+        },
+        rels: {
+          father: father?.unique_id,
+          mother: mother?.unique_id,
+          spouses: spouses.length > 0 ? spouses : undefined,
+          children: children.length > 0 ? children : undefined,
+        },
+      };
+
+      // Log relationship details for debugging
+      if (
+        member.unique_id === "LAKETU" ||
+        children.length > 0 ||
+        spouses.length > 0
+      ) {
+        console.log(
+          `Member ${member.unique_id} (${member.first_name} ${member.last_name}):`,
+          {
+            father: father?.unique_id,
+            mother: mother?.unique_id,
+            spouses: spouses,
+            children: children,
+            childrenCount: children.length,
+          }
+        );
+      }
+
+      return chartMember;
+    });
+
+    console.log("Converted chart data:", {
+      totalMembers: chartMembers.length,
+      sampleMember: chartMembers[0],
+      laketu: chartMembers.find((m) => m.id === "LAKETU"),
+    });
+
+    return chartMembers;
+  };
+
+  // Initialize Family Chart
+  const initializeFamilyChart = useCallback((data: FamilyChartMember[]) => {
+    if (!familyTreeRef.current || data.length === 0) return;
+
+    // Clear previous chart
+    if (familyChartInstance.current) {
+      familyTreeRef.current.innerHTML = "";
+    }
+
+    // Find the originator (main person)
+    const originator = data.find(
+      (d) => d.id === "LAKETU" || d.data.first_name?.toUpperCase() === "LAKETU"
+    );
+
+    if (!originator) {
+      console.error("No originator found in data");
+      toast.error("No LAKETU originator found in family data");
+      return;
+    }
+
+    console.log("Found originator:", originator);
+    console.log("Total family data nodes:", data.length);
+
+    // Log some sample relationships for debugging
+    const membersWithChildren = data.filter(
+      (d) => d.rels.children && d.rels.children.length > 0
+    );
+    const membersWithSpouses = data.filter(
+      (d) => d.rels.spouses && d.rels.spouses.length > 0
+    );
+
+    console.log("Members with children:", membersWithChildren.length);
+    console.log("Members with spouses:", membersWithSpouses.length);
+    console.log(
+      "Sample members with children:",
+      membersWithChildren.slice(0, 5).map((m) => ({
+        id: m.id,
+        name: `${m.data.first_name} ${m.data.last_name}`,
+        children: m.rels.children,
+      }))
+    );
+
+    try {
+      // Test if family-chart library is available
+      console.log("Family-chart library check:", {
+        f3Available: !!f3,
+        createSvgAvailable: !!f3?.createSvg,
+        CalculateTreeAvailable: !!f3?.CalculateTree,
+        viewAvailable: !!f3?.view,
+      });
+
+      if (!f3 || !f3.createSvg || !f3.CalculateTree || !f3.view) {
+        throw new Error("Family-chart library methods are not available");
+      }
+
+      // Create SVG using family-chart's createSvg method
+      const svg = f3.createSvg(familyTreeRef.current);
+
+      if (!svg) {
+        throw new Error("Failed to create SVG element");
+      }
+
+      console.log("SVG created successfully:", svg);
+
+      // Calculate tree layout using family-chart
+      const tree_data = f3.CalculateTree({
+        data: data,
+        node_separation: 250,
+        level_separation: 150,
+        main_id: originator.id,
+      });
+
+      if (!tree_data || !tree_data.data) {
+        throw new Error("Failed to calculate tree data");
+      }
+
+      console.log("Tree calculation result:", {
+        totalNodes: tree_data.data?.length || 0,
+        mainNode: tree_data.data?.[0]?.data || null,
+        hasData: !!tree_data.data,
+        dataStructure: tree_data.data?.[0] || null,
+      });
+
+      // Validate tree data structure
+      if (!Array.isArray(tree_data.data) || tree_data.data.length === 0) {
+        throw new Error("Tree data is empty or invalid");
+      }
+
+      // Custom card function for styling nodes
+      const Card = (onClick: (d: any) => void) => {
+        return function (this: any, d: any) {
+          const member = d.data.data || d.data;
+          const isCircular =
+            member.gender === "female" || member.gender === "f";
+          const backgroundColor = member.lineageColor || LINEAGE_COLORS.DEFAULT;
+
+          // Clear previous content
+          this.innerHTML = "";
+
+          // Create card group
+          const g = d3
+            .select(this)
+            .append("g")
+            .attr("transform", `translate(${[-70, isCircular ? -70 : -50]})`)
+            .attr("class", "card")
+            .attr("data-id", d.data.id)
+            .attr("cursor", "pointer")
+            .on("click", () => onClick.call(this, d));
+
+          // Create shape (rectangle for males, circle for females)
+          if (isCircular) {
+            g.append("circle")
+              .attr("cx", 70)
+              .attr("cy", 70)
+              .attr("r", 70)
+              .attr("fill", backgroundColor)
+              .attr("stroke", "#000")
+              .attr("stroke-width", member.isOriginator ? 3 : 1);
+          } else {
+            g.append("rect")
+              .attr("width", 140)
+              .attr("height", 100)
+              .attr("rx", 8)
+              .attr("ry", 8)
+              .attr("fill", backgroundColor)
+              .attr("stroke", "#000")
+              .attr("stroke-width", member.isOriginator ? 3 : 1);
+          }
+
+          // Add name text
+          g.append("text")
+            .attr("x", 70)
+            .attr("y", isCircular ? 60 : 45)
+            .attr("text-anchor", "middle")
+            .attr("fill", "white")
+            .attr("font-size", "12px")
+            .attr("font-weight", "bold")
+            .text(`${member.first_name} ${member.last_name}`);
+
+          // Add ID text
+          g.append("text")
+            .attr("x", 70)
+            .attr("y", isCircular ? 80 : 65)
+            .attr("text-anchor", "middle")
+            .attr("fill", "white")
+            .attr("font-size", "10px")
+            .attr("opacity", 0.8)
+            .text(member.unique_id);
+
+          // Add birth year if available
+          if (member.birthday) {
+            g.append("text")
+              .attr("x", 70)
+              .attr("y", isCircular ? 95 : 80)
+              .attr("text-anchor", "middle")
+              .attr("fill", "white")
+              .attr("font-size", "9px")
+              .attr("opacity", 0.7)
+              .text(new Date(member.birthday).getFullYear());
+          }
+
+          // Add badges for special attributes
+          let badgeX = isCircular ? 120 : 120;
+          let badgeY = 10;
+
+          if (member.isOriginator) {
+            g.append("circle")
+              .attr("cx", badgeX)
+              .attr("cy", badgeY)
+              .attr("r", 6)
+              .attr("fill", "#fbbf24")
+              .attr("stroke", "#000")
+              .attr("stroke-width", 1);
+            badgeY += 15;
+          }
+
+          if (member.isTwin) {
+            g.append("circle")
+              .attr("cx", badgeX)
+              .attr("cy", badgeY)
+              .attr("r", 6)
+              .attr("fill", "#60a5fa")
+              .attr("stroke", "#000")
+              .attr("stroke-width", 1);
+            badgeY += 15;
+          }
+
+          if (member.isPolygamous) {
+            g.append("circle")
+              .attr("cx", badgeX)
+              .attr("cy", badgeY)
+              .attr("r", 6)
+              .attr("fill", "#f87171")
+              .attr("stroke", "#000")
+              .attr("stroke-width", 1);
+          }
+        };
+      };
+
+      // Click handler
+      const onCardClick = (d: any) => {
+        const member = d.data.data || d.data;
+        toast.info(`Clicked on ${member.first_name} ${member.last_name}`, {
+          description: `ID: ${member.unique_id}${
+            member.birthday
+              ? ` | Born: ${new Date(member.birthday).getFullYear()}`
+              : ""
+          }`,
+        });
+        console.log("Card clicked:", member);
+      };
+
+      // Render the tree using family-chart's view method
+      f3.view(tree_data, svg, Card(onCardClick));
+
+      // Add zoom functionality to the SVG
+      const zoom = d3
+        .zoom<SVGSVGElement, unknown>()
+        .scaleExtent([0.1, 4])
+        .on("zoom", (event) => {
+          const container = d3.select(svg).select(".view");
+          if (container.node()) {
+            container.attr("transform", event.transform);
+          }
+        });
+
+      d3.select(svg).call(zoom as any);
+
+      // Set initial zoom to fit the tree
+      setTimeout(() => {
+        try {
+          const container = d3.select(svg);
+          const viewBox = svg.getBBox();
+          const containerWidth = familyTreeRef.current!.offsetWidth;
+          const containerHeight = Math.max(600, window.innerHeight - 400);
+
+          if (viewBox.width > 0 && viewBox.height > 0) {
+            const scaleX = (containerWidth * 0.8) / viewBox.width;
+            const scaleY = (containerHeight * 0.8) / viewBox.height;
+            const scale = Math.min(scaleX, scaleY, 1);
+
+            const centerX = containerWidth / 2;
+            const centerY = containerHeight / 2;
+            const translateX =
+              centerX - (viewBox.x + viewBox.width / 2) * scale;
+            const translateY =
+              centerY - (viewBox.y + viewBox.height / 2) * scale;
+
+            const initialTransform = d3.zoomIdentity
+              .translate(translateX, translateY)
+              .scale(scale);
+
+            container.call(zoom.transform as any, initialTransform);
+          }
+        } catch (zoomError) {
+          console.warn("Could not set initial zoom:", zoomError);
+        }
+      }, 500);
+
+      familyChartInstance.current = { svg, tree_data, zoom };
+
+      // Make it responsive
+      const handleResize = () => {
+        if (familyTreeRef.current) {
+          const newWidth = familyTreeRef.current.offsetWidth;
+          const newHeight = Math.max(600, window.innerHeight - 400);
+
+          d3.select(svg).attr("width", newWidth).attr("height", newHeight);
+        }
+      };
+
+      window.addEventListener("resize", handleResize);
+      handleResize();
+
+      return () => {
+        window.removeEventListener("resize", handleResize);
+      };
+    } catch (error) {
+      console.error("Error initializing family chart:", error);
+      toast.error("Failed to initialize family tree visualization");
+
+      // Fallback: Create a simple tree visualization
+      try {
+        console.log("Attempting fallback visualization...");
+        createFallbackVisualization(data);
+      } catch (fallbackError) {
+        console.error("Fallback visualization also failed:", fallbackError);
+
+        // Show a simple message
+        if (familyTreeRef.current) {
+          familyTreeRef.current.innerHTML = `
+            <div class="flex items-center justify-center h-96 border rounded-lg bg-gray-50">
+              <div class="text-center">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">Family Tree Visualization Error</h3>
+                <p class="mt-1 text-sm text-gray-500">Unable to render the family tree. Found ${data.length} family members.</p>
+                <p class="mt-1 text-xs text-gray-400">Check the console for more details or try refreshing the page.</p>
+              </div>
+            </div>
+          `;
+        }
+      }
+    }
+  }, []);
+
+  // Fallback visualization function
+  const createFallbackVisualization = (data: FamilyChartMember[]) => {
+    if (!familyTreeRef.current) return;
+
+    console.log("Creating fallback visualization with", data.length, "members");
+
+    // Clear container
+    familyTreeRef.current.innerHTML = "";
+
+    // Create a simple SVG
+    const containerWidth = familyTreeRef.current.offsetWidth;
+    const containerHeight = Math.max(600, window.innerHeight - 400);
+
+    const svg = d3
+      .select(familyTreeRef.current)
+      .append("svg")
+      .attr("width", containerWidth)
+      .attr("height", containerHeight)
+      .style("background", "#f8fafc");
+
+    // Add zoom behavior
+    const zoom = d3
+      .zoom<SVGSVGElement, unknown>()
+      .scaleExtent([0.1, 4])
+      .on("zoom", (event) => {
+        container.attr("transform", event.transform);
+      });
+
+    svg.call(zoom as any);
+
+    // Create main container group
+    const container = svg.append("g").attr("class", "fallback-container");
+
+    // Find the originator
+    const originator = data.find(
+      (d) => d.id === "LAKETU" || d.data.first_name?.toUpperCase() === "LAKETU"
+    );
+
+    if (!originator) {
+      throw new Error("No LAKETU originator found for fallback visualization");
+    }
+
+    // Create a simple hierarchy
+    const hierarchy = d3.hierarchy({
+      id: originator.id,
+      data: originator.data,
+      children: getChildrenRecursive(originator.id, data),
+    });
+
+    // Create tree layout
+    const treeLayout = d3
+      .tree<any>()
+      .size([containerWidth - 100, containerHeight - 100])
+      .separation((a, b) => (a.parent === b.parent ? 1 : 2));
+
+    const treeData = treeLayout(hierarchy);
+
+    // Create links
+    container
+      .selectAll(".link")
+      .data(treeData.links())
+      .enter()
+      .append("path")
+      .attr("class", "link")
+      .attr("d", (d: any) => {
+        return d3
+          .linkVertical()
+          .x((node: any) => node.x)
+          .y((node: any) => node.y)(d);
+      })
+      .attr("fill", "none")
+      .attr("stroke", "#374151")
+      .attr("stroke-width", 2);
+
+    // Create nodes
+    const nodes = container
+      .selectAll(".node")
+      .data(treeData.descendants())
+      .enter()
+      .append("g")
+      .attr("class", "node")
+      .attr("transform", (d: any) => `translate(${d.x},${d.y})`)
+      .style("cursor", "pointer");
+
+    // Add circles for nodes
+    nodes
+      .append("circle")
+      .attr("r", 30)
+      .attr(
+        "fill",
+        (d: any) => d.data.data?.lineageColor || LINEAGE_COLORS.DEFAULT
+      )
+      .attr("stroke", "#000")
+      .attr("stroke-width", 1);
+
+    // Add text
+    nodes
+      .append("text")
+      .attr("dy", "0.35em")
+      .attr("text-anchor", "middle")
+      .attr("fill", "white")
+      .attr("font-size", "10px")
+      .attr("font-weight", "bold")
+      .text((d: any) => {
+        const member = d.data.data || d.data;
+        return `${member.first_name} ${member.last_name}`.slice(0, 15);
+      });
+
+    // Add click handlers
+    nodes.on("click", (event, d: any) => {
+      const member = d.data.data || d.data;
+      toast.info(`Clicked on ${member.first_name} ${member.last_name}`, {
+        description: `ID: ${member.unique_id}`,
+      });
+    });
+
+    // Center the tree
+    const bounds = container.node()?.getBBox();
+    if (bounds) {
+      const translateX = (containerWidth - bounds.width) / 2 - bounds.x;
+      const translateY = 50;
+
+      const initialTransform = d3.zoomIdentity
+        .translate(translateX, translateY)
+        .scale(0.8);
+
+      svg.call(zoom.transform as any, initialTransform);
+    }
+
+    console.log("Fallback visualization created successfully");
+  };
+
+  // Helper function to get children recursively
+  const getChildrenRecursive = (
+    parentId: string,
+    allData: FamilyChartMember[],
+    depth = 0
+  ): any[] => {
+    if (depth > 5) return []; // Prevent infinite recursion
+
+    const parent = allData.find((d) => d.id === parentId);
+    if (!parent?.rels.children) return [];
+
+    return parent.rels.children
+      .map((childId) => {
+        const child = allData.find((d) => d.id === childId);
+        if (!child) return null;
+
+        return {
+          id: child.id,
+          data: child.data,
+          children: getChildrenRecursive(child.id, allData, depth + 1),
+        };
+      })
+      .filter(Boolean);
+  };
+
+  // Update family chart when data changes
+  useEffect(() => {
+    if (existingData.length > 0) {
+      const chartData = convertToFamilyChartFormat(existingData);
+      setFamilyChartData(chartData);
+
+      if (viewMode === "tree") {
+        initializeFamilyChart(chartData);
+      }
+    }
+  }, [existingData, viewMode, initializeFamilyChart]);
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -489,7 +1356,6 @@ const FamilyTreeUploadPage = () => {
                 Existing Family Tree Data ({existingData.length} records)
               </span>
               <div className="flex items-center gap-2">
-                {/* View Toggle Buttons */}
                 <div className="flex rounded-lg border p-1">
                   <Button
                     variant={viewMode === "table" ? "default" : "ghost"}
@@ -525,7 +1391,8 @@ const FamilyTreeUploadPage = () => {
               </div>
             </CardTitle>
             <CardDescription>
-              Current family members in the database
+              Current family members in the database - Interactive family tree
+              with click actions
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -549,16 +1416,16 @@ const FamilyTreeUploadPage = () => {
                           Date of Birth
                         </TableHead>
                         <TableHead className="min-w-[150px]">
-                          Father&apos;s First Name
+                          Father's First Name
                         </TableHead>
                         <TableHead className="min-w-[150px]">
-                          Father&apos;s Last Name
+                          Father's Last Name
                         </TableHead>
                         <TableHead className="min-w-[150px]">
-                          Mother&apos;s First Name
+                          Mother's First Name
                         </TableHead>
                         <TableHead className="min-w-[150px]">
-                          Mother&apos;s Last Name
+                          Mother's Last Name
                         </TableHead>
                         <TableHead className="min-w-[100px]">
                           Order of Birth
@@ -570,10 +1437,10 @@ const FamilyTreeUploadPage = () => {
                           Marital Status
                         </TableHead>
                         <TableHead className="min-w-[150px]">
-                          Spouse&apos;s First Name
+                          Spouse's First Name
                         </TableHead>
                         <TableHead className="min-w-[150px]">
-                          Spouse&apos;s Last Name
+                          Spouse's Last Name
                         </TableHead>
                         <TableHead className="min-w-[200px]">
                           Picture Link
@@ -624,14 +1491,135 @@ const FamilyTreeUploadPage = () => {
                 </div>
               </div>
             ) : (
-              <div className="border rounded-lg p-8 text-center">
-                <GitBranch className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Tree View Coming Soon
-                </h3>
-                <p className="text-gray-500">
-                  The family tree visualization will be implemented here.
-                </p>
+              <div className="border rounded-lg">
+                {familyChartData.length > 0 ? (
+                  <div>
+                    {/* Legend */}
+                    <div className="p-4 border-b bg-gray-50">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <h4 className="font-semibold mb-2">
+                            Lineage Colors:
+                          </h4>
+                          <div className="grid grid-cols-1 gap-2 text-xs">
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-4 h-4 rounded"
+                                style={{
+                                  backgroundColor: LINEAGE_COLORS.LAKETU,
+                                }}
+                              ></div>
+                              <span>LAKETU (Originator)</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-4 h-4 rounded"
+                                style={{
+                                  backgroundColor: LINEAGE_COLORS.EGUNDEBI,
+                                }}
+                              ></div>
+                              <span>EGUNDEBI (First Mosuro)</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-4 h-4 rounded"
+                                style={{
+                                  backgroundColor: LINEAGE_COLORS.ADELAJA,
+                                }}
+                              ></div>
+                              <span>ADELAJA Lineage</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-4 h-4 rounded"
+                                style={{
+                                  backgroundColor: LINEAGE_COLORS.CHILD2,
+                                }}
+                              ></div>
+                              <span>2nd Child Lineage</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-4 h-4 rounded"
+                                style={{
+                                  backgroundColor: LINEAGE_COLORS.CHILD3,
+                                }}
+                              ></div>
+                              <span>3rd Child Lineage</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-4 h-4 rounded"
+                                style={{
+                                  backgroundColor: LINEAGE_COLORS.CHILD4,
+                                }}
+                              ></div>
+                              <span>4th Child Lineage</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold mb-2">
+                            Connection Types:
+                          </h4>
+                          <div className="space-y-2 text-xs">
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-0.5 bg-gray-700"></div>
+                              <span>Parent-Child Relationships</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-6 h-0.5 bg-red-600"
+                                style={{
+                                  borderTop: "2px dashed #dc2626",
+                                  background: "none",
+                                }}
+                              ></div>
+                              <span>Marriage/Spouse Relationships</span>
+                            </div>
+                            <div className="text-xs text-gray-600 mt-2">
+                              All family connections are now visible with proper
+                              lines
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold mb-2">
+                            Interactive Features:
+                          </h4>
+                          <ul className="text-xs space-y-1">
+                            <li>• Click on any family member to see details</li>
+                            <li>• Zoom in/out using mouse wheel or pinch</li>
+                            <li>• Pan by dragging the background</li>
+                            <li>
+                              • Males: Square shapes, Females: Circular shapes
+                            </li>
+                            <li>• Tree auto-zooms to fit on initial load</li>
+                            <li>• Responsive design adapts to screen size</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Family Chart Container */}
+                    <div
+                      ref={familyTreeRef}
+                      className="w-full min-h-[600px] bg-white overflow-hidden"
+                      style={{ height: "calc(100vh - 400px)" }}
+                    />
+                  </div>
+                ) : (
+                  <div className="p-8 text-center">
+                    <GitBranch className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      No Family Tree Data
+                    </h3>
+                    <p className="text-gray-500">
+                      Upload family data with LAKETU as the originator to build
+                      the interactive tree.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
