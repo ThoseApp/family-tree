@@ -918,8 +918,8 @@ const FamilyTreeUploadPage = () => {
       // Calculate tree layout using family-chart
       const tree_data = f3.CalculateTree({
         data: data,
-        node_separation: 250,
-        level_separation: 150,
+        node_separation: 400,
+        level_separation: 250,
         main_id: originator.id,
       });
 
@@ -1210,8 +1210,8 @@ const FamilyTreeUploadPage = () => {
     // Create tree layout
     const treeLayout = d3
       .tree<any>()
-      .size([containerWidth - 100, containerHeight - 100])
-      .separation((a, b) => (a.parent === b.parent ? 1 : 2));
+      .size([containerWidth - 200, containerHeight - 200])
+      .separation((a, b) => (a.parent === b.parent ? 2 : 3));
 
     const treeData = treeLayout(hierarchy);
 
@@ -1229,8 +1229,8 @@ const FamilyTreeUploadPage = () => {
           .y((node: any) => node.y)(d);
       })
       .attr("fill", "none")
-      .attr("stroke", "#374151")
-      .attr("stroke-width", 2);
+      .attr("stroke", "#000000")
+      .attr("stroke-width", 3);
 
     // Create nodes
     const nodes = container
@@ -1245,13 +1245,13 @@ const FamilyTreeUploadPage = () => {
     // Add circles for nodes
     nodes
       .append("circle")
-      .attr("r", 30)
+      .attr("r", 40)
       .attr(
         "fill",
         (d: any) => d.data.data?.lineageColor || LINEAGE_COLORS.DEFAULT
       )
       .attr("stroke", "#000")
-      .attr("stroke-width", 1);
+      .attr("stroke-width", 2);
 
     // Add text
     nodes
@@ -1259,11 +1259,12 @@ const FamilyTreeUploadPage = () => {
       .attr("dy", "0.35em")
       .attr("text-anchor", "middle")
       .attr("fill", "white")
-      .attr("font-size", "10px")
+      .attr("font-size", "11px")
       .attr("font-weight", "bold")
       .text((d: any) => {
         const member = d.data.data || d.data;
-        return `${member.first_name} ${member.last_name}`.slice(0, 15);
+        const name = `${member.first_name} ${member.last_name}`;
+        return name.length > 12 ? name.slice(0, 12) + "..." : name;
       });
 
     // Add click handlers
@@ -1606,7 +1607,28 @@ const FamilyTreeUploadPage = () => {
                       ref={familyTreeRef}
                       className="w-full min-h-[600px] bg-white overflow-hidden"
                       style={{ height: "calc(100vh - 400px)" }}
-                    />
+                    >
+                      {/* CSS Styles for family-chart connections */}
+                      <style
+                        dangerouslySetInnerHTML={{
+                          __html: `
+                            .links_view path.link {
+                              stroke: #000000 !important;
+                              stroke-width: 3px !important;
+                            }
+                            .link {
+                              stroke: #000000 !important;
+                              stroke-width: 3px !important;
+                            }
+                            /* Ensure fallback visualization links are also black */
+                            .fallback-container .link {
+                              stroke: #000000 !important;
+                              stroke-width: 3px !important;
+                            }
+                          `,
+                        }}
+                      />
+                    </div>
                   </div>
                 ) : (
                   <div className="p-8 text-center">
