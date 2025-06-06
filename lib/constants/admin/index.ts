@@ -55,11 +55,11 @@ export const navLinksTopSection: NavLink[] = [
     href: "/admin/family-tree",
     icon: TreesIcon,
   },
-  {
-    label: "Family Members",
-    href: "/admin/family-members",
-    icon: UsersIcon,
-  },
+  // {
+  //   label: "Family Members",
+  //   href: "/admin/family-members",
+  //   icon: UsersIcon,
+  // },
   {
     label: "Events",
     href: "/admin/events",
