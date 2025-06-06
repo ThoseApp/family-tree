@@ -11,6 +11,40 @@ interface DashboardOverviewCardProps {
   routePath: string;
 }
 
+const formatDate = (dateString: string) => {
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInDays = Math.ceil(
+      (date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    // Format the date in a readable format
+    const formattedDate = date.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    // Add relative time context for better UX
+    if (diffInDays === 0) {
+      return `Today • ${formattedDate}`;
+    } else if (diffInDays === 1) {
+      return `Tomorrow • ${formattedDate}`;
+    } else if (diffInDays > 0 && diffInDays <= 7) {
+      return `In ${diffInDays} days • ${formattedDate}`;
+    } else if (diffInDays < 0 && diffInDays >= -7) {
+      return `${Math.abs(diffInDays)} days ago • ${formattedDate}`;
+    } else {
+      return formattedDate;
+    }
+  } catch (error) {
+    // Fallback to original string if parsing fails
+    return dateString;
+  }
+};
+
 const DashboardOverviewCard = ({
   imageSrc,
   title,
@@ -18,6 +52,8 @@ const DashboardOverviewCard = ({
   description,
   routePath,
 }: DashboardOverviewCardProps) => {
+  const formattedDate = formatDate(date);
+
   return (
     <div className=" relative h-[390px] w-full rounded-lg bg-background shadow-md">
       <Image
@@ -32,7 +68,11 @@ const DashboardOverviewCard = ({
       <div className="z-10 absolute inset-0 h-full w-full flex flex-col items-center justify-between p-8 lg:p-12">
         <div className="flex flex-col items-center justify-center gap-y-2 text-background font-semibold">
           <h3 className="lg:text-4xl text-2xl ">{title}</h3>
-          <p className="lg:text-xl text-lg ">{date}</p>
+          <div className="text-center">
+            <p className="lg:text-lg text-base text-background/90 font-medium">
+              {formattedDate}
+            </p>
+          </div>
           <p className="lg:text-xl text-lg ">{description}</p>
         </div>
 
