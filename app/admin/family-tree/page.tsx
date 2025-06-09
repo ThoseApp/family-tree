@@ -1417,16 +1417,16 @@ const FamilyTreeUploadPage = () => {
                           Date of Birth
                         </TableHead>
                         <TableHead className="min-w-[150px]">
-                          Father's First Name
+                          Father&apos;s First Name
                         </TableHead>
                         <TableHead className="min-w-[150px]">
-                          Father's Last Name
+                          Father&apos;s Last Name
                         </TableHead>
                         <TableHead className="min-w-[150px]">
-                          Mother's First Name
+                          Mother&apos;s First Name
                         </TableHead>
                         <TableHead className="min-w-[150px]">
-                          Mother's Last Name
+                          Mother&apos;s Last Name
                         </TableHead>
                         <TableHead className="min-w-[100px]">
                           Order of Birth
@@ -1438,10 +1438,10 @@ const FamilyTreeUploadPage = () => {
                           Marital Status
                         </TableHead>
                         <TableHead className="min-w-[150px]">
-                          Spouse's First Name
+                          Spouse&apos;s First Name
                         </TableHead>
                         <TableHead className="min-w-[150px]">
-                          Spouse's Last Name
+                          Spouse&apos;s Last Name
                         </TableHead>
                         <TableHead className="min-w-[200px]">
                           Picture Link
