@@ -2573,31 +2573,7 @@ const FamilyTreeUploadPage = () => {
                             </div>
                           </div>
                         </div>
-                        <div>
-                          <h4 className="font-semibold mb-2">
-                            Connection Types:
-                          </h4>
-                          <div className="space-y-2 text-xs">
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-0.5 bg-gray-700"></div>
-                              <span>Parent-Child Relationships</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <div
-                                className="w-6 h-0.5 bg-red-600"
-                                style={{
-                                  borderTop: "2px dashed #dc2626",
-                                  background: "none",
-                                }}
-                              ></div>
-                              <span>Marriage/Spouse Relationships</span>
-                            </div>
-                            <div className="text-xs text-gray-600 mt-2">
-                              All family connections are now visible with proper
-                              lines
-                            </div>
-                          </div>
-                        </div>
+
                         <div>
                           <h4 className="font-semibold mb-2">
                             Interactive Features:
