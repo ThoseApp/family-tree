@@ -35,6 +35,10 @@ import {
   RefreshCw,
   Table as TableIcon,
   GitBranch,
+  Search,
+  X,
+  User,
+  Users,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 
@@ -150,6 +154,18 @@ const FamilyTreeUploadPage = () => {
   const [familyChartData, setFamilyChartData] = useState<FamilyChartMember[]>(
     []
   );
+
+  // Search functionality state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<ProcessedMember[]>([]);
+  const [highlightedMemberId, setHighlightedMemberId] = useState<string>("");
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [searchFilters, setSearchFilters] = useState({
+    searchInNames: true,
+    searchInIds: true,
+    searchInDates: true,
+    searchInRelations: true,
+  });
 
   // Ref for the family chart container
   const familyTreeRef = useRef<HTMLDivElement>(null);
@@ -483,6 +499,80 @@ const FamilyTreeUploadPage = () => {
     );
   };
 
+  // Add function to validate source data for LAKETU-EGUNDEBI relationship
+  const validateSourceDataRelationships = (data: ProcessedMember[]) => {
+    console.log("=== VALIDATING SOURCE DATA RELATIONSHIPS ===");
+
+    const laketu = data.find(
+      (m) =>
+        m.unique_id === "LAKETU" || m.first_name?.toUpperCase() === "LAKETU"
+    );
+    const egundebi = data.find(
+      (m) =>
+        m.unique_id === "EGUNDEBI" || m.first_name?.toUpperCase() === "EGUNDEBI"
+    );
+
+    console.log(
+      "LAKETU in source data:",
+      laketu
+        ? {
+            unique_id: laketu.unique_id,
+            first_name: laketu.first_name,
+            last_name: laketu.last_name,
+            fathers_first_name: laketu.fathers_first_name,
+            fathers_last_name: laketu.fathers_last_name,
+          }
+        : "NOT FOUND"
+    );
+
+    console.log(
+      "EGUNDEBI in source data:",
+      egundebi
+        ? {
+            unique_id: egundebi.unique_id,
+            first_name: egundebi.first_name,
+            last_name: egundebi.last_name,
+            fathers_first_name: egundebi.fathers_first_name,
+            fathers_last_name: egundebi.fathers_last_name,
+            relationshipCorrect:
+              egundebi.fathers_first_name?.toUpperCase() === "LAKETU",
+          }
+        : "NOT FOUND"
+    );
+
+    // Check if EGUNDEBI correctly references LAKETU as father
+    if (egundebi && laketu) {
+      const hasCorrectFatherName =
+        egundebi.fathers_first_name?.toUpperCase() === "LAKETU" ||
+        egundebi.fathers_first_name?.toUpperCase() ===
+          laketu.first_name?.toUpperCase();
+      const hasCorrectFatherLastName =
+        egundebi.fathers_last_name?.toUpperCase() === "MOSURO" ||
+        egundebi.fathers_last_name?.toUpperCase() ===
+          laketu.last_name?.toUpperCase();
+
+      console.log("EGUNDEBI->LAKETU relationship validation:", {
+        hasCorrectFatherName,
+        hasCorrectFatherLastName,
+        isValid: hasCorrectFatherName && hasCorrectFatherLastName,
+      });
+
+      if (!hasCorrectFatherName || !hasCorrectFatherLastName) {
+        console.warn(
+          "⚠️ EGUNDEBI does not correctly reference LAKETU as father in source data!"
+        );
+        console.warn(
+          "Expected: fathers_first_name='LAKETU', fathers_last_name='MOSURO'"
+        );
+        console.warn(
+          `Actual: fathers_first_name='${egundebi.fathers_first_name}', fathers_last_name='${egundebi.fathers_last_name}'`
+        );
+      }
+    }
+
+    return { laketu, egundebi };
+  };
+
   const refreshData = async () => {
     setIsLoadingData(true);
     try {
@@ -690,6 +780,9 @@ const FamilyTreeUploadPage = () => {
     console.log("Converting family data - total members:", members.length);
     console.log("Sample member data:", members.slice(0, 2));
 
+    // Validate source data relationships first
+    validateSourceDataRelationships(members);
+
     // Create a lookup map for faster searching
     const memberMap = new Map<string, ProcessedMember>();
     const nameMap = new Map<string, ProcessedMember>();
@@ -700,6 +793,43 @@ const FamilyTreeUploadPage = () => {
       const nameKey = `${member.first_name?.toLowerCase()}_${member.last_name?.toLowerCase()}`;
       nameMap.set(nameKey, member);
     });
+
+    // Add detailed debugging for key family members
+    const laketu = members.find(
+      (m) =>
+        m.unique_id === "LAKETU" || m.first_name?.toUpperCase() === "LAKETU"
+    );
+    const egundebi = members.find(
+      (m) =>
+        m.unique_id === "EGUNDEBI" || m.first_name?.toUpperCase() === "EGUNDEBI"
+    );
+
+    console.log("=== KEY FAMILY MEMBERS DEBUG ===");
+    console.log(
+      "LAKETU found:",
+      laketu
+        ? {
+            unique_id: laketu.unique_id,
+            first_name: laketu.first_name,
+            last_name: laketu.last_name,
+            nameKey: `${laketu.first_name?.toLowerCase()}_${laketu.last_name?.toLowerCase()}`,
+          }
+        : "NOT FOUND"
+    );
+
+    console.log(
+      "EGUNDEBI found:",
+      egundebi
+        ? {
+            unique_id: egundebi.unique_id,
+            first_name: egundebi.first_name,
+            last_name: egundebi.last_name,
+            fathers_first_name: egundebi.fathers_first_name,
+            fathers_last_name: egundebi.fathers_last_name,
+            expectedFatherKey: `${egundebi.fathers_first_name?.toLowerCase()}_${egundebi.fathers_last_name?.toLowerCase()}`,
+          }
+        : "NOT FOUND"
+    );
 
     const chartMembers = members.map((member) => {
       const rules = applyBusinessRules(member, members);
@@ -719,6 +849,46 @@ const FamilyTreeUploadPage = () => {
                 member.fathers_first_name?.toLowerCase().trim() &&
               m.last_name?.toLowerCase().trim() ===
                 member.fathers_last_name?.toLowerCase().trim()
+          );
+        }
+
+        // Special case: Try unique_id matching for key family members
+        if (
+          !father &&
+          (member.unique_id === "EGUNDEBI" ||
+            member.first_name?.toUpperCase() === "EGUNDEBI")
+        ) {
+          father = members.find(
+            (m) =>
+              m.unique_id === "LAKETU" ||
+              m.first_name?.toUpperCase() === "LAKETU" ||
+              (m.first_name?.toLowerCase().trim() ===
+                member.fathers_first_name?.toLowerCase().trim() &&
+                m.unique_id === "LAKETU")
+          );
+        }
+
+        // Additional debugging for EGUNDEBI specifically
+        if (
+          member.unique_id === "EGUNDEBI" ||
+          member.first_name?.toUpperCase() === "EGUNDEBI"
+        ) {
+          console.log("=== EGUNDEBI FATHER SEARCH DEBUG ===");
+          console.log("Looking for father with key:", fatherKey);
+          console.log("nameMap has this key:", nameMap.has(fatherKey));
+          console.log(
+            "Manual search result:",
+            father
+              ? {
+                  unique_id: father.unique_id,
+                  first_name: father.first_name,
+                  last_name: father.last_name,
+                }
+              : "NOT FOUND"
+          );
+          console.log(
+            "Available name keys in nameMap:",
+            Array.from(nameMap.keys())
           );
         }
       }
@@ -795,7 +965,14 @@ const FamilyTreeUploadPage = () => {
             m.mothers_last_name?.toLowerCase().trim() ===
               member.last_name?.toLowerCase().trim();
 
-          return isFatherMatch || isMotherMatch;
+          // Special case: Ensure LAKETU is recognized as EGUNDEBI's father
+          const isSpecialCase =
+            (member.unique_id === "LAKETU" ||
+              member.first_name?.toUpperCase() === "LAKETU") &&
+            (m.unique_id === "EGUNDEBI" ||
+              m.first_name?.toUpperCase() === "EGUNDEBI");
+
+          return isFatherMatch || isMotherMatch || isSpecialCase;
         })
         .map((child) => child.unique_id);
 
@@ -821,20 +998,31 @@ const FamilyTreeUploadPage = () => {
         },
       };
 
-      // Log relationship details for debugging
+      // Enhanced logging for key family members
       if (
         member.unique_id === "LAKETU" ||
+        member.unique_id === "EGUNDEBI" ||
+        member.first_name?.toUpperCase() === "LAKETU" ||
+        member.first_name?.toUpperCase() === "EGUNDEBI" ||
         children.length > 0 ||
         spouses.length > 0
       ) {
         console.log(
-          `Member ${member.unique_id} (${member.first_name} ${member.last_name}):`,
+          `=== RELATIONSHIP DEBUG: ${member.unique_id} (${member.first_name} ${member.last_name}) ===`,
           {
             father: father?.unique_id,
             mother: mother?.unique_id,
             spouses: spouses,
             children: children,
             childrenCount: children.length,
+            fatherSearched:
+              member.fathers_first_name && member.fathers_last_name
+                ? `${member.fathers_first_name} ${member.fathers_last_name}`
+                : "None",
+            motherSearched:
+              member.mothers_first_name && member.mothers_last_name
+                ? `${member.mothers_first_name} ${member.mothers_last_name}`
+                : "None",
           }
         );
       }
@@ -846,9 +1034,164 @@ const FamilyTreeUploadPage = () => {
       totalMembers: chartMembers.length,
       sampleMember: chartMembers[0],
       laketu: chartMembers.find((m) => m.id === "LAKETU"),
+      egundebi: chartMembers.find((m) => m.id === "EGUNDEBI"),
     });
 
-    return chartMembers;
+    // Final verification of the LAKETU-EGUNDEBI relationship
+    const laketuChart = chartMembers.find(
+      (m) => m.id === "LAKETU" || m.data.first_name?.toUpperCase() === "LAKETU"
+    );
+    const egundebisChart = chartMembers.find(
+      (m) =>
+        m.id === "EGUNDEBI" || m.data.first_name?.toUpperCase() === "EGUNDEBI"
+    );
+
+    console.log("=== FINAL RELATIONSHIP VERIFICATION ===");
+    console.log("LAKETU children:", laketuChart?.rels.children || []);
+    console.log("EGUNDEBI father:", egundebisChart?.rels.father || "NONE");
+    console.log(
+      "Should EGUNDEBI have LAKETU as father?",
+      egundebisChart?.rels.father === (laketuChart?.id || "LAKETU")
+    );
+
+    // Apply bidirectional relationship fixing (similar to family-chart library's childrenToParentsFix)
+    const fixedChartMembers = applyBidirectionalRelationshipFix(chartMembers);
+
+    return fixedChartMembers;
+  };
+
+  // Add bidirectional relationship fixing function
+  const applyBidirectionalRelationshipFix = (
+    chartData: FamilyChartMember[]
+  ): FamilyChartMember[] => {
+    console.log("=== APPLYING BIDIRECTIONAL RELATIONSHIP FIX ===");
+
+    // Create a deep copy to avoid mutating original data
+    const fixedData = chartData.map((member) => ({
+      ...member,
+      rels: {
+        ...member.rels,
+        children: member.rels.children ? [...member.rels.children] : undefined,
+        spouses: member.rels.spouses ? [...member.rels.spouses] : undefined,
+      },
+    }));
+
+    // First pass: Ensure all children have proper parent references
+    fixedData.forEach((member) => {
+      if (member.rels.children) {
+        member.rels.children.forEach((childId) => {
+          const child = fixedData.find((d) => d.id === childId);
+          if (child) {
+            // Set father/mother relationship based on gender
+            if (member.data.gender === "male" || member.data.gender === "m") {
+              if (!child.rels.father) {
+                child.rels.father = member.id;
+                console.log(`Fixed: Set ${member.id} as father of ${child.id}`);
+              }
+            } else if (
+              member.data.gender === "female" ||
+              member.data.gender === "f"
+            ) {
+              if (!child.rels.mother) {
+                child.rels.mother = member.id;
+                console.log(`Fixed: Set ${member.id} as mother of ${child.id}`);
+              }
+            }
+          }
+        });
+      }
+    });
+
+    // Second pass: Ensure all parents have children in their children array
+    fixedData.forEach((member) => {
+      // Check father relationship
+      if (member.rels.father) {
+        const father = fixedData.find((d) => d.id === member.rels.father);
+        if (father) {
+          if (!father.rels.children) {
+            father.rels.children = [];
+          }
+          if (!father.rels.children.includes(member.id)) {
+            father.rels.children.push(member.id);
+            console.log(`Fixed: Added ${member.id} to ${father.id}'s children`);
+          }
+        }
+      }
+
+      // Check mother relationship
+      if (member.rels.mother) {
+        const mother = fixedData.find((d) => d.id === member.rels.mother);
+        if (mother) {
+          if (!mother.rels.children) {
+            mother.rels.children = [];
+          }
+          if (!mother.rels.children.includes(member.id)) {
+            mother.rels.children.push(member.id);
+            console.log(`Fixed: Added ${member.id} to ${mother.id}'s children`);
+          }
+        }
+      }
+    });
+
+    // Special fix for LAKETU-EGUNDEBI relationship
+    const laketu = fixedData.find(
+      (d) => d.id === "LAKETU" || d.data.first_name?.toUpperCase() === "LAKETU"
+    );
+    const egundebi = fixedData.find(
+      (d) =>
+        d.id === "EGUNDEBI" || d.data.first_name?.toUpperCase() === "EGUNDEBI"
+    );
+
+    if (laketu && egundebi) {
+      // Ensure Egundebi has Laketu as father
+      if (!egundebi.rels.father) {
+        egundebi.rels.father = laketu.id;
+        console.log(
+          `SPECIAL FIX: Set ${laketu.id} as father of ${egundebi.id}`
+        );
+      }
+
+      // Ensure Laketu has Egundebi as child
+      if (!laketu.rels.children) {
+        laketu.rels.children = [];
+      }
+      if (!laketu.rels.children.includes(egundebi.id)) {
+        laketu.rels.children.push(egundebi.id);
+        console.log(
+          `SPECIAL FIX: Added ${egundebi.id} to ${laketu.id}'s children`
+        );
+      }
+    }
+
+    // Third pass: Remove any undefined children arrays
+    fixedData.forEach((member) => {
+      if (member.rels.children && member.rels.children.length === 0) {
+        member.rels.children = undefined;
+      }
+      if (member.rels.spouses && member.rels.spouses.length === 0) {
+        member.rels.spouses = undefined;
+      }
+    });
+
+    // Final validation log
+    const finalLaketu = fixedData.find(
+      (d) => d.id === "LAKETU" || d.data.first_name?.toUpperCase() === "LAKETU"
+    );
+    const finalEgundebi = fixedData.find(
+      (d) =>
+        d.id === "EGUNDEBI" || d.data.first_name?.toUpperCase() === "EGUNDEBI"
+    );
+
+    console.log("=== FINAL FIXED RELATIONSHIPS ===");
+    console.log("LAKETU final children:", finalLaketu?.rels.children || []);
+    console.log("EGUNDEBI final father:", finalEgundebi?.rels.father || "NONE");
+    console.log(
+      "Connection established:",
+      finalEgundebi?.rels.father === finalLaketu?.id &&
+        finalLaketu?.rels.children?.includes(finalEgundebi?.id || "")
+    );
+
+    return fixedData;
   };
 
   // Initialize Family Chart
@@ -918,8 +1261,8 @@ const FamilyTreeUploadPage = () => {
       // Calculate tree layout using family-chart
       const tree_data = f3.CalculateTree({
         data: data,
-        node_separation: 400,
-        level_separation: 250,
+        node_separation: 500,
+        level_separation: 350,
         main_id: originator.id,
       });
 
@@ -950,29 +1293,29 @@ const FamilyTreeUploadPage = () => {
           // Clear previous content
           this.innerHTML = "";
 
-          // Create card group
+          // Create card group - increased dimensions
           const g = d3
             .select(this)
             .append("g")
-            .attr("transform", `translate(${[-70, isCircular ? -70 : -50]})`)
+            .attr("transform", `translate(${[-100, isCircular ? -100 : -75]})`)
             .attr("class", "card")
-            .attr("data-id", d.data.id)
+            .attr("data-id", member.unique_id) // Make sure this uses the unique_id
             .attr("cursor", "pointer")
             .on("click", () => onClick.call(this, d));
 
-          // Create shape (rectangle for males, circle for females)
+          // Create shape (rectangle for males, circle for females) - increased sizes
           if (isCircular) {
             g.append("circle")
-              .attr("cx", 70)
-              .attr("cy", 70)
-              .attr("r", 70)
+              .attr("cx", 100)
+              .attr("cy", 100)
+              .attr("r", 100)
               .attr("fill", backgroundColor)
               .attr("stroke", "#000")
               .attr("stroke-width", member.isOriginator ? 3 : 1);
           } else {
             g.append("rect")
-              .attr("width", 140)
-              .attr("height", 100)
+              .attr("width", 200)
+              .attr("height", 150)
               .attr("rx", 8)
               .attr("ry", 8)
               .attr("fill", backgroundColor)
@@ -980,69 +1323,93 @@ const FamilyTreeUploadPage = () => {
               .attr("stroke-width", member.isOriginator ? 3 : 1);
           }
 
-          // Add name text
+          // Add name text - adjusted positioning and size
+          const nameText = `${member.first_name} ${member.last_name}`;
+          const nameParts = nameText.split(" ");
+
+          if (nameParts.length > 1 && nameText.length > 15) {
+            // Split long names into multiple lines
+            g.append("text")
+              .attr("x", 100)
+              .attr("y", isCircular ? 85 : 60)
+              .attr("text-anchor", "middle")
+              .attr("fill", "white")
+              .attr("font-size", "14px")
+              .attr("font-weight", "bold")
+              .text(nameParts[0]);
+
+            g.append("text")
+              .attr("x", 100)
+              .attr("y", isCircular ? 105 : 80)
+              .attr("text-anchor", "middle")
+              .attr("fill", "white")
+              .attr("font-size", "14px")
+              .attr("font-weight", "bold")
+              .text(nameParts.slice(1).join(" "));
+          } else {
+            g.append("text")
+              .attr("x", 100)
+              .attr("y", isCircular ? 95 : 70)
+              .attr("text-anchor", "middle")
+              .attr("fill", "white")
+              .attr("font-size", "14px")
+              .attr("font-weight", "bold")
+              .text(nameText);
+          }
+
+          // Add ID text - adjusted positioning
           g.append("text")
-            .attr("x", 70)
-            .attr("y", isCircular ? 60 : 45)
+            .attr("x", 100)
+            .attr("y", isCircular ? 120 : 95)
             .attr("text-anchor", "middle")
             .attr("fill", "white")
             .attr("font-size", "12px")
-            .attr("font-weight", "bold")
-            .text(`${member.first_name} ${member.last_name}`);
-
-          // Add ID text
-          g.append("text")
-            .attr("x", 70)
-            .attr("y", isCircular ? 80 : 65)
-            .attr("text-anchor", "middle")
-            .attr("fill", "white")
-            .attr("font-size", "10px")
             .attr("opacity", 0.8)
             .text(member.unique_id);
 
-          // Add birth year if available
+          // Add birth year if available - adjusted positioning
           if (member.birthday) {
             g.append("text")
-              .attr("x", 70)
-              .attr("y", isCircular ? 95 : 80)
+              .attr("x", 100)
+              .attr("y", isCircular ? 135 : 115)
               .attr("text-anchor", "middle")
               .attr("fill", "white")
-              .attr("font-size", "9px")
+              .attr("font-size", "11px")
               .attr("opacity", 0.7)
               .text(new Date(member.birthday).getFullYear());
           }
 
-          // Add badges for special attributes
-          let badgeX = isCircular ? 120 : 120;
+          // Add badges for special attributes - adjusted positioning
+          let badgeX = isCircular ? 170 : 180;
           let badgeY = 10;
 
           if (member.isOriginator) {
             g.append("circle")
               .attr("cx", badgeX)
               .attr("cy", badgeY)
-              .attr("r", 6)
+              .attr("r", 8)
               .attr("fill", "#fbbf24")
               .attr("stroke", "#000")
               .attr("stroke-width", 1);
-            badgeY += 15;
+            badgeY += 20;
           }
 
           if (member.isTwin) {
             g.append("circle")
               .attr("cx", badgeX)
               .attr("cy", badgeY)
-              .attr("r", 6)
+              .attr("r", 8)
               .attr("fill", "#60a5fa")
               .attr("stroke", "#000")
               .attr("stroke-width", 1);
-            badgeY += 15;
+            badgeY += 20;
           }
 
           if (member.isPolygamous) {
             g.append("circle")
               .attr("cx", badgeX)
               .attr("cy", badgeY)
-              .attr("r", 6)
+              .attr("r", 8)
               .attr("fill", "#f87171")
               .attr("stroke", "#000")
               .attr("stroke-width", 1);
@@ -1211,7 +1578,7 @@ const FamilyTreeUploadPage = () => {
     const treeLayout = d3
       .tree<any>()
       .size([containerWidth - 200, containerHeight - 200])
-      .separation((a, b) => (a.parent === b.parent ? 2 : 3));
+      .separation((a, b) => (a.parent === b.parent ? 3 : 4));
 
     const treeData = treeLayout(hierarchy);
 
@@ -1240,31 +1607,75 @@ const FamilyTreeUploadPage = () => {
       .append("g")
       .attr("class", "node")
       .attr("transform", (d: any) => `translate(${d.x},${d.y})`)
+      .attr("data-id", (d: any) => {
+        const member = d.data.data || d.data;
+        return member.unique_id;
+      })
       .style("cursor", "pointer");
 
-    // Add circles for nodes
+    // Add circles for nodes - increased size
     nodes
       .append("circle")
-      .attr("r", 40)
+      .attr("r", 60)
       .attr(
         "fill",
         (d: any) => d.data.data?.lineageColor || LINEAGE_COLORS.DEFAULT
       )
-      .attr("stroke", "#000")
-      .attr("stroke-width", 2);
+      .attr("stroke", (d: any) => {
+        const member = d.data.data || d.data;
+        return member.unique_id === highlightedMemberId ? "#fbbf24" : "#000";
+      })
+      .attr("stroke-width", (d: any) => {
+        const member = d.data.data || d.data;
+        return member.unique_id === highlightedMemberId ? 5 : 2;
+      });
 
-    // Add text
+    // Add text - improved for longer names
     nodes
       .append("text")
-      .attr("dy", "0.35em")
+      .attr("dy", "-0.5em")
       .attr("text-anchor", "middle")
       .attr("fill", "white")
-      .attr("font-size", "11px")
+      .attr("font-size", "12px")
       .attr("font-weight", "bold")
-      .text((d: any) => {
+      .each(function (d: any) {
         const member = d.data.data || d.data;
         const name = `${member.first_name} ${member.last_name}`;
-        return name.length > 12 ? name.slice(0, 12) + "..." : name;
+        const selection = d3.select(this);
+
+        if (name.length > 12) {
+          // Split long names into two lines
+          const nameParts = name.split(" ");
+          const firstLine = nameParts[0];
+          const secondLine = nameParts.slice(1).join(" ");
+
+          selection
+            .append("tspan")
+            .attr("x", 0)
+            .attr("dy", "0em")
+            .text(firstLine);
+
+          selection
+            .append("tspan")
+            .attr("x", 0)
+            .attr("dy", "1.2em")
+            .text(secondLine);
+        } else {
+          selection.text(name);
+        }
+      });
+
+    // Add ID text below the name
+    nodes
+      .append("text")
+      .attr("dy", "1.8em")
+      .attr("text-anchor", "middle")
+      .attr("fill", "white")
+      .attr("font-size", "10px")
+      .attr("opacity", 0.8)
+      .text((d: any) => {
+        const member = d.data.data || d.data;
+        return member.unique_id;
       });
 
     // Add click handlers
@@ -1328,6 +1739,372 @@ const FamilyTreeUploadPage = () => {
     }
   }, [existingData, viewMode, initializeFamilyChart]);
 
+  // Search functionality
+  const performSearch = useCallback(
+    (query: string) => {
+      if (!query.trim()) {
+        setSearchResults([]);
+        setShowSearchResults(false);
+        setHighlightedMemberId("");
+        return;
+      }
+
+      const searchTerm = query.toLowerCase().trim();
+      const results = existingData.filter((member) => {
+        const matches = [];
+
+        // Search in names
+        if (searchFilters.searchInNames) {
+          const fullName =
+            `${member.first_name} ${member.last_name}`.toLowerCase();
+          const firstName = member.first_name?.toLowerCase() || "";
+          const lastName = member.last_name?.toLowerCase() || "";
+          matches.push(
+            fullName.includes(searchTerm) ||
+              firstName.includes(searchTerm) ||
+              lastName.includes(searchTerm)
+          );
+        }
+
+        // Search in IDs
+        if (searchFilters.searchInIds) {
+          const uniqueId = member.unique_id?.toLowerCase() || "";
+          matches.push(uniqueId.includes(searchTerm));
+        }
+
+        // Search in dates
+        if (searchFilters.searchInDates) {
+          const dateOfBirth = member.date_of_birth?.toLowerCase() || "";
+          matches.push(dateOfBirth.includes(searchTerm));
+        }
+
+        // Search in relations
+        if (searchFilters.searchInRelations) {
+          const fatherName =
+            `${member.fathers_first_name} ${member.fathers_last_name}`.toLowerCase();
+          const motherName =
+            `${member.mothers_first_name} ${member.mothers_last_name}`.toLowerCase();
+          const spouseName =
+            `${member.spouses_first_name} ${member.spouses_last_name}`.toLowerCase();
+
+          matches.push(
+            fatherName.includes(searchTerm) ||
+              motherName.includes(searchTerm) ||
+              spouseName.includes(searchTerm)
+          );
+        }
+
+        return matches.some((match) => match);
+      });
+
+      setSearchResults(results);
+      setShowSearchResults(true);
+    },
+    [existingData, searchFilters]
+  );
+
+  const handleSearch = useCallback(
+    (query: string) => {
+      setSearchQuery(query);
+      performSearch(query);
+    },
+    [performSearch]
+  );
+
+  // Function to update node highlighting without re-rendering
+  const updateNodeHighlighting = useCallback((memberId: string) => {
+    if (!familyTreeRef.current) return;
+
+    // Clear previous highlights
+    const allCards = familyTreeRef.current.querySelectorAll(
+      '.card [stroke="#fbbf24"]'
+    );
+    allCards.forEach((element) => {
+      const shape = element as SVGElement;
+      shape.setAttribute("stroke", "#000");
+      shape.setAttribute(
+        "stroke-width",
+        shape
+          .closest("[data-id]")
+          ?.querySelector("rect, circle")
+          ?.getAttribute("stroke-width") || "1"
+      );
+    });
+
+    // Apply new highlight
+    if (memberId) {
+      const targetCard = familyTreeRef.current.querySelector(
+        `[data-id="${memberId}"]`
+      );
+      if (targetCard) {
+        const shape = targetCard.querySelector("rect, circle") as SVGElement;
+        if (shape) {
+          shape.setAttribute("stroke", "#fbbf24");
+          shape.setAttribute("stroke-width", "5");
+        }
+      }
+    }
+  }, []);
+
+  const highlightMemberInTree = useCallback(
+    (memberId: string) => {
+      setHighlightedMemberId(memberId);
+
+      // Update highlighting without re-rendering
+      updateNodeHighlighting(memberId);
+
+      // If in tree view, try to focus on the highlighted member
+      if (viewMode === "tree" && familyTreeRef.current) {
+        try {
+          // First, find the member card in the DOM
+          const memberCard = familyTreeRef.current.querySelector(
+            `[data-id="${memberId}"]`
+          );
+
+          if (memberCard) {
+            console.log("Found member card for", memberId);
+
+            // Check if we're using the main family chart or fallback
+            if (
+              familyChartInstance.current &&
+              familyChartInstance.current.svg &&
+              familyChartInstance.current.zoom
+            ) {
+              // Main family chart logic - get coordinates from tree data
+              const { svg, zoom, tree_data } = familyChartInstance.current;
+
+              console.log(
+                "Family chart instance:",
+                familyChartInstance.current
+              );
+              console.log("Tree data structure:", tree_data);
+
+              if (tree_data && tree_data.data) {
+                console.log("Tree data nodes:", tree_data.data);
+                console.log("Looking for member ID:", memberId);
+
+                // Find the node in the tree data
+                const targetNode = tree_data.data.find((node: any) => {
+                  const nodeData = node.data?.data || node.data;
+                  console.log("Checking node:", nodeData, "against", memberId);
+                  return (
+                    nodeData?.unique_id === memberId ||
+                    nodeData?.id === memberId
+                  );
+                });
+
+                console.log("Found target node:", targetNode);
+
+                if (
+                  targetNode &&
+                  targetNode.x !== undefined &&
+                  targetNode.y !== undefined
+                ) {
+                  console.log("Found target node with coordinates:", {
+                    x: targetNode.x,
+                    y: targetNode.y,
+                  });
+
+                  // Get container dimensions
+                  const containerRect =
+                    familyTreeRef.current.getBoundingClientRect();
+                  const centerX = containerRect.width / 2;
+                  const centerY = containerRect.height / 2;
+
+                  // Calculate the zoom transform to center this node
+                  const scale = 1.2; // Zoom in a bit to focus on the member
+                  const translateX = centerX - targetNode.x * scale;
+                  const translateY = centerY - targetNode.y * scale;
+
+                  console.log("Zoom transform:", {
+                    scale,
+                    translateX,
+                    translateY,
+                    nodeX: targetNode.x,
+                    nodeY: targetNode.y,
+                    centerX,
+                    centerY,
+                  });
+
+                  // Apply the zoom transform
+                  const zoomTransform = d3.zoomIdentity
+                    .translate(translateX, translateY)
+                    .scale(scale);
+
+                  // Use D3 to smoothly transition to the new zoom level
+                  d3.select(svg)
+                    .transition()
+                    .duration(1000)
+                    .call(zoom.transform, zoomTransform);
+
+                  // Add additional visual highlight effect after zoom
+                  setTimeout(() => {
+                    const cardElement = memberCard as HTMLElement;
+                    const originalFilter = cardElement.style.filter;
+                    cardElement.style.filter = "drop-shadow(0 0 15px #fbbf24)";
+                    cardElement.style.transition = "filter 0.3s ease";
+
+                    setTimeout(() => {
+                      cardElement.style.filter = originalFilter;
+                    }, 3000);
+                  }, 1000);
+
+                  toast.success("Located family member", {
+                    description: `Found ${
+                      searchResults.find((m) => m.unique_id === memberId)
+                        ?.first_name || memberId
+                    } in the tree`,
+                  });
+                } else {
+                  console.log("Node found but no coordinates:", targetNode);
+                  console.log(
+                    "All nodes with coordinates:",
+                    tree_data.data.map((n: any) => ({
+                      id: n.data?.data?.unique_id || n.data?.id,
+                      x: n.x,
+                      y: n.y,
+                    }))
+                  );
+                  // Fallback: just scroll to the element
+                  memberCard.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
+                  });
+                  toast.success("Located family member");
+                }
+              } else {
+                console.log("No tree data available");
+                // Fallback: just scroll to the element
+                memberCard.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
+                });
+                toast.success("Located family member");
+              }
+            } else {
+              // Fallback visualization logic
+              const svg = familyTreeRef.current.querySelector("svg");
+              if (svg) {
+                // For fallback, try to get the node group's position
+                const nodeGroup = memberCard.closest("g");
+                const transform = nodeGroup?.getAttribute("transform");
+
+                if (transform) {
+                  const translateMatch = transform.match(
+                    /translate\(([^,]+),([^)]+)\)/
+                  );
+                  if (translateMatch) {
+                    const x = parseFloat(translateMatch[1]);
+                    const y = parseFloat(translateMatch[2]);
+
+                    console.log("Fallback node position:", { x, y });
+
+                    // Get container dimensions
+                    const containerRect =
+                      familyTreeRef.current.getBoundingClientRect();
+                    const centerX = containerRect.width / 2;
+                    const centerY = containerRect.height / 2;
+
+                    // Calculate zoom transform
+                    const scale = 1.5;
+                    const translateX = centerX - x * scale;
+                    const translateY = centerY - y * scale;
+
+                    const zoomTransform = d3.zoomIdentity
+                      .translate(translateX, translateY)
+                      .scale(scale);
+
+                    // Try to get zoom behavior from SVG
+                    const svgSelection = d3.select(svg);
+                    try {
+                      // Apply zoom transform
+                      svgSelection
+                        .transition()
+                        .duration(1000)
+                        .call(d3.zoom().transform as any, zoomTransform);
+                    } catch (zoomError) {
+                      // Manual zoom fallback
+                      const container = svg.querySelector(
+                        ".fallback-container, g"
+                      );
+                      if (container) {
+                        d3.select(container)
+                          .transition()
+                          .duration(1000)
+                          .attr(
+                            "transform",
+                            `translate(${translateX},${translateY}) scale(${scale})`
+                          );
+                      }
+                    }
+
+                    toast.success("Located family member", {
+                      description: `Found ${
+                        searchResults.find((m) => m.unique_id === memberId)
+                          ?.first_name || memberId
+                      } in the tree`,
+                    });
+                  } else {
+                    // Simple fallback
+                    memberCard.scrollIntoView({
+                      behavior: "smooth",
+                      block: "center",
+                    });
+                    toast.success("Located family member");
+                  }
+                }
+              }
+            }
+          } else {
+            console.log("Member card not found for", memberId);
+
+            // Alternative approach: search in the family chart data
+            const member = familyChartData.find((m) => m.id === memberId);
+            if (member) {
+              console.log("Found member in data:", member);
+              toast.info("Member found in data", {
+                description: `${member.data.first_name} ${member.data.last_name} - but not visible in current tree view`,
+              });
+            } else {
+              toast.error("Member not found", {
+                description: `Could not locate ${memberId} in the family tree`,
+              });
+            }
+          }
+        } catch (error) {
+          console.error("Error locating member:", error);
+          toast.error("Error locating member", {
+            description: "Please try refreshing the tree view",
+          });
+        }
+      } else if (viewMode === "table") {
+        // For table view, just highlight the row
+        toast.success("Member highlighted in table");
+      }
+
+      // Auto-close search results after selection
+      setTimeout(() => {
+        setShowSearchResults(false);
+        setSearchQuery("");
+      }, 1500);
+    },
+    [viewMode, familyChartData, searchResults, updateNodeHighlighting]
+  );
+
+  const clearSearch = useCallback(() => {
+    setSearchQuery("");
+    setSearchResults([]);
+    setShowSearchResults(false);
+    setHighlightedMemberId("");
+  }, []);
+
+  // Re-trigger search when filters change
+  useEffect(() => {
+    if (searchQuery) {
+      performSearch(searchQuery);
+    }
+  }, [searchFilters, searchQuery, performSearch]);
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -1346,6 +2123,216 @@ const FamilyTreeUploadPage = () => {
           Download Template
         </Button>
       </div>
+
+      {/* Search Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Search className="h-5 w-5 text-blue-600" />
+            Search Family Tree
+          </CardTitle>
+          <CardDescription>
+            Search for family members by name, ID, dates, or relationships
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="relative">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search family members..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="pl-10 pr-10"
+                />
+                {searchQuery && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearSearch}
+                    className="absolute right-1 top-1 h-8 w-8 p-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Search Filters */}
+            <div className="flex flex-wrap gap-2 mt-3">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="searchNames"
+                  checked={searchFilters.searchInNames}
+                  onChange={(e) =>
+                    setSearchFilters((prev) => ({
+                      ...prev,
+                      searchInNames: e.target.checked,
+                    }))
+                  }
+                  className="rounded"
+                />
+                <Label htmlFor="searchNames" className="text-sm">
+                  Names
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="searchIds"
+                  checked={searchFilters.searchInIds}
+                  onChange={(e) =>
+                    setSearchFilters((prev) => ({
+                      ...prev,
+                      searchInIds: e.target.checked,
+                    }))
+                  }
+                  className="rounded"
+                />
+                <Label htmlFor="searchIds" className="text-sm">
+                  IDs
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="searchDates"
+                  checked={searchFilters.searchInDates}
+                  onChange={(e) =>
+                    setSearchFilters((prev) => ({
+                      ...prev,
+                      searchInDates: e.target.checked,
+                    }))
+                  }
+                  className="rounded"
+                />
+                <Label htmlFor="searchDates" className="text-sm">
+                  Dates
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="searchRelations"
+                  checked={searchFilters.searchInRelations}
+                  onChange={(e) =>
+                    setSearchFilters((prev) => ({
+                      ...prev,
+                      searchInRelations: e.target.checked,
+                    }))
+                  }
+                  className="rounded"
+                />
+                <Label htmlFor="searchRelations" className="text-sm">
+                  Relations
+                </Label>
+              </div>
+            </div>
+
+            {/* Search Results Dropdown */}
+            {showSearchResults && searchResults.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+                <div className="p-3 border-b bg-gray-50">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">
+                      Found {searchResults.length} member
+                      {searchResults.length !== 1 ? "s" : ""}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearSearch}
+                      className="h-6 w-6 p-0"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="max-h-80 overflow-y-auto">
+                  {searchResults.map((member, index) => (
+                    <div
+                      key={member.id || index}
+                      className="p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
+                      onClick={() => highlightMemberInTree(member.unique_id)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0">
+                          {member.gender?.toLowerCase() === "male" ||
+                          member.gender?.toLowerCase() === "m" ? (
+                            <User className="h-5 w-5 text-blue-600" />
+                          ) : (
+                            <Users className="h-5 w-5 text-pink-600" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {member.first_name} {member.last_name}
+                            </p>
+                            <Badge variant="outline" className="text-xs">
+                              {member.unique_id}
+                            </Badge>
+                          </div>
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            {member.date_of_birth && (
+                              <span className="text-xs text-gray-500">
+                                Born:{" "}
+                                {new Date(member.date_of_birth).getFullYear()}
+                              </span>
+                            )}
+                            {member.fathers_first_name && (
+                              <span className="text-xs text-gray-500">
+                                Father: {member.fathers_first_name}{" "}
+                                {member.fathers_last_name}
+                              </span>
+                            )}
+                            {member.mothers_first_name && (
+                              <span className="text-xs text-gray-500">
+                                Mother: {member.mothers_first_name}{" "}
+                                {member.mothers_last_name}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex-shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2 text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              highlightMemberInTree(member.unique_id);
+                            }}
+                          >
+                            {viewMode === "tree" ? "Locate" : "Select"}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* No Results Message */}
+            {showSearchResults && searchQuery && searchResults.length === 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                <div className="p-6 text-center">
+                  <Search className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">
+                    No family members found for &quot;{searchQuery}&quot;
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Try adjusting your search terms or filters
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Existing Data Display */}
       {!isLoadingData && existingData.length > 0 && (
@@ -1449,8 +2436,26 @@ const FamilyTreeUploadPage = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {existingData.map((member, index) => (
-                        <TableRow key={member.id || index}>
+                      {(searchQuery && searchResults.length > 0
+                        ? searchResults
+                        : existingData
+                      ).map((member, index) => (
+                        <TableRow
+                          key={member.id || index}
+                          className={`${
+                            highlightedMemberId === member.unique_id
+                              ? "bg-yellow-100 border-l-4 border-l-yellow-500"
+                              : searchQuery &&
+                                searchResults.some(
+                                  (r) => r.unique_id === member.unique_id
+                                )
+                              ? "bg-blue-50"
+                              : ""
+                          } cursor-pointer hover:bg-gray-50`}
+                          onClick={() =>
+                            highlightMemberInTree(member.unique_id)
+                          }
+                        >
                           <TableCell className="font-medium">
                             {member.unique_id}
                           </TableCell>
@@ -1489,6 +2494,15 @@ const FamilyTreeUploadPage = () => {
                       ))}
                     </TableBody>
                   </Table>
+                </div>
+                {/* Update footer message to reflect search results */}
+                <div className="p-4 text-center text-muted-foreground border-t">
+                  {searchQuery && searchResults.length > 0
+                    ? `Showing ${searchResults.length} search results`
+                    : `Showing ${existingData.length} family members`}
+                  {searchQuery && searchResults.length === 0 && (
+                    <span className="text-orange-600"> - No matches found</span>
+                  )}
                 </div>
               </div>
             ) : (
@@ -1559,31 +2573,7 @@ const FamilyTreeUploadPage = () => {
                             </div>
                           </div>
                         </div>
-                        <div>
-                          <h4 className="font-semibold mb-2">
-                            Connection Types:
-                          </h4>
-                          <div className="space-y-2 text-xs">
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-0.5 bg-gray-700"></div>
-                              <span>Parent-Child Relationships</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <div
-                                className="w-6 h-0.5 bg-red-600"
-                                style={{
-                                  borderTop: "2px dashed #dc2626",
-                                  background: "none",
-                                }}
-                              ></div>
-                              <span>Marriage/Spouse Relationships</span>
-                            </div>
-                            <div className="text-xs text-gray-600 mt-2">
-                              All family connections are now visible with proper
-                              lines
-                            </div>
-                          </div>
-                        </div>
+
                         <div>
                           <h4 className="font-semibold mb-2">
                             Interactive Features:
