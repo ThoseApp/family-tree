@@ -265,7 +265,7 @@ const NoticeBoardSearchFilters: React.FC<NoticeBoardSearchFiltersProps> = ({
 
           {filters.searchTerm && (
             <Badge variant="secondary" className="gap-1">
-              Search: "{filters.searchTerm}"
+              Search: &quot;{filters.searchTerm}&quot;
               <X
                 className="h-3 w-3 cursor-pointer"
                 onClick={() => handleSearchChange("")}
