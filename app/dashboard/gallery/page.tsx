@@ -16,6 +16,7 @@ import { useAlbumStore } from "@/stores/album-store";
 import { LoadingIcon } from "@/components/loading-icon";
 import { ImagePreviewModal } from "@/components/modals/image-preview-modal";
 import { CreateAlbumModal } from "@/components/modals/create-album-modal";
+import { ImportFromWebModal } from "@/components/modals/import-from-web-modal";
 import { toast } from "sonner";
 import AlbumGrid from "@/components/album-grid";
 import {
@@ -47,6 +48,7 @@ const Page = () => {
     fetchUserGallery,
     fetchUserGalleryByStatus,
     uploadToGallery,
+    importFromWeb,
     deleteFromGallery,
     updateGalleryDetails,
   } = useGalleryStore();
@@ -69,6 +71,7 @@ const Page = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAlbumId, setSelectedAlbumId] = useState("none");
   const [isCreateAlbumModalOpen, setIsCreateAlbumModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   useEffect(() => {
@@ -229,6 +232,20 @@ const Page = () => {
     }
   };
 
+  const handleImportFromWeb = async (imageUrl: string, caption: string) => {
+    if (!user) {
+      toast.error("User not authenticated");
+      return;
+    }
+
+    try {
+      await importFromWeb(imageUrl, caption, user.id);
+      toast.success("Image imported successfully");
+    } catch (error) {
+      toast.error("Failed to import image from web");
+    }
+  };
+
   const handleAlbumClick = (album: any) => {
     // Navigate to album view - you can implement this based on your routing needs
     console.log("Album clicked:", album);
@@ -307,7 +324,11 @@ const Page = () => {
             </Button>
           )}
 
-          <Button variant="outline" className="rounded-full">
+          <Button
+            variant="outline"
+            className="rounded-full"
+            onClick={() => setIsImportModalOpen(true)}
+          >
             <Download className="size-5 mr-2" />
             Import from Web
           </Button>
@@ -482,6 +503,14 @@ const Page = () => {
         onClose={() => setIsCreateAlbumModalOpen(false)}
         onConfirm={handleCreateAlbum}
         isLoading={albumsLoading}
+      />
+
+      {/* IMPORT FROM WEB MODAL */}
+      <ImportFromWebModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onConfirm={handleImportFromWeb}
+        isLoading={isLoading}
       />
     </div>
   );
