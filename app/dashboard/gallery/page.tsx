@@ -329,22 +329,20 @@ const Page = () => {
         </div>
       </div>
 
-      {(viewMode === "grid" || viewMode === "table") && (
+      {viewMode === "grid" && (
         <div className="flex items-center gap-4">
-          {viewMode === "grid" && (
-            <div className="relative w-full max-w-md">
-              <Input
-                placeholder="Search by caption..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            </div>
-          )}
+          <div className="relative w-full flex-1">
+            <Input
+              placeholder="Search by caption..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          </div>
 
           <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-muted-foreground" />
+            {/* <Filter className="h-4 w-4 text-muted-foreground" /> */}
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Filter by status" />
