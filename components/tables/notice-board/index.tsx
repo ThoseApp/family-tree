@@ -24,8 +24,9 @@ const NoticeBoardTable = ({
     <DataTable
       columns={columns}
       data={data}
+      showSearchInput={true}
       searchKey="title"
-      placeholder="Search by title..."
+      placeholder="Search notices by title..."
     />
   );
 };

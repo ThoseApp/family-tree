@@ -4,6 +4,9 @@ import React, { useEffect, useState } from "react";
 import NewNoticeCard from "@/components/cards/new-notice-card";
 import NoticeBoardCard from "@/components/cards/notice-board-card";
 import NoticeBoardTable from "@/components/tables/notice-board";
+import NoticeBoardSearchFilters, {
+  SearchFilters,
+} from "@/components/search/notice-board-search-filters";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -22,6 +25,7 @@ import { useNoticeBoardStore } from "@/stores/notice-board-store";
 import { NoticeBoard } from "@/lib/types";
 import { toast } from "sonner";
 import { useUserStore } from "@/stores/user-store";
+import { getFilteredAndSortedNoticeBoards } from "@/lib/utils/notice-board-filters";
 
 const AdminNoticeBoardPage = () => {
   const { user } = useUserStore();
@@ -41,6 +45,16 @@ const AdminNoticeBoardPage = () => {
   const [noticeBoardToDelete, setNoticeBoardToDelete] = useState<string | null>(
     null
   );
+
+  // Search and filter state
+  const [filters, setFilters] = useState<SearchFilters>({
+    searchTerm: "",
+    selectedTags: [],
+    pinnedFilter: "all",
+    editorFilter: "",
+    dateFrom: undefined,
+    dateTo: undefined,
+  });
 
   // Fetch notice boards on component mount
   useEffect(() => {
@@ -122,10 +136,11 @@ const AdminNoticeBoardPage = () => {
     }
   };
 
-  // Get pinned and unpinned notices
-  const pinnedNotices = noticeBoards.filter((notice) => notice.pinned);
-  const unpinnedNotices = noticeBoards.filter((notice) => !notice.pinned);
-  const sortedNotices = [...pinnedNotices, ...unpinnedNotices];
+  // Get filtered and sorted notices
+  const filteredNotices = getFilteredAndSortedNoticeBoards(
+    noticeBoards,
+    filters
+  );
 
   return (
     <div className="flex flex-col gap-y-8 lg:gap-y-12">
@@ -167,6 +182,15 @@ const AdminNoticeBoardPage = () => {
         </div>
       </div>
 
+      {/* SEARCH AND FILTERS SECTION */}
+      {!newNotice && (
+        <NoticeBoardSearchFilters
+          noticeBoards={noticeBoards}
+          filters={filters}
+          onFiltersChange={setFilters}
+        />
+      )}
+
       {/* GRID SECTION */}
       <div className={cn("", newNotice && "flex items-start gap-4 w-full")}>
         <div
@@ -181,7 +205,7 @@ const AdminNoticeBoardPage = () => {
             <div className="flex justify-center items-center h-40">
               <LoadingIcon className="h-8 w-8" />
             </div>
-          ) : noticeBoards.length === 0 ? (
+          ) : filteredNotices.length === 0 && noticeBoards.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-40 text-center">
               <h3 className="text-lg font-medium text-muted-foreground mb-2">
                 No notices yet
@@ -194,13 +218,37 @@ const AdminNoticeBoardPage = () => {
                 Create Notice
               </Button>
             </div>
+          ) : filteredNotices.length === 0 && noticeBoards.length > 0 ? (
+            <div className="flex flex-col items-center justify-center h-40 text-center">
+              <h3 className="text-lg font-medium text-muted-foreground mb-2">
+                No notices match your filters
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Try adjusting your search criteria or clear all filters
+              </p>
+              <Button
+                variant="outline"
+                onClick={() =>
+                  setFilters({
+                    searchTerm: "",
+                    selectedTags: [],
+                    pinnedFilter: "all",
+                    editorFilter: "",
+                    dateFrom: undefined,
+                    dateTo: undefined,
+                  })
+                }
+              >
+                Clear Filters
+              </Button>
+            </div>
           ) : displayMode === "grid" ? (
-            sortedNotices.map((noticeBoard) => (
+            filteredNotices.map((noticeBoard) => (
               <NoticeBoardCard key={noticeBoard.id} noticeBoard={noticeBoard} />
             ))
           ) : (
             <NoticeBoardTable
-              data={sortedNotices}
+              data={filteredNotices}
               onEditClick={handleEdit}
               onDeleteClick={handleDeleteClick}
               onTogglePinClick={handleTogglePin}
