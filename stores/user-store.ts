@@ -69,6 +69,33 @@ export const useUserStore = create(
 
           if (error) throw error;
 
+          // Check user approval status
+          const { data: profile, error: profileError } = await supabase
+            .from("profiles")
+            .select("status")
+            .eq("user_id", data.user.id)
+            .single();
+
+          if (profileError) {
+            console.error("Error fetching user profile:", profileError);
+            throw new Error("Unable to verify account status");
+          }
+
+          // Check if user is approved
+          if (profile.status === "pending") {
+            await supabase.auth.signOut(); // Sign out the user
+            throw new Error(
+              "Your account is pending approval. Please wait for admin approval."
+            );
+          }
+
+          if (profile.status === "rejected") {
+            await supabase.auth.signOut(); // Sign out the user
+            throw new Error(
+              "Your account has been rejected. Please contact support."
+            );
+          }
+
           set({ user: data.user, success: true, loading: false });
           toast.success("Login successful");
           return { data, path: nextRoute || "/dashboard" };
@@ -160,6 +187,7 @@ export const useUserStore = create(
                 date_of_birth: dateOfBirth ? dateOfBirth.toISOString() : null,
                 relative: relative || null,
                 relationship_to_relative: relationshipToRelative || null,
+                status: isAdmin ? "approved" : "pending", // Set status based on admin flag
               });
 
             if (profileError) {
@@ -169,9 +197,10 @@ export const useUserStore = create(
           }
 
           set({ success: true, loading: false });
-          toast.success(
-            "Sign up successful! Check your email for verification."
-          );
+          const successMessage = isAdmin
+            ? "Admin account created successfully! Check your email for verification."
+            : "Sign up successful! Your account is pending admin approval. You'll be able to login once approved.";
+          toast.success(successMessage);
           return { data: authData };
         } catch (error: any) {
           const errorMessage = error?.message || "Sign up failed";

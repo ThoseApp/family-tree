@@ -57,13 +57,13 @@ const DashboardOverviewCard = ({
   return (
     <div className=" relative h-[390px] w-full rounded-lg bg-background shadow-md">
       <Image
-        src="/images/dashboard/confetti.webp"
+        src={imageSrc}
         alt={title}
         fill
         className="h-full w-full object-cover object-center rounded-lg"
       />
 
-      <div className="absolute inset-0 bg-foreground/30 rounded-lg" />
+      <div className="absolute inset-0 bg-foreground/40 rounded-lg" />
 
       <div className="z-10 absolute inset-0 h-full w-full flex flex-col items-center justify-between p-8 lg:p-12">
         <div className="flex flex-col items-center justify-center gap-y-2 text-background font-semibold">

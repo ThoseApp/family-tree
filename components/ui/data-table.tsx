@@ -38,6 +38,8 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   showSearchInput?: boolean;
+  searchKey?: string;
+  placeholder?: string;
   exportData?: boolean;
   categoryFilter?: boolean;
   visibilityFilter?: boolean;
@@ -51,6 +53,8 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   showSearchInput,
+  searchKey = "caption",
+  placeholder = "Search...",
   exportData,
   categoryFilter,
   visibilityFilter,
@@ -85,12 +89,12 @@ export function DataTable<TData, TValue>({
         {showSearchInput && (
           <div className="flex flex-1 items-center py-4 ">
             <Input
-              placeholder="Search by caption..."
+              placeholder={placeholder}
               value={
-                (table.getColumn("caption")?.getFilterValue() as string) ?? ""
+                (table.getColumn(searchKey)?.getFilterValue() as string) ?? ""
               }
               onChange={(event) =>
-                table.getColumn("caption")?.setFilterValue(event.target.value)
+                table.getColumn(searchKey)?.setFilterValue(event.target.value)
               }
             />
           </div>

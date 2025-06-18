@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { GalleryStatusEnum } from "@/lib/constants/enums";
 import { useEventsStore } from "@/stores/events-store";
+import { useMemberRequestsStore } from "@/stores/member-requests-store";
 import { toast } from "sonner";
 import { LoadingIcon } from "@/components/loading-icon";
 
@@ -29,11 +30,9 @@ const DashboardPage = () => {
 
   // State for dashboard data
   const [galleryRequests, setGalleryRequests] = useState(0);
+  const [pendingMembers, setPendingMembers] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [featuredEvent, setFeaturedEvent] = useState<any>(null);
-
-  // Placeholder data - replace with actual data fetching
-  const pendingMembers = 4;
   const landingPageImageUrl = dummyProfileImage; // Replace with actual image path
 
   // Fetch dashboard data
@@ -52,6 +51,11 @@ const DashboardPage = () => {
         } else {
           setGalleryRequests(count || 0);
         }
+
+        // Fetch pending member requests count using store
+        const memberRequestsStore = useMemberRequestsStore.getState();
+        const memberCount = await memberRequestsStore.getMemberRequestsCount();
+        setPendingMembers(memberCount);
 
         // Fetch upcoming events
         const upcomingEvents = await fetchUpcomingEvents();
@@ -178,11 +182,41 @@ const DashboardPage = () => {
               <Button
                 className="w-full rounded-full bg-foreground text-background hover:bg-foreground/80"
                 size="lg"
-                onClick={() =>
-                  toast.info(
-                    "Member request functionality will be implemented soon"
-                  )
-                }
+                onClick={async () => {
+                  try {
+                    const memberRequestsStore =
+                      useMemberRequestsStore.getState();
+
+                    // Get pending member requests and approve them in bulk
+                    const { data: pendingMembers, error } = await supabase
+                      .from("profiles")
+                      .select("*")
+                      .eq("status", "pending")
+                      .limit(5); // Approve up to 5 at a time
+
+                    if (error) {
+                      throw error;
+                    }
+
+                    if (pendingMembers && pendingMembers.length > 0) {
+                      // Approve members using the store
+                      const userIds = pendingMembers.map(
+                        (member) => member.user_id
+                      );
+                      await memberRequestsStore.approveBulkRequests(userIds);
+
+                      // Refresh the count
+                      const updatedCount =
+                        await memberRequestsStore.getMemberRequestsCount();
+                      setPendingMembers(updatedCount);
+                    } else {
+                      toast.info("No pending member requests to approve");
+                    }
+                  } catch (error) {
+                    console.error("Error approving member requests:", error);
+                    toast.error("Failed to approve member requests");
+                  }
+                }}
               >
                 Accept
               </Button>

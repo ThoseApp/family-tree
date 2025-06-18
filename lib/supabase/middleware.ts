@@ -43,7 +43,8 @@ export async function updateSession(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    // If we have a user, ensure they have a profile
+    // If we have a user, ensure they have a profile and check approval status
+    let userProfile = null;
     if (user) {
       // Check if this user has a profile already
       const { data: profile, error: profileError } = await supabase
@@ -69,15 +70,22 @@ export async function updateSession(request: NextRequest) {
             ? user.user_metadata?.name?.split(" ").slice(1).join(" ")
             : "");
 
-        // Create a profile for this user
-        await supabase.from("profiles").insert({
+        // Create a profile for this user with pending status (unless admin)
+        const newProfile = {
           user_id: user.id,
           email: user.email,
           first_name: firstName,
           last_name: lastName,
+          status:
+            user.user_metadata?.is_admin === true ? "approved" : "pending",
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-        });
+        };
+
+        await supabase.from("profiles").insert(newProfile);
+        userProfile = newProfile;
+      } else {
+        userProfile = profile;
       }
     }
 
@@ -106,12 +114,34 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(redirectUrl);
     }
 
+    // Check approval status for authenticated users on private routes
+    if (user && userProfile && isPrivateRoute) {
+      if (userProfile.status === "pending") {
+        // Redirect to pending approval page
+        if (!path.startsWith("/auth/pending-approval")) {
+          const redirectUrl = new URL("/auth/pending-approval", request.url);
+          return NextResponse.redirect(redirectUrl);
+        }
+      }
+
+      if (userProfile.status === "rejected") {
+        // Redirect to account rejected page
+        if (!path.startsWith("/auth/account-rejected")) {
+          const redirectUrl = new URL("/auth/account-rejected", request.url);
+          return NextResponse.redirect(redirectUrl);
+        }
+      }
+    }
+
     if (user && isAuthRoute) {
-      // Redirect authenticated users away from auth routes
-      const redirectPath =
-        user.user_metadata?.is_admin === true ? "/admin" : "/dashboard";
-      const redirectUrl = new URL(redirectPath, request.url);
-      return NextResponse.redirect(redirectUrl);
+      // Only allow approved users to access dashboard/admin
+      if (userProfile?.status === "approved") {
+        // Redirect authenticated and approved users away from auth routes
+        const redirectPath =
+          user.user_metadata?.is_admin === true ? "/admin" : "/dashboard";
+        const redirectUrl = new URL(redirectPath, request.url);
+        return NextResponse.redirect(redirectUrl);
+      }
     }
 
     // Only redirect admin users if they're on the home page or dashboard

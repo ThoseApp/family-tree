@@ -22,6 +22,14 @@ import {
 import { Button } from "@/components/ui/button"; // Adjust path as per your project structure
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Album } from "@/stores/album-store";
 
 interface ImagePreviewModalProps {
   isOpen: boolean;
@@ -34,6 +42,13 @@ interface ImagePreviewModalProps {
   showCaptionInput?: boolean; // Whether to show the caption input field
   captionValue?: string; // Current caption value
   onCaptionChange?: (value: string) => void; // Handler for caption changes
+  showAlbumSelection?: boolean; // Whether to show album selection
+  albums?: Album[]; // Available albums
+  selectedAlbumId?: string; // Currently selected album ID
+  onAlbumChange?: (albumId: string) => void; // Handler for album changes
+  editMode?: boolean; // Whether in edit mode
+  editButtonText?: string; // Text for edit button
+  confirmButtonText?: string; // Text for confirm button
 }
 
 export const ImagePreviewModal = ({
@@ -47,6 +62,13 @@ export const ImagePreviewModal = ({
   showCaptionInput = false,
   captionValue = "",
   onCaptionChange = () => {},
+  showAlbumSelection = false,
+  albums = [],
+  selectedAlbumId = "",
+  onAlbumChange = () => {},
+  editMode = false,
+  editButtonText = "Edit",
+  confirmButtonText = "OK",
 }: ImagePreviewModalProps) => {
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
@@ -115,28 +137,58 @@ export const ImagePreviewModal = ({
             )}
           </div>
 
-          {showCaptionInput && (
-            <div className="mt-4">
-              <Label
-                htmlFor="caption"
-                className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block"
-              >
-                Caption
-              </Label>
-              <textarea
-                id="caption"
-                value={caption}
-                onChange={(e) => handleCaptionChange(e.target.value)}
-                placeholder="Add a caption for this image (optional)"
-                className="mt-1 w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 resize-none min-h-[50px]"
-                maxLength={maxCaptionLength}
-                aria-label="Image caption"
-              />
-              <div className="flex justify-end mt-1 text-xs text-gray-500 dark:text-gray-400">
-                <span>
-                  {caption.length}/{maxCaptionLength}
-                </span>
-              </div>
+          {(showCaptionInput || showAlbumSelection) && (
+            <div className="mt-4 space-y-4">
+              {showAlbumSelection && (
+                <div>
+                  <Label
+                    htmlFor="album-select"
+                    className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block"
+                  >
+                    Album (Optional)
+                  </Label>
+                  <Select value={selectedAlbumId} onValueChange={onAlbumChange}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select an album or leave unorganized" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">
+                        No Album (Unorganized)
+                      </SelectItem>
+                      {albums.map((album) => (
+                        <SelectItem key={album.id} value={album.id}>
+                          {album.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {showCaptionInput && (
+                <div>
+                  <Label
+                    htmlFor="caption"
+                    className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block"
+                  >
+                    Caption
+                  </Label>
+                  <textarea
+                    id="caption"
+                    value={caption}
+                    onChange={(e) => handleCaptionChange(e.target.value)}
+                    placeholder="Add a caption for this image (optional)"
+                    className="mt-1 w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 resize-none min-h-[50px]"
+                    maxLength={maxCaptionLength}
+                    aria-label="Image caption"
+                  />
+                  <div className="flex justify-end mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    <span>
+                      {caption.length}/{maxCaptionLength}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -161,7 +213,7 @@ export const ImagePreviewModal = ({
                     aria-label="Edit image"
                   >
                     <Edit3 className="mr-2 h-4 w-4" />
-                    Edit Image
+                    {editButtonText}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Edit image details</TooltipContent>
@@ -198,7 +250,7 @@ export const ImagePreviewModal = ({
                 Processing...
               </>
             ) : (
-              "OK"
+              confirmButtonText
             )}
           </Button>
         </DialogFooter>

@@ -6,6 +6,7 @@ import Image from "next/image";
 import React, { useMemo, useState } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { ImagePreviewModal } from "@/components/modals/image-preview-modal";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 export interface GalleryProps {
   gallery: GalleryGlobalType[];
@@ -18,6 +19,7 @@ interface GalleryImageProps {
   title: string;
   index?: number;
   id?: string;
+  status?: "pending" | "approved" | "rejected";
   onClick?: (image: any) => void;
 }
 
@@ -27,6 +29,7 @@ export const GalleryType = ({
   title,
   index,
   id,
+  status,
   onClick,
 }: GalleryImageProps) => {
   const handleClick = () => {
@@ -58,6 +61,11 @@ export const GalleryType = ({
             fill
             className="object-cover w-full h-full rounded-t-md"
           />
+          {status && status !== "approved" && (
+            <div className="absolute top-2 right-2">
+              <StatusBadge status={status} />
+            </div>
+          )}
         </div>
       </CardContent>
       <div className="p-2 text-center">
@@ -116,6 +124,7 @@ const GalleryGrid = ({ gallery, onImageClick }: GalleryProps) => {
             date={gallery.uploaded_at || gallery.created_at || ""}
             title={gallery.caption || gallery.file_name || "Untitled"}
             id={gallery.id}
+            status={gallery.status as "pending" | "approved" | "rejected"}
             onClick={onImageClick}
           />
         ))}
