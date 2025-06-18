@@ -8,6 +8,8 @@ import {
   Plus,
   Search,
   Filter,
+  Folder,
+  ImageIcon,
 } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
 import GalleryTable from "@/components/tables/gallery";
@@ -47,6 +49,7 @@ const Page = () => {
     isLoading,
     fetchUserGallery,
     fetchUserGalleryByStatus,
+    fetchUserGalleryByAlbum,
     uploadToGallery,
     importFromWeb,
     deleteFromGallery,
@@ -75,6 +78,8 @@ const Page = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingCaption, setEditingCaption] = useState("");
+  const [selectedAlbum, setSelectedAlbum] = useState<any>(null);
+  const [albumGallery, setAlbumGallery] = useState<any[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -294,6 +299,23 @@ const Page = () => {
     // You might want to add album filtering logic here
   };
 
+  const handleSidebarAlbumClick = async (album: any) => {
+    if (!user) return;
+
+    try {
+      setSelectedAlbum(album);
+      const albumItems = await fetchUserGalleryByAlbum(user.id, album.id);
+      setAlbumGallery(albumItems);
+    } catch (error) {
+      toast.error("Failed to load album contents");
+    }
+  };
+
+  const handleBackToAllAlbums = () => {
+    setSelectedAlbum(null);
+    setAlbumGallery([]);
+  };
+
   // Calculate status counts
   const statusCounts = {
     total: userGallery.length,
@@ -353,16 +375,6 @@ const Page = () => {
               <LayoutGrid className="size-5" />
             </Button>
           </div>
-          {viewMode === "albums" && (
-            <Button
-              variant="outline"
-              className="rounded-full"
-              onClick={() => setIsCreateAlbumModalOpen(true)}
-            >
-              <Plus className="size-5 mr-2" />
-              New Folder
-            </Button>
-          )}
 
           <Button
             variant="outline"
@@ -425,7 +437,142 @@ const Page = () => {
           <LoadingIcon className="size-8" />
         </div>
       ) : viewMode === "albums" ? (
-        <AlbumGrid albums={userAlbums} onAlbumClick={handleAlbumClick} />
+        <div className="flex h-[calc(100vh-200px)] bg-gray-50 rounded-lg overflow-hidden">
+          {/* Sidebar */}
+          <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
+            <div className="p-4 border-b border-gray-200 bg-yellow-50">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Media Library
+              </h2>
+            </div>
+            <div className="flex-1 p-4">
+              <div className="space-y-2">
+                {selectedAlbum && (
+                  <div
+                    className="flex items-center gap-2 text-gray-600 hover:bg-gray-100 p-2 rounded cursor-pointer mb-2"
+                    onClick={handleBackToAllAlbums}
+                  >
+                    <span className="text-sm">← Back to Albums</span>
+                  </div>
+                )}
+                {!selectedAlbum && userAlbums.length > 0 ? (
+                  userAlbums.map((album) => (
+                    <div
+                      key={album.id}
+                      className="flex items-center gap-2 text-gray-700 hover:bg-yellow-50 p-2 rounded cursor-pointer"
+                      onClick={() => handleSidebarAlbumClick(album)}
+                    >
+                      <Folder className="w-4 h-4" />
+                      <span className="text-sm">{album.name}</span>
+                      <span className="text-xs text-gray-400 ml-auto">
+                        {album.item_count}
+                      </span>
+                    </div>
+                  ))
+                ) : !selectedAlbum ? (
+                  <div className="text-gray-500 text-sm p-2">No albums yet</div>
+                ) : null}
+              </div>
+              <div className="mt-6">
+                <button
+                  onClick={() => setIsCreateAlbumModalOpen(true)}
+                  className="flex items-center gap-2 text-yellow-600 hover:text-yellow-700 text-sm font-medium"
+                >
+                  <Plus className="w-4 h-4" />
+                  New Folder
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="flex-1 flex flex-col">
+            {/* Breadcrumb */}
+            <div className="p-4 bg-white border-b border-gray-200">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <span>Media Library</span>
+                <span>›</span>
+                {selectedAlbum ? (
+                  <>
+                    <span
+                      className="hover:text-gray-900 cursor-pointer"
+                      onClick={handleBackToAllAlbums}
+                    >
+                      Albums
+                    </span>
+                    <span>›</span>
+                    <span className="font-medium text-gray-900">
+                      {selectedAlbum.name}
+                    </span>
+                  </>
+                ) : (
+                  <span className="font-medium text-gray-900">Albums</span>
+                )}
+              </div>
+            </div>
+
+            {/* Content Area */}
+            <div className="flex-1 p-6">
+              {selectedAlbum ? (
+                // Show album contents
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <h2 className="text-xl font-semibold text-gray-900">
+                        {selectedAlbum.name}
+                      </h2>
+                      {selectedAlbum.description && (
+                        <p className="text-gray-600 text-sm mt-1">
+                          {selectedAlbum.description}
+                        </p>
+                      )}
+                      <p className="text-gray-500 text-sm mt-1">
+                        {albumGallery.length} items
+                      </p>
+                    </div>
+                  </div>
+
+                  {albumGallery.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-64 text-center">
+                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                        <ImageIcon className="w-8 h-8 text-gray-400" />
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        No items in this album yet
+                      </h3>
+                      <p className="text-gray-500 text-sm">
+                        Upload images or videos to this album to see them here
+                      </p>
+                    </div>
+                  ) : (
+                    <GalleryGrid
+                      gallery={albumGallery}
+                      onImageClick={handlePreviewImage}
+                    />
+                  )}
+                </div>
+              ) : userAlbums.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center">
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    You have no album yet
+                  </h3>
+                  <button
+                    onClick={() => setIsCreateAlbumModalOpen(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-black font-medium rounded-lg transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Create
+                  </button>
+                </div>
+              ) : (
+                <AlbumGrid
+                  albums={userAlbums}
+                  onAlbumClick={handleSidebarAlbumClick}
+                />
+              )}
+            </div>
+          </div>
+        </div>
       ) : viewMode === "table" ? (
         <GalleryTable
           data={userGallery}

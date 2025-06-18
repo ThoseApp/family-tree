@@ -29,6 +29,10 @@ interface GalleryActions {
     userId: string,
     status?: keyof typeof GalleryStatusEnum
   ) => Promise<void>;
+  fetchUserGalleryByAlbum: (
+    userId: string,
+    albumId: string
+  ) => Promise<GalleryType[]>;
   uploadToGallery: (
     file: File,
     caption?: string,
@@ -133,6 +137,24 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
           error: err.message || "Failed to fetch user gallery",
           isLoading: false,
         });
+      }
+    },
+
+    fetchUserGalleryByAlbum: async (userId, albumId) => {
+      try {
+        const { data, error } = await supabase
+          .from("galleries")
+          .select("*")
+          .eq("user_id", userId)
+          .eq("album_id", albumId)
+          .order("updated_at", { ascending: false });
+
+        if (error) throw error;
+
+        return data || [];
+      } catch (err: any) {
+        console.error("Error fetching user gallery by album:", err);
+        throw err;
       }
     },
 
