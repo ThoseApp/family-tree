@@ -25,10 +25,15 @@ interface GalleryState {
 interface GalleryActions {
   fetchGallery: () => Promise<void>;
   fetchUserGallery: (userId: string) => Promise<void>;
+  fetchUserGalleryByStatus: (
+    userId: string,
+    status?: keyof typeof GalleryStatusEnum
+  ) => Promise<void>;
   uploadToGallery: (
     file: File,
     caption?: string,
-    userId?: string
+    userId?: string,
+    albumId?: string
   ) => Promise<void>;
   deleteFromGallery: (imageId: string) => Promise<void>;
   updateGalleryDetails: (
@@ -82,7 +87,6 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
           .from("galleries")
           .select("*")
           .eq("user_id", userId)
-          .eq("status", GalleryStatusEnum.approved)
           .order("updated_at", { ascending: false });
 
         if (error) throw error;
@@ -97,7 +101,36 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
       }
     },
 
-    uploadToGallery: async (file, caption, userId) => {
+    fetchUserGalleryByStatus: async (userId, status) => {
+      set({ isLoading: true, error: null });
+
+      try {
+        let query = supabase
+          .from("galleries")
+          .select("*")
+          .eq("user_id", userId);
+
+        if (status) {
+          query = query.eq("status", status);
+        }
+
+        const { data, error } = await query.order("updated_at", {
+          ascending: false,
+        });
+
+        if (error) throw error;
+
+        set({ userGallery: data || [], isLoading: false });
+      } catch (err: any) {
+        console.error("Error fetching user gallery by status:", err);
+        set({
+          error: err.message || "Failed to fetch user gallery",
+          isLoading: false,
+        });
+      }
+    },
+
+    uploadToGallery: async (file, caption, userId, albumId) => {
       set({ isLoading: true, error: null });
 
       try {
@@ -141,6 +174,7 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
           user_id: userId || "",
           file_name: file_name,
           file_size: file.size,
+          album_id: albumId,
           status:
             userId === ADMIN_ID
               ? GalleryStatusEnum.approved
@@ -210,7 +244,9 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
         }
 
         // Find the image to get its file name
-        const imageToDelete = get().gallery.find((img) => img.id === imageId);
+        const imageToDelete =
+          get().gallery.find((img) => img.id === imageId) ||
+          get().userGallery.find((img) => img.id === imageId);
         if (!imageToDelete) {
           throw new Error("Image not found");
         }
@@ -239,6 +275,9 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
         // Update local state
         set((state) => ({
           gallery: state.gallery.filter((image) => image.id !== imageId),
+          userGallery: state.userGallery.filter(
+            (image) => image.id !== imageId
+          ),
           isLoading: false,
           selectedImage:
             state.selectedImage?.id === imageId ? null : state.selectedImage,
@@ -282,6 +321,9 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
         // Update local state
         set((state) => ({
           gallery: state.gallery.map((image) =>
+            image.id === imageId ? { ...image, ...updatesWithTimestamp } : image
+          ),
+          userGallery: state.userGallery.map((image) =>
             image.id === imageId ? { ...image, ...updatesWithTimestamp } : image
           ),
           isLoading: false,

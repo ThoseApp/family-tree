@@ -7,6 +7,7 @@ import Image from "next/image";
 import { cn, formatFileSize } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2, Eye } from "lucide-react";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 export const columns: ColumnDef<GalleryType>[] = [
   {
@@ -105,6 +106,21 @@ export const columns: ColumnDef<GalleryType>[] = [
       // For now, show "You" since this is typically the user's own gallery
       // In the future, this could be enhanced to show actual user names
       return <p className="text-sm text-left ">You</p>;
+    },
+  },
+
+  {
+    id: "status",
+    header: "Status",
+    accessorKey: "status",
+    cell: ({ row }) => {
+      const gallery = row.original;
+      const status = gallery.status as "pending" | "approved" | "rejected";
+      return (
+        <div className="flex justify-start">
+          <StatusBadge status={status || "pending"} />
+        </div>
+      );
     },
   },
 

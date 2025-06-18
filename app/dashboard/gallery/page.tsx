@@ -1,13 +1,23 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { AlignJustify, Download, LayoutGrid, Plus, Search } from "lucide-react";
+import {
+  AlignJustify,
+  Download,
+  LayoutGrid,
+  Plus,
+  Search,
+  Filter,
+} from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
 import GalleryTable from "@/components/tables/gallery";
 import { useGalleryStore } from "@/stores/gallery-store";
+import { useAlbumStore } from "@/stores/album-store";
 import { LoadingIcon } from "@/components/loading-icon";
 import { ImagePreviewModal } from "@/components/modals/image-preview-modal";
+import { CreateAlbumModal } from "@/components/modals/create-album-modal";
 import { toast } from "sonner";
+import AlbumGrid from "@/components/album-grid";
 import {
   Dialog,
   DialogContent,
@@ -18,8 +28,16 @@ import {
 } from "@/components/ui/dialog";
 import GalleryGrid from "@/components/gallery";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useUserStore } from "@/stores/user-store";
 import { MAX_IMAGE_SIZE_MB, MAX_VIDEO_SIZE_MB } from "@/lib/constants";
+import { GalleryStatusEnum } from "@/lib/constants/enums";
 
 const Page = () => {
   const { user } = useUserStore();
@@ -27,11 +45,21 @@ const Page = () => {
     userGallery,
     isLoading,
     fetchUserGallery,
+    fetchUserGalleryByStatus,
     uploadToGallery,
     deleteFromGallery,
     updateGalleryDetails,
   } = useGalleryStore();
-  const [viewMode, setViewMode] = useState<"grid" | "table">("table");
+  const {
+    userAlbums,
+    isLoading: albumsLoading,
+    fetchUserAlbums,
+    createAlbum,
+    deleteAlbum,
+  } = useAlbumStore();
+  const [viewMode, setViewMode] = useState<"albums" | "grid" | "table">(
+    "albums"
+  );
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -39,12 +67,23 @@ const Page = () => {
   const [imageToDelete, setImageToDelete] = useState<string | null>(null);
   const [captionInput, setCaptionInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedAlbumId, setSelectedAlbumId] = useState("none");
+  const [isCreateAlbumModalOpen, setIsCreateAlbumModalOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   useEffect(() => {
     if (user) {
-      fetchUserGallery(user.id);
+      if (statusFilter === "all") {
+        fetchUserGallery(user.id);
+      } else {
+        fetchUserGalleryByStatus(
+          user.id,
+          statusFilter as keyof typeof GalleryStatusEnum
+        );
+      }
+      fetchUserAlbums(user.id);
     }
-  }, [user]);
+  }, [user, statusFilter]);
 
   /**
    * Handle Upload of image of video
@@ -110,11 +149,15 @@ const Page = () => {
       await uploadToGallery(
         selectedImage.file,
         captionInput || selectedImage.name,
-        user?.id
+        user?.id,
+        selectedAlbumId && selectedAlbumId !== "none"
+          ? selectedAlbumId
+          : undefined
       );
       toast.success("Gallery uploaded successfully");
       setIsPreviewOpen(false);
       setSelectedImage(null);
+      setSelectedAlbumId("none");
     } catch (error) {
       toast.error("Failed to upload image");
     }
@@ -172,14 +215,69 @@ const Page = () => {
     }
   };
 
+  const handleCreateAlbum = async (name: string, description?: string) => {
+    if (!user) {
+      toast.error("User not authenticated");
+      return;
+    }
+
+    try {
+      await createAlbum(name, description, user.id);
+      toast.success("Album created successfully");
+    } catch (error) {
+      toast.error("Failed to create album");
+    }
+  };
+
+  const handleAlbumClick = (album: any) => {
+    // Navigate to album view - you can implement this based on your routing needs
+    console.log("Album clicked:", album);
+    // For now, switch to grid view filtered by this album
+    setViewMode("grid");
+    // You might want to add album filtering logic here
+  };
+
+  // Calculate status counts
+  const statusCounts = {
+    total: userGallery.length,
+    approved: userGallery.filter((item) => item.status === "approved").length,
+    pending: userGallery.filter((item) => item.status === "pending").length,
+    rejected: userGallery.filter((item) => item.status === "rejected").length,
+  };
+
   return (
     <div className="flex flex-col gap-y-8 lg:gap-y-12">
       {/* HEADER SECTION */}
       <div className="flex md:items-center md:flex-row flex-col md:justify-between gap-y-4">
-        <h1 className="text-2xl font-semibold">Manage Family Gallery</h1>
+        <div>
+          <h1 className="text-2xl font-semibold">Manage Family Gallery</h1>
+          {!isLoading && (viewMode === "grid" || viewMode === "table") && (
+            <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+              <span>Total: {statusCounts.total}</span>
+              <span className="text-green-600">
+                Approved: {statusCounts.approved}
+              </span>
+              <span className="text-yellow-600">
+                Pending: {statusCounts.pending}
+              </span>
+              <span className="text-red-600">
+                Rejected: {statusCounts.rejected}
+              </span>
+            </div>
+          )}
+        </div>
 
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
+            <Button
+              variant={viewMode === "albums" ? "default" : "outline"}
+              size="sm"
+              className="rounded-full"
+              onClick={() => setViewMode("albums")}
+            >
+              Albums
+            </Button>
+
             <Button
               variant={viewMode === "table" ? "default" : "outline"}
               size="icon"
@@ -198,6 +296,17 @@ const Page = () => {
               <LayoutGrid className="size-5" />
             </Button>
           </div>
+          {viewMode === "albums" && (
+            <Button
+              variant="outline"
+              className="rounded-full"
+              onClick={() => setIsCreateAlbumModalOpen(true)}
+            >
+              <Plus className="size-5 mr-2" />
+              New Folder
+            </Button>
+          )}
+
           <Button variant="outline" className="rounded-full">
             <Download className="size-5 mr-2" />
             Import from Web
@@ -220,22 +329,44 @@ const Page = () => {
         </div>
       </div>
 
-      {viewMode === "grid" && (
-        <div className="relative w-full max-w-md">
-          <Input
-            placeholder="Search by caption..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      {(viewMode === "grid" || viewMode === "table") && (
+        <div className="flex items-center gap-4">
+          {viewMode === "grid" && (
+            <div className="relative w-full max-w-md">
+              <Input
+                placeholder="Search by caption..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            </div>
+          )}
+
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Items</SelectItem>
+                <SelectItem value="approved">Approved</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       )}
 
-      {isLoading && userGallery.length === 0 ? (
+      {(isLoading && userGallery.length === 0) ||
+      (albumsLoading && userAlbums.length === 0) ? (
         <div className="flex items-center justify-center h-40">
           <LoadingIcon className="size-8" />
         </div>
+      ) : viewMode === "albums" ? (
+        <AlbumGrid albums={userAlbums} onAlbumClick={handleAlbumClick} />
       ) : viewMode === "table" ? (
         <GalleryTable
           data={userGallery}
@@ -309,6 +440,10 @@ const Page = () => {
         }
         isLoading={isLoading}
         showCaptionInput={!!selectedImage?.file}
+        showAlbumSelection={!!selectedImage?.file}
+        albums={userAlbums}
+        selectedAlbumId={selectedAlbumId}
+        onAlbumChange={setSelectedAlbumId}
       />
 
       {/* DELETE CONFIRMATION DIALOG */}
@@ -342,6 +477,14 @@ const Page = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* CREATE ALBUM MODAL */}
+      <CreateAlbumModal
+        isOpen={isCreateAlbumModalOpen}
+        onClose={() => setIsCreateAlbumModalOpen(false)}
+        onConfirm={handleCreateAlbum}
+        isLoading={albumsLoading}
+      />
     </div>
   );
 };

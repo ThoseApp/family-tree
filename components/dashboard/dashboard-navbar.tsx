@@ -57,13 +57,22 @@ const DashboardNavbar = () => {
         {/* ACTION ICONS */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" className="rounded-full">
-              <Mail className="size-6" />
-            </Button>
-
+            {user?.user_metadata?.is_admin === true && (
+              <Button
+                variant="outline"
+                size="icon"
+                className="rounded-full"
+                asChild
+              >
+                <Link href="/admin/member-requests">
+                  <Mail className="size-6" />
+                </Link>
+              </Button>
+            )}
+            {/* 
             <Button variant="outline" size="icon" className="rounded-full">
               <Heart className="size-6" />
-            </Button>
+            </Button> */}
 
             <Button
               variant="outline"

@@ -7,9 +7,11 @@ import { LogOut } from "lucide-react";
 import Logo from "../logo";
 import { navLinksTopSection } from "@/lib/constants/dashbaord";
 import { cn } from "@/lib/utils";
+import { useUserStore } from "@/stores/user-store";
 
 const DashboardSideBar = () => {
   const pathname = usePathname();
+  const { logout } = useUserStore();
 
   return (
     <>
@@ -43,7 +45,7 @@ const DashboardSideBar = () => {
             <div className="mt-auto  px-3">
               <div
                 className="relative text-sm group p-3 flex w-full rounded-lg  justify-start items-center  cursor-pointer hover:bg-destructive/20 text-destructive   transition"
-                // onClick={toggleLogoutDialog}
+                onClick={logout}
               >
                 <LogOut className="size-5 mr-2" />
                 <span>Log out</span>

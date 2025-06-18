@@ -78,10 +78,12 @@ export interface GalleryType {
   url: string;
   caption?: string;
   album?: string;
+  album_id?: string;
   uploaded_at?: string;
   user_id: string;
   file_name: string;
   file_size: number;
+  folder?: string;
   status?: keyof typeof GalleryStatusEnum;
   created_at: string;
   updated_at?: string;
