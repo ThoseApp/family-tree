@@ -46,6 +46,9 @@ interface ImagePreviewModalProps {
   albums?: Album[]; // Available albums
   selectedAlbumId?: string; // Currently selected album ID
   onAlbumChange?: (albumId: string) => void; // Handler for album changes
+  editMode?: boolean; // Whether in edit mode
+  editButtonText?: string; // Text for edit button
+  confirmButtonText?: string; // Text for confirm button
 }
 
 export const ImagePreviewModal = ({
@@ -63,6 +66,9 @@ export const ImagePreviewModal = ({
   albums = [],
   selectedAlbumId = "",
   onAlbumChange = () => {},
+  editMode = false,
+  editButtonText = "Edit",
+  confirmButtonText = "OK",
 }: ImagePreviewModalProps) => {
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
@@ -207,7 +213,7 @@ export const ImagePreviewModal = ({
                     aria-label="Edit image"
                   >
                     <Edit3 className="mr-2 h-4 w-4" />
-                    Edit Image
+                    {editButtonText}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Edit image details</TooltipContent>
@@ -244,7 +250,7 @@ export const ImagePreviewModal = ({
                 Processing...
               </>
             ) : (
-              "OK"
+              confirmButtonText
             )}
           </Button>
         </DialogFooter>

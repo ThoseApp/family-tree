@@ -73,6 +73,8 @@ const Page = () => {
   const [isCreateAlbumModalOpen, setIsCreateAlbumModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingCaption, setEditingCaption] = useState("");
 
   useEffect(() => {
     if (user) {
@@ -168,10 +170,14 @@ const Page = () => {
 
   const handlePreviewImage = (image: any) => {
     setSelectedImage({
-      url: image.image || image.url,
-      name: image.name,
+      url: image.url, // Fix: Use image.url directly as that's the actual property
+      name: image.title || image.name || image.caption || image.file_name,
       id: image.id,
+      caption: image.title || image.caption,
+      file_name: image.file_name,
     });
+    setEditingCaption(image.title || image.caption || "");
+    setIsEditMode(false);
     setIsPreviewOpen(true);
   };
 
@@ -244,6 +250,40 @@ const Page = () => {
     } catch (error) {
       toast.error("Failed to import image from web");
     }
+  };
+
+  const handleEditImage = () => {
+    setIsEditMode(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!selectedImage?.id) {
+      toast.error("No image selected");
+      return;
+    }
+
+    try {
+      await updateGalleryDetails(selectedImage.id, {
+        caption: editingCaption,
+      });
+
+      // Update the selected image with new caption
+      setSelectedImage({
+        ...selectedImage,
+        caption: editingCaption,
+        name: editingCaption || selectedImage.file_name,
+      });
+
+      setIsEditMode(false);
+      toast.success("Image updated successfully");
+    } catch (error) {
+      toast.error("Failed to update image");
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCaption(selectedImage?.caption || "");
+    setIsEditMode(false);
   };
 
   const handleAlbumClick = (album: any) => {
@@ -402,13 +442,8 @@ const Page = () => {
                 .includes(searchQuery.toLowerCase())
             )}
             onImageClick={(image) => {
-              // Convert the grid image format to the format expected by handlePreviewImage
-              const formattedImage = {
-                id: image.id,
-                name: image.caption || image.file_name,
-                image: image.url,
-              };
-              handlePreviewImage(formattedImage);
+              // Pass the image directly as the format is already correct
+              handlePreviewImage(image);
             }}
           />
         </div>
@@ -435,6 +470,8 @@ const Page = () => {
         isOpen={isPreviewOpen}
         onClose={() => {
           setIsPreviewOpen(false);
+          setIsEditMode(false);
+          setEditingCaption("");
           // If we were viewing a temporary file (new upload), revoke the URL
           if (selectedImage?.file && selectedImage?.url) {
             URL.revokeObjectURL(selectedImage.url);
@@ -442,27 +479,39 @@ const Page = () => {
         }}
         imageUrl={selectedImage?.url || ""}
         imageName={selectedImage?.name || ""}
-        captionValue={captionInput}
-        onCaptionChange={(value) => setCaptionInput(value)}
+        captionValue={selectedImage?.file ? captionInput : editingCaption}
+        onCaptionChange={(value) => {
+          if (selectedImage?.file) {
+            setCaptionInput(value);
+          } else {
+            setEditingCaption(value);
+          }
+        }}
         onConfirm={
           selectedImage?.file
             ? handleUploadConfirm
+            : isEditMode
+            ? handleSaveEdit
             : () => setIsPreviewOpen(false)
         }
         onEdit={
           selectedImage?.file
             ? undefined
-            : () => {
-                // Implement edit functionality if needed
-                setIsPreviewOpen(false);
-              }
+            : isEditMode
+            ? handleCancelEdit
+            : handleEditImage
         }
         isLoading={isLoading}
-        showCaptionInput={!!selectedImage?.file}
+        showCaptionInput={!!selectedImage?.file || isEditMode}
         showAlbumSelection={!!selectedImage?.file}
         albums={userAlbums}
         selectedAlbumId={selectedAlbumId}
         onAlbumChange={setSelectedAlbumId}
+        editMode={isEditMode}
+        editButtonText={isEditMode ? "Cancel" : "Edit"}
+        confirmButtonText={
+          selectedImage?.file ? "Upload" : isEditMode ? "Save Changes" : "OK"
+        }
       />
 
       {/* DELETE CONFIRMATION DIALOG */}
