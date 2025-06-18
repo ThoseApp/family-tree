@@ -25,10 +25,25 @@ interface GalleryState {
 interface GalleryActions {
   fetchGallery: () => Promise<void>;
   fetchUserGallery: (userId: string) => Promise<void>;
+  fetchUserGalleryByStatus: (
+    userId: string,
+    status?: keyof typeof GalleryStatusEnum
+  ) => Promise<void>;
+  fetchUserGalleryByAlbum: (
+    userId: string,
+    albumId: string
+  ) => Promise<GalleryType[]>;
   uploadToGallery: (
     file: File,
     caption?: string,
-    userId?: string
+    userId?: string,
+    albumId?: string
+  ) => Promise<void>;
+  importFromWeb: (
+    imageUrl: string,
+    caption?: string,
+    userId?: string,
+    albumId?: string
   ) => Promise<void>;
   deleteFromGallery: (imageId: string) => Promise<void>;
   updateGalleryDetails: (
@@ -82,7 +97,6 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
           .from("galleries")
           .select("*")
           .eq("user_id", userId)
-          .eq("status", GalleryStatusEnum.approved)
           .order("updated_at", { ascending: false });
 
         if (error) throw error;
@@ -97,7 +111,54 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
       }
     },
 
-    uploadToGallery: async (file, caption, userId) => {
+    fetchUserGalleryByStatus: async (userId, status) => {
+      set({ isLoading: true, error: null });
+
+      try {
+        let query = supabase
+          .from("galleries")
+          .select("*")
+          .eq("user_id", userId);
+
+        if (status) {
+          query = query.eq("status", status);
+        }
+
+        const { data, error } = await query.order("updated_at", {
+          ascending: false,
+        });
+
+        if (error) throw error;
+
+        set({ userGallery: data || [], isLoading: false });
+      } catch (err: any) {
+        console.error("Error fetching user gallery by status:", err);
+        set({
+          error: err.message || "Failed to fetch user gallery",
+          isLoading: false,
+        });
+      }
+    },
+
+    fetchUserGalleryByAlbum: async (userId, albumId) => {
+      try {
+        const { data, error } = await supabase
+          .from("galleries")
+          .select("*")
+          .eq("user_id", userId)
+          .eq("album_id", albumId)
+          .order("updated_at", { ascending: false });
+
+        if (error) throw error;
+
+        return data || [];
+      } catch (err: any) {
+        console.error("Error fetching user gallery by album:", err);
+        throw err;
+      }
+    },
+
+    uploadToGallery: async (file, caption, userId, albumId) => {
       set({ isLoading: true, error: null });
 
       try {
@@ -141,6 +202,7 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
           user_id: userId || "",
           file_name: file_name,
           file_size: file.size,
+          album_id: albumId,
           status:
             userId === ADMIN_ID
               ? GalleryStatusEnum.approved
@@ -197,6 +259,146 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
       }
     },
 
+    importFromWeb: async (imageUrl, caption, userId, albumId) => {
+      set({ isLoading: true, error: null });
+
+      try {
+        let blob: Blob;
+        let contentType = "";
+
+        try {
+          // First, try direct fetch with CORS mode
+          const response = await fetch(imageUrl, {
+            mode: "cors",
+            headers: {
+              Accept: "image/*",
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          blob = await response.blob();
+          contentType = response.headers.get("content-type") || "";
+        } catch (corsError) {
+          console.log("Direct fetch failed, trying canvas method:", corsError);
+
+          // If CORS fails, try using canvas method
+          blob = await new Promise<Blob>((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+
+            img.onload = () => {
+              try {
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+
+                if (!ctx) {
+                  reject(new Error("Failed to get canvas context"));
+                  return;
+                }
+
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+
+                canvas.toBlob(
+                  (blob) => {
+                    if (blob) {
+                      resolve(blob);
+                    } else {
+                      reject(new Error("Failed to convert canvas to blob"));
+                    }
+                  },
+                  "image/jpeg",
+                  0.9
+                );
+              } catch (error) {
+                reject(error);
+              }
+            };
+
+            img.onerror = () => {
+              reject(
+                new Error(
+                  "Failed to load image. The URL may not be accessible due to CORS restrictions or the image may not exist."
+                )
+              );
+            };
+
+            img.src = imageUrl;
+          });
+
+          contentType = "image/jpeg"; // Canvas output is always JPEG
+        }
+
+        // Determine file type and extension
+        let fileExtension = "jpg";
+        let mimeType = "image/jpeg";
+
+        if (contentType) {
+          mimeType = contentType;
+          const mimeToExt: { [key: string]: string } = {
+            "image/jpeg": "jpg",
+            "image/jpg": "jpg",
+            "image/png": "png",
+            "image/gif": "gif",
+            "image/webp": "webp",
+            "image/bmp": "bmp",
+          };
+          fileExtension = mimeToExt[contentType.toLowerCase()] || "jpg";
+        } else {
+          // Try to determine from URL
+          const urlExtension = imageUrl
+            .split(".")
+            .pop()
+            ?.split("?")[0]
+            ?.toLowerCase();
+          if (
+            urlExtension &&
+            ["jpg", "jpeg", "png", "gif", "webp", "bmp"].includes(urlExtension)
+          ) {
+            fileExtension = urlExtension === "jpeg" ? "jpg" : urlExtension;
+            mimeType = `image/${
+              fileExtension === "jpg" ? "jpeg" : fileExtension
+            }`;
+          }
+        }
+
+        // Ensure we have a valid blob
+        if (!blob || blob.size === 0) {
+          throw new Error(
+            "Failed to fetch image data - the image may be too large or not accessible"
+          );
+        }
+
+        // Create file with proper MIME type
+        const fileName = `imported-${Date.now()}.${fileExtension}`;
+        const file = new File([blob], fileName, {
+          type: mimeType,
+          lastModified: Date.now(),
+        });
+
+        console.log("Created file:", {
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          originalUrl: imageUrl,
+        });
+
+        // Use the existing uploadToGallery function
+        await get().uploadToGallery(file, caption, userId, albumId);
+      } catch (err: any) {
+        console.error("Error importing from web:", err);
+        set({
+          error: err.message || "Failed to import image from web",
+          isLoading: false,
+        });
+        throw err;
+      }
+    },
+
     deleteFromGallery: async (imageId) => {
       set({ isLoading: true, error: null });
 
@@ -210,7 +412,9 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
         }
 
         // Find the image to get its file name
-        const imageToDelete = get().gallery.find((img) => img.id === imageId);
+        const imageToDelete =
+          get().gallery.find((img) => img.id === imageId) ||
+          get().userGallery.find((img) => img.id === imageId);
         if (!imageToDelete) {
           throw new Error("Image not found");
         }
@@ -239,6 +443,9 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
         // Update local state
         set((state) => ({
           gallery: state.gallery.filter((image) => image.id !== imageId),
+          userGallery: state.userGallery.filter(
+            (image) => image.id !== imageId
+          ),
           isLoading: false,
           selectedImage:
             state.selectedImage?.id === imageId ? null : state.selectedImage,
@@ -282,6 +489,9 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
         // Update local state
         set((state) => ({
           gallery: state.gallery.map((image) =>
+            image.id === imageId ? { ...image, ...updatesWithTimestamp } : image
+          ),
+          userGallery: state.userGallery.map((image) =>
             image.id === imageId ? { ...image, ...updatesWithTimestamp } : image
           ),
           isLoading: false,

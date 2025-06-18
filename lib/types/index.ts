@@ -78,10 +78,12 @@ export interface GalleryType {
   url: string;
   caption?: string;
   album?: string;
+  album_id?: string;
   uploaded_at?: string;
   user_id: string;
   file_name: string;
   file_size: number;
+  folder?: string;
   status?: keyof typeof GalleryStatusEnum;
   created_at: string;
   updated_at?: string;
@@ -164,4 +166,20 @@ export interface LandingPageContent {
   history: LandingPageSection;
   family_members: LandingPageSection;
   family_tree: LandingPageSection;
+}
+
+export interface MemberRequest {
+  id: string;
+  user_id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone_number?: string;
+  date_of_birth?: string;
+  relative?: string;
+  relationship_to_relative?: string;
+  status: keyof typeof UserStatusEnum;
+  image?: string;
+  created_at: string;
+  updated_at?: string;
 }

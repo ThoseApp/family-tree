@@ -1,17 +1,21 @@
-import { FamilyMember } from "@/lib/types";
+import { MemberRequest } from "@/lib/types";
 import React from "react";
-import { columns } from "./columns";
+import { createColumns } from "./columns";
 import { DataTable } from "@/components/ui/data-table";
 
 interface MemberRequestsTableProps {
-  data: FamilyMember[];
-  onUserClick?: (user: FamilyMember) => void;
+  data: MemberRequest[];
+  onUserClick?: (user: MemberRequest) => void;
+  onRefresh?: () => void;
 }
 
 const MemberRequestsTable = ({
   data,
   onUserClick,
+  onRefresh,
 }: MemberRequestsTableProps) => {
+  const columns = createColumns(onRefresh);
+
   return (
     <DataTable
       columns={columns}

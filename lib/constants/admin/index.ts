@@ -33,7 +33,7 @@ export const navLinksTopSection: NavLink[] = [
   {
     label: "Member Requests",
     href: "/admin/member-requests",
-    icon: TreesIcon,
+    icon: UsersIcon,
   },
   {
     label: "Gallery Requests",

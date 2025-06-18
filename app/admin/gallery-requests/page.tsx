@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase/client";
 import { GalleryType } from "@/lib/types";
 import { GalleryStatusEnum, NotificationTypeEnum } from "@/lib/constants/enums";
+import { BUCKET_NAME } from "@/lib/constants";
 import { ImagePreviewModal } from "@/components/modals/image-preview-modal";
 
 const GalleryRequestsPage = () => {
@@ -169,6 +170,30 @@ const GalleryRequestsPage = () => {
     }
   };
 
+  // Test function to verify database connection and permissions
+  const testDeclineOperation = async (galleryId: string) => {
+    try {
+      // Test if we can fetch the specific gallery
+      const { data: testData, error: testError } = await supabase
+        .from("galleries")
+        .select("*")
+        .eq("id", galleryId)
+        .single();
+
+      console.log("Test fetch result:", { testData, testError });
+
+      if (testError) {
+        console.error("Cannot fetch gallery for decline:", testError);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Test operation failed:", error);
+      return false;
+    }
+  };
+
   // Handle decline gallery request
   const handleDecline = async (galleryId: string) => {
     if (!user) {
@@ -180,11 +205,64 @@ const GalleryRequestsPage = () => {
     setProcessingItems((prev) => new Set(prev).add(galleryId));
 
     try {
+      console.log("Starting decline process for gallery ID:", galleryId);
+
+      // Test database connectivity first
+      const canProceed = await testDeclineOperation(galleryId);
+      if (!canProceed) {
+        throw new Error("Database test failed - cannot proceed with decline");
+      }
+
       // Find the gallery to get user info for notification
       const declinedGallery = pendingGalleries.find((g) => g.id === galleryId);
 
-      if (declinedGallery) {
-        // Create notification for the user
+      if (!declinedGallery) {
+        throw new Error("Gallery not found in pending list");
+      }
+
+      console.log("Found gallery to decline:", declinedGallery);
+
+      // Step 1: Try to update status to rejected first
+      let statusUpdateFailed = false;
+      try {
+        const { error: updateError } = await supabase
+          .from("galleries")
+          .update({
+            status: GalleryStatusEnum.rejected,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", galleryId);
+
+        if (updateError) {
+          console.error("Error updating gallery status:", updateError);
+          statusUpdateFailed = true;
+        } else {
+          console.log("Gallery status updated to rejected");
+        }
+      } catch (updateErr) {
+        console.error("Failed to update status:", updateErr);
+        statusUpdateFailed = true;
+      }
+
+      // If status update failed, try direct deletion as fallback
+      if (statusUpdateFailed) {
+        console.log("Status update failed, trying direct deletion...");
+
+        const { error: deleteError } = await supabase
+          .from("galleries")
+          .delete()
+          .eq("id", galleryId);
+
+        if (deleteError) {
+          console.error("Error deleting gallery:", deleteError);
+          throw deleteError;
+        }
+
+        console.log("Gallery deleted successfully");
+      }
+
+      // Step 2: Create notification for the user
+      try {
         const notificationData = {
           title: "Gallery Request Declined",
           body: `Your gallery item "${
@@ -203,34 +281,45 @@ const GalleryRequestsPage = () => {
 
         if (notificationError) {
           console.warn("Failed to create notification:", notificationError);
+          // Don't fail the whole operation if notification fails
+        } else {
+          console.log("Notification created successfully");
         }
+      } catch (notificationErr) {
+        console.warn("Notification creation failed:", notificationErr);
+      }
 
-        // Delete the gallery from storage
-        if (declinedGallery.file_name) {
+      // Step 3: Delete from storage (uncommented - should work now)
+      if (declinedGallery.file_name) {
+        try {
+          console.log(
+            "Attempting to delete file from storage:",
+            declinedGallery.file_name
+          );
           const { error: storageError } = await supabase.storage
-            .from("family-tree-bucket")
+            .from(BUCKET_NAME)
             .remove([declinedGallery.file_name]);
 
           if (storageError) {
             console.warn("Failed to delete file from storage:", storageError);
+            // Don't fail the whole operation if storage deletion fails
+          } else {
+            console.log("File deleted from storage successfully");
           }
+        } catch (storageErr) {
+          console.warn("Storage deletion failed:", storageErr);
+          // Don't fail the whole operation if storage deletion fails
         }
       }
 
-      // Delete the gallery record
-      const { error } = await supabase
-        .from("galleries")
-        .delete()
-        .eq("id", galleryId);
-
-      if (error) throw error;
-
-      // Remove from pending list
+      // Remove from pending list (since it's no longer pending)
       setPendingGalleries((prev) => prev.filter((g) => g.id !== galleryId));
-      toast.success("Gallery request declined and removed");
+      toast.success("Gallery request declined successfully");
+
+      console.log("Decline process completed successfully");
     } catch (err: any) {
       console.error("Error declining gallery:", err);
-      toast.error("Failed to decline gallery request");
+      toast.error(`Failed to decline gallery request: ${err.message}`);
     } finally {
       // Remove from processing
       setProcessingItems((prev) => {

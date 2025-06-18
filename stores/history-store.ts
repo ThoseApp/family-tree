@@ -107,10 +107,15 @@ export const useHistoryStore = create(
           if (error) throw error;
 
           const newItem = data as HistoryItem;
-          set((state) => ({
-            userHistoryItems: [...state.userHistoryItems, newItem],
-            isLoading: false,
-          }));
+          set((state) => {
+            const updatedItems = [...state.userHistoryItems, newItem];
+            // Sort by year in descending order (newest first)
+            updatedItems.sort((a, b) => parseInt(b.year) - parseInt(a.year));
+            return {
+              userHistoryItems: updatedItems,
+              isLoading: false,
+            };
+          });
 
           toast.success("History item added successfully");
           return newItem;
@@ -139,12 +144,17 @@ export const useHistoryStore = create(
           if (error) throw error;
 
           const updatedItem = data as HistoryItem;
-          set((state) => ({
-            userHistoryItems: state.userHistoryItems.map((item) =>
+          set((state) => {
+            const updatedItems = state.userHistoryItems.map((item) =>
               item.id === id ? updatedItem : item
-            ),
-            isLoading: false,
-          }));
+            );
+            // Sort by year in descending order (newest first) in case the year was changed
+            updatedItems.sort((a, b) => parseInt(b.year) - parseInt(a.year));
+            return {
+              userHistoryItems: updatedItems,
+              isLoading: false,
+            };
+          });
 
           toast.success("History item updated successfully");
           return updatedItem;

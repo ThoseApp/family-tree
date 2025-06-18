@@ -1,8 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Plus, Loader2, X } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { Plus, Loader2, X, Search } from "lucide-react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useHistoryStore } from "@/stores/history-store";
 import { HistoryItem } from "@/lib/types";
 import { Input } from "@/components/ui/input";
@@ -72,6 +72,33 @@ const HistoryComponent = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editing, setEditing] = useState<HistoryItem | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchFilter, setSearchFilter] = useState("all");
+
+  // Filter history items based on search query and filter
+  const filteredHistoryItems = useMemo(() => {
+    if (!searchQuery.trim()) return userHistoryItems;
+
+    return userHistoryItems.filter((item) => {
+      const query = searchQuery.toLowerCase();
+
+      switch (searchFilter) {
+        case "title":
+          return item.title.toLowerCase().includes(query);
+        case "description":
+          return item.description.toLowerCase().includes(query);
+        case "year":
+          return item.year.includes(query);
+        case "all":
+        default:
+          return (
+            item.title.toLowerCase().includes(query) ||
+            item.description.toLowerCase().includes(query) ||
+            item.year.includes(query)
+          );
+      }
+    });
+  }, [userHistoryItems, searchQuery, searchFilter]);
 
   useEffect(() => {
     if (user) {
@@ -141,6 +168,62 @@ const HistoryComponent = () => {
           </Button>
         </div>
       </div>
+
+      {/* SEARCH SECTION */}
+      {userHistoryItems.length > 0 && (
+        <div className="bg-white p-6 rounded-xl shadow-sm border">
+          <div className="flex flex-col md:flex-row gap-4 items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 size-4" />
+              <Input
+                placeholder="Search timeline by title, description, or year..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Label
+                htmlFor="search-filter"
+                className="text-sm font-medium whitespace-nowrap"
+              >
+                Search in:
+              </Label>
+              <Select value={searchFilter} onValueChange={setSearchFilter}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All fields</SelectItem>
+                  <SelectItem value="title">Title only</SelectItem>
+                  <SelectItem value="description">Description only</SelectItem>
+                  <SelectItem value="year">Year only</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {searchQuery && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSearchQuery("")}
+                className="shrink-0"
+              >
+                <X className="size-4 mr-1" />
+                Clear
+              </Button>
+            )}
+          </div>
+          {searchQuery && (
+            <div className="mt-3 text-sm text-gray-600">
+              {filteredHistoryItems.length > 0
+                ? `Found ${filteredHistoryItems.length} result${
+                    filteredHistoryItems.length === 1 ? "" : "s"
+                  } for "${searchQuery}"`
+                : `No results found for "${searchQuery}"`}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ADD FORM */}
       {showAddForm && (
@@ -388,10 +471,29 @@ const HistoryComponent = () => {
         </div>
       )}
 
+      {/* NO SEARCH RESULTS STATE */}
+      {!isLoading &&
+        userHistoryItems.length > 0 &&
+        searchQuery &&
+        !filteredHistoryItems.length && (
+          <div className="text-center py-12 border rounded-lg bg-gray-50">
+            <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-1">
+              No matching stories found
+            </h3>
+            <p className="text-gray-500 mb-4">
+              Try adjusting your search terms or search filter.
+            </p>
+            <Button variant="outline" onClick={() => setSearchQuery("")}>
+              Clear Search
+            </Button>
+          </div>
+        )}
+
       {/* TIMELINE SECTION */}
       {userHistoryItems.length > 0 && (
         <div className="pl-8 border-l-2 border-gray-200">
-          {userHistoryItems.map((item) => (
+          {filteredHistoryItems.map((item) => (
             <div key={item.id} className="relative mb-8 ml-4">
               {/* Timeline Marker */}
               <div className="absolute w-3 h-3 bg-gray-300 rounded-full top-1 -left-[calc(3rem+7px)] border-2 border-white"></div>

@@ -3,6 +3,9 @@
 import NoticeBoardCard from "@/components/cards/notice-board-card";
 import NoticeBoardForm from "@/components/forms/notice-board-form";
 import NoticeBoardTable from "@/components/tables/notice-board";
+import NoticeBoardSearchFilters, {
+  SearchFilters,
+} from "@/components/search/notice-board-search-filters";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,11 +16,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { LoadingIcon } from "@/components/loading-icon";
-import { Plus, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, ChevronDown, ChevronUp, Grid, Table } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNoticeBoardStore } from "@/stores/notice-board-store";
 import { NoticeBoard } from "@/lib/types";
 import { toast } from "sonner";
+import { getFilteredAndSortedNoticeBoards } from "@/lib/utils/notice-board-filters";
+import { cn } from "@/lib/utils";
 
 const NoticeBoardPage = () => {
   const {
@@ -40,9 +45,25 @@ const NoticeBoardPage = () => {
   );
   const [displayMode, setDisplayMode] = useState<"grid" | "table">("grid");
 
+  // Search and filter state
+  const [filters, setFilters] = useState<SearchFilters>({
+    searchTerm: "",
+    selectedTags: [],
+    pinnedFilter: "all",
+    editorFilter: "",
+    dateFrom: undefined,
+    dateTo: undefined,
+  });
+
   useEffect(() => {
     fetchNoticeBoards();
   }, [fetchNoticeBoards]);
+
+  // Get filtered and sorted notices
+  const filteredNotices = getFilteredAndSortedNoticeBoards(
+    noticeBoards,
+    filters
+  );
 
   const handleSubmit = async (data: Omit<NoticeBoard, "id">) => {
     try {
@@ -95,25 +116,28 @@ const NoticeBoardPage = () => {
       {/* HEADER SECTION */}
       <div className="flex md:items-center md:flex-row flex-col md:justify-between gap-y-4">
         <h1 className="text-2xl font-semibold">Family Notice Board</h1>
-        {/* <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4">
+          {/* Display Mode Toggle */}
           <div className="flex items-center space-x-2">
             <Button
-              variant="outline"
+              variant={displayMode === "grid" ? "default" : "outline"}
               size="sm"
               onClick={() => setDisplayMode("grid")}
-              className={displayMode === "grid" ? "bg-muted" : ""}
             >
+              <Grid className="h-4 w-4 mr-2" />
               Grid
             </Button>
             <Button
-              variant="outline"
+              variant={displayMode === "table" ? "default" : "outline"}
               size="sm"
               onClick={() => setDisplayMode("table")}
-              className={displayMode === "table" ? "bg-muted" : ""}
             >
+              <Table className="h-4 w-4 mr-2" />
               Table
             </Button>
           </div>
+
+          {/* Add Notice Button */}
           <Button onClick={() => setShowForm(!showForm)}>
             {showForm ? (
               <>
@@ -125,7 +149,7 @@ const NoticeBoardPage = () => {
               </>
             )}
           </Button>
-        </div> */}
+        </div>
       </div>
 
       {/* FORM SECTION */}
@@ -139,16 +163,62 @@ const NoticeBoardPage = () => {
         </div>
       )}
 
+      {/* SEARCH AND FILTERS SECTION */}
+      {!showForm && (
+        <NoticeBoardSearchFilters
+          noticeBoards={noticeBoards}
+          filters={filters}
+          onFiltersChange={setFilters}
+        />
+      )}
+
       {/* CONTENT SECTION */}
       {loading && noticeBoards.length === 0 ? (
         <div className="flex justify-center items-center h-40">
           <LoadingIcon className="h-8 w-8" />
         </div>
+      ) : filteredNotices.length === 0 && noticeBoards.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-40 text-center">
+          <h3 className="text-lg font-medium text-muted-foreground mb-2">
+            No notices yet
+          </h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Create your first family notice to get started
+          </p>
+          <Button onClick={() => setShowForm(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create Notice
+          </Button>
+        </div>
+      ) : filteredNotices.length === 0 && noticeBoards.length > 0 ? (
+        <div className="flex flex-col items-center justify-center h-40 text-center">
+          <h3 className="text-lg font-medium text-muted-foreground mb-2">
+            No notices match your filters
+          </h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Try adjusting your search criteria or clear all filters
+          </p>
+          <Button
+            variant="outline"
+            onClick={() =>
+              setFilters({
+                searchTerm: "",
+                selectedTags: [],
+                pinnedFilter: "all",
+                editorFilter: "",
+                dateFrom: undefined,
+                dateTo: undefined,
+              })
+            }
+          >
+            Clear Filters
+          </Button>
+        </div>
       ) : (
         <>
           {displayMode === "grid" ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {noticeBoards.map((noticeBoard) => (
+              {filteredNotices.map((noticeBoard) => (
                 <NoticeBoardCard
                   key={noticeBoard.id}
                   noticeBoard={noticeBoard}
@@ -157,7 +227,7 @@ const NoticeBoardPage = () => {
             </div>
           ) : (
             <NoticeBoardTable
-              data={noticeBoards}
+              data={filteredNotices}
               onEditClick={handleEdit}
               onDeleteClick={(id) => {
                 setNoticeBoardToDelete(id);
