@@ -16,6 +16,7 @@ import {
   ImageIcon,
   CalendarIcon,
   LogOutIcon,
+  Mail,
 } from "lucide-react";
 import { dummyProfileImage } from "..";
 
@@ -45,6 +46,11 @@ export const navLinksTopSection: NavLink[] = [
     label: "Events",
     href: "/dashboard/events",
     icon: CalendarIcon,
+  },
+  {
+    label: "Invitations",
+    href: "/dashboard/invitations",
+    icon: Mail,
   },
   {
     label: "Gallery",

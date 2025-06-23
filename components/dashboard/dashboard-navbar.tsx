@@ -110,7 +110,11 @@ const DashboardNavbar = () => {
             <DropdownMenuContent align="end" className="w-56 p-2">
               <DropdownMenuItem
                 className="cursor-pointer flex items-center gap-2 rounded-md"
-                onClick={() => router.push("/dashboard/profile")}
+                onClick={() =>
+                  user?.user_metadata?.is_admin
+                    ? router.push("/admin/profile")
+                    : router.push("/dashboard/profile")
+                }
               >
                 <User className="size-5" />
                 <span>Profile</span>

@@ -9,14 +9,16 @@ interface EventsTableProps {
   data: Event[];
   onEditClick?: (event: Event) => void;
   onDeleteClick?: (id: string) => void;
+  onInviteClick?: (event: Event) => void;
 }
 
 const EventsTable = ({
   data,
   onEditClick,
   onDeleteClick,
+  onInviteClick,
 }: EventsTableProps) => {
-  const columns = createColumns(onEditClick, onDeleteClick);
+  const columns = createColumns(onEditClick, onDeleteClick, onInviteClick);
 
   return (
     <DataTable

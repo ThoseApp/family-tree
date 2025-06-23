@@ -11,6 +11,40 @@ export type NavLink = {
   icon?: LucideIcon;
 };
 
+export interface LifeEvent {
+  id: string;
+  year: string;
+  title: string;
+  description?: string;
+  date?: string; // Optional specific date if more precise than year
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface EventInvitation {
+  id: string;
+  event_id: string;
+  inviter_id: string; // User who sent the invitation
+  invitee_id: string; // User who received the invitation
+  status: "pending" | "accepted" | "declined";
+  message?: string; // Optional message from inviter
+  responded_at?: string;
+  created_at: string;
+  updated_at: string;
+  // Populated fields for easier display
+  event?: Event;
+  inviter?: {
+    first_name: string;
+    last_name: string;
+    image?: string;
+  };
+  invitee?: {
+    first_name: string;
+    last_name: string;
+    image?: string;
+  };
+}
+
 export interface UserProfile {
   id: string;
   user_id: string;
