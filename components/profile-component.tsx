@@ -302,7 +302,9 @@ const ProfileComponent = () => {
               <div className="text-center py-8 text-gray-500">
                 <Calendar className="size-12 mx-auto mb-2 text-gray-300" />
                 <p>No life events added yet.</p>
-                <p className="text-sm">Click "Add Event" to get started!</p>
+                <p className="text-sm">
+                  Click &quot;Add Event&quot; to get started!
+                </p>
               </div>
             )}
           </div>

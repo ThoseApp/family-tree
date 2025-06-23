@@ -156,7 +156,7 @@ const InvitationsComponent = () => {
                   No invitations yet
                 </h3>
                 <p className="text-muted-foreground text-center">
-                  You haven't received any event invitations from family
+                  You haven&apos;t received any event invitations from family
                   members.
                 </p>
               </CardContent>
@@ -188,7 +188,8 @@ const InvitationsComponent = () => {
                   No sent invitations
                 </h3>
                 <p className="text-muted-foreground text-center">
-                  You haven't sent any event invitations to family members yet.
+                  You haven&apos;t sent any event invitations to family members
+                  yet.
                 </p>
               </CardContent>
             </Card>
@@ -312,7 +313,9 @@ const InvitationCard: React.FC<InvitationCardProps> = ({
 
               {invitation.message && (
                 <div className="bg-muted p-3 rounded-md mt-3">
-                  <p className="text-sm italic">"{invitation.message}"</p>
+                  <p className="text-sm italic">
+                    &quot;{invitation.message}&quot;
+                  </p>
                 </div>
               )}
             </div>

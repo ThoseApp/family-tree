@@ -743,8 +743,8 @@ const EventComponent = () => {
               Invite Family Members
             </DialogTitle>
             <DialogDescription>
-              Send invitations to family members for "
-              {eventToInvite?.name || "this event"}"
+              Send invitations to family members for &quot;
+              {eventToInvite?.name || "this event"}&quot;
             </DialogDescription>
           </DialogHeader>
 

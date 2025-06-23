@@ -206,7 +206,7 @@ export const createInvitationColumns = (
         const message = row.getValue("message") as string;
         return message ? (
           <div className="max-w-[200px]">
-            <div className="truncate text-sm">"{message}"</div>
+            <div className="truncate text-sm">&quot;{message}&quot;</div>
           </div>
         ) : (
           <span className="text-muted-foreground text-sm">No message</span>
