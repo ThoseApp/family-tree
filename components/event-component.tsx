@@ -12,9 +12,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { CalendarIcon, ChevronDown, ChevronUp, Plus } from "lucide-react";
+import {
+  CalendarIcon,
+  ChevronDown,
+  ChevronUp,
+  Plus,
+  Users,
+  Send,
+} from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useEventsStore } from "@/stores/events-store";
+import { useEventInvitationsStore } from "@/stores/event-invitations-store";
 import { toast } from "sonner";
 import { LoadingIcon } from "@/components/loading-icon";
 import {
@@ -44,6 +52,10 @@ import { uploadImage } from "@/lib/file-upload";
 import { BucketFolderEnum } from "@/lib/constants/enums";
 import Image from "next/image";
 import { useUserStore } from "@/stores/user-store";
+import { Event, UserProfile } from "@/lib/types";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { dummyProfileImage } from "@/lib/constants";
 
 const EVENT_CATEGORIES = [
   "Birthday",
@@ -64,6 +76,13 @@ const EventComponent = () => {
     updateEvent,
     deleteEvent,
   } = useEventsStore();
+
+  const {
+    sendInvitations,
+    getFamilyMembers,
+    loading: inviteLoading,
+  } = useEventInvitationsStore();
+
   const { user } = useUserStore();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
@@ -73,6 +92,13 @@ const EventComponent = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedEditFile, setSelectedEditFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+
+  // Invitation states
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
+  const [eventToInvite, setEventToInvite] = useState<Event | null>(null);
+  const [familyMembers, setFamilyMembers] = useState<UserProfile[]>([]);
+  const [selectedInvitees, setSelectedInvitees] = useState<string[]>([]);
+  const [inviteMessage, setInviteMessage] = useState("");
 
   // Form state for the main form
   const [formData, setFormData] = useState({
@@ -126,23 +152,38 @@ const EventComponent = () => {
     }
   }, [selectedEditDate]);
 
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      date: "",
-      category: "",
-      description: "",
-      image: "",
-    });
-    setSelectedDate(undefined);
-    setSelectedFile(null);
+  // Load family members when invite dialog opens
+  useEffect(() => {
+    if (isInviteDialogOpen) {
+      loadFamilyMembers();
+    }
+  }, [isInviteDialogOpen]);
+
+  const loadFamilyMembers = async () => {
+    const members = await getFamilyMembers();
+    // Filter out the current user
+    const filteredMembers = members.filter(
+      (member) => member.user_id !== user?.id
+    );
+    setFamilyMembers(filteredMembers);
   };
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const toggleForm = () => {
+    setShowForm((prev) => !prev);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    if (name === "description" && selectedEvent) {
+      setEditData((prev) => ({ ...prev, [name]: value }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSelectChange = (value: string) => {
@@ -150,29 +191,25 @@ const EventComponent = () => {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
-    } else {
-      setSelectedFile(null);
-    }
+    const file = e.target.files?.[0];
+    setSelectedFile(file || null);
   };
 
   const handleEditFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedEditFile(e.target.files[0]);
-    } else {
-      setSelectedEditFile(null);
-    }
+    const file = e.target.files?.[0];
+    setSelectedEditFile(file || null);
   };
 
-  const handleMainFormSubmit = async () => {
-    if (!formData.name || !formData.date || !formData.category) {
+  const handleMainFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!user || !formData.name || !formData.date || !formData.category) {
       toast.error("Please fill in all required fields (Name, Date, Category)");
       return;
     }
 
     setIsUploading(true);
-    let imageUrl = formData.image;
+    let imageUrl = "";
 
     if (selectedFile) {
       const uploadedUrl = await uploadImage(
@@ -189,48 +226,30 @@ const EventComponent = () => {
     }
     setIsUploading(false);
 
-    if (!user) {
-      toast.error("User not authenticated");
-      return;
-    }
-
     try {
       await createEvent({
         name: formData.name,
         date: formData.date,
-        user_id: user.id,
         category: formData.category,
         description: formData.description || undefined,
         image: imageUrl || undefined,
+        user_id: user.id,
       });
 
-      resetForm();
+      // Reset form
+      setFormData({
+        name: "",
+        date: "",
+        category: "",
+        description: "",
+        image: "",
+      });
+      setSelectedDate(undefined);
+      setSelectedFile(null);
       setShowForm(false);
-      toast.success("Event created successfully");
     } catch (error) {
       console.error("Error creating event:", error);
     }
-  };
-
-  // Toggle form visibility
-  const toggleForm = () => {
-    setShowForm(!showForm);
-    if (!showForm) {
-      // Reset the form when opening it
-      resetForm();
-    }
-  };
-
-  // Edit dialog handlers
-  const handleEditInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setEditData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleEditSelectChange = (value: string) => {
-    setEditData((prev) => ({ ...prev, category: value }));
   };
 
   const handleEdit = (event: any) => {
@@ -321,6 +340,43 @@ const EventComponent = () => {
     }
   };
 
+  // Invitation handlers
+  const handleInvite = (event: Event) => {
+    setEventToInvite(event);
+    setSelectedInvitees([]);
+    setInviteMessage("");
+    setIsInviteDialogOpen(true);
+  };
+
+  const handleInviteeSelection = (userId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedInvitees((prev) => [...prev, userId]);
+    } else {
+      setSelectedInvitees((prev) => prev.filter((id) => id !== userId));
+    }
+  };
+
+  const handleSendInvitations = async () => {
+    if (!user || !eventToInvite || selectedInvitees.length === 0) {
+      toast.error("Please select at least one family member to invite");
+      return;
+    }
+
+    const success = await sendInvitations(
+      eventToInvite.id,
+      user.id,
+      selectedInvitees,
+      inviteMessage || undefined
+    );
+
+    if (success) {
+      setIsInviteDialogOpen(false);
+      setEventToInvite(null);
+      setSelectedInvitees([]);
+      setInviteMessage("");
+    }
+  };
+
   return (
     <div className="flex flex-col gap-y-8 lg:gap-y-12">
       {/* HEADER SECTION */}
@@ -356,10 +412,11 @@ const EventComponent = () => {
           data={userEvents}
           onEditClick={handleEdit}
           onDeleteClick={(id) => handleDelete(id)}
+          onInviteClick={handleInvite}
         />
       )}
 
-      {/* NEW EVENT */}
+      {/* NEW EVENT FORM */}
       {showForm && (
         <Card className="animate-in fade-in-50 duration-300">
           <CardHeader>
@@ -413,19 +470,19 @@ const EventComponent = () => {
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
-                      variant={"outline"}
+                      variant="outline"
                       className={cn(
-                        "w-full pl-3 text-left font-normal",
+                        "justify-start text-left font-normal",
                         !selectedDate && "text-muted-foreground"
                       )}
                       disabled={loading || isUploading}
                     >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
                       {selectedDate ? (
                         format(selectedDate, "PPP")
                       ) : (
                         <span>Pick a date</span>
                       )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -433,28 +490,21 @@ const EventComponent = () => {
                       mode="single"
                       selected={selectedDate}
                       onSelect={setSelectedDate}
-                      disabled={(date) => date < new Date("1900-01-01")}
                       initialFocus
                     />
                   </PopoverContent>
                 </Popover>
-                <Input
-                  type="hidden"
-                  name="date"
-                  value={formData.date}
-                  readOnly
-                />
               </div>
 
               {/* CATEGORY */}
               <div className="flex flex-col gap-2">
                 <Label htmlFor="category">Category</Label>
                 <Select
-                  onValueChange={handleSelectChange}
                   value={formData.category}
+                  onValueChange={handleSelectChange}
                   disabled={loading || isUploading}
                 >
-                  <SelectTrigger id="category">
+                  <SelectTrigger>
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -469,14 +519,15 @@ const EventComponent = () => {
 
               {/* DESCRIPTION */}
               <div className="flex flex-col gap-2">
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">Description (Optional)</Label>
                 <Textarea
                   id="description"
                   name="description"
-                  rows={4}
+                  placeholder="Add event description..."
                   value={formData.description}
-                  onChange={handleInputChange}
+                  onChange={handleTextareaChange}
                   disabled={loading || isUploading}
+                  rows={3}
                 />
               </div>
             </div>
@@ -562,7 +613,7 @@ const EventComponent = () => {
                   id="edit-name"
                   name="name"
                   value={editData.name}
-                  onChange={handleEditInputChange}
+                  onChange={handleInputChange}
                   disabled={loading || isUploading}
                   required
                 />
@@ -602,7 +653,7 @@ const EventComponent = () => {
                 <Label htmlFor="edit-category">Category</Label>
                 <Select
                   value={editData.category}
-                  onValueChange={handleEditSelectChange}
+                  onValueChange={handleSelectChange}
                   disabled={loading || isUploading}
                 >
                   <SelectTrigger id="edit-category">
@@ -623,7 +674,7 @@ const EventComponent = () => {
                   id="edit-description"
                   name="description"
                   value={editData.description}
-                  onChange={handleEditInputChange}
+                  onChange={handleTextareaChange}
                   disabled={loading || isUploading}
                   rows={3}
                 />
@@ -678,6 +729,122 @@ const EventComponent = () => {
               onClick={() => setIsDeleteDialogOpen(false)}
             >
               Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* INVITE DIALOG */}
+      <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="size-5" />
+              Invite Family Members
+            </DialogTitle>
+            <DialogDescription>
+              Send invitations to family members for "
+              {eventToInvite?.name || "this event"}"
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Message Input */}
+            <div>
+              <Label htmlFor="invite-message">
+                Personal Message (Optional)
+              </Label>
+              <Textarea
+                id="invite-message"
+                placeholder="Add a personal message to your invitation..."
+                value={inviteMessage}
+                onChange={(e) => setInviteMessage(e.target.value)}
+                rows={3}
+              />
+            </div>
+
+            {/* Family Members Selection */}
+            <div>
+              <Label className="text-sm font-medium">
+                Select Family Members
+              </Label>
+              <div className="mt-2 max-h-80 overflow-y-auto border rounded-md p-3">
+                {familyMembers.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No family members available to invite
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {familyMembers.map((member) => (
+                      <div
+                        key={member.user_id}
+                        className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded"
+                      >
+                        <Checkbox
+                          id={`member-${member.user_id}`}
+                          checked={selectedInvitees.includes(member.user_id)}
+                          onCheckedChange={(checked) =>
+                            handleInviteeSelection(
+                              member.user_id,
+                              checked as boolean
+                            )
+                          }
+                        />
+                        <Avatar className="size-8">
+                          <AvatarImage
+                            src={member.image || dummyProfileImage}
+                            alt={`${member.first_name} ${member.last_name}`}
+                          />
+                          <AvatarFallback>
+                            {member.first_name?.[0]}
+                            {member.last_name?.[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">
+                            {member.first_name} {member.last_name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {member.email}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {selectedInvitees.length > 0 && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  {selectedInvitees.length} family member
+                  {selectedInvitees.length === 1 ? "" : "s"} selected
+                </p>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsInviteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSendInvitations}
+              disabled={inviteLoading || selectedInvitees.length === 0}
+              className="bg-foreground text-background hover:bg-foreground/80"
+            >
+              {inviteLoading ? (
+                <>
+                  <LoadingIcon className="size-4 mr-2" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send className="size-4 mr-2" />
+                  Send Invitations ({selectedInvitees.length})
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
