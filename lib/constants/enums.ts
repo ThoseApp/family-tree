@@ -11,6 +11,7 @@ export enum BucketFolderEnum {
 
 export enum NotificationTypeEnum {
   event = "event",
+  event_invitation = "event_invitation", // user notification when invited to an event
   notice_board = "notice_board",
   gallery = "gallery",
   gallery_request = "gallery_request", // admin notification type

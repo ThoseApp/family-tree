@@ -20,7 +20,8 @@ const formatDate = (dateStr: string) => {
 
 export const createColumns = (
   onEditClick?: (event: Event) => void,
-  onDeleteClick?: (id: string) => void
+  onDeleteClick?: (id: string) => void,
+  onInviteClick?: (event: Event) => void
 ): ColumnDef<Event>[] => [
   {
     id: "s/n",
@@ -116,7 +117,11 @@ export const createColumns = (
     id: "invite",
     header: "",
     cell: ({ row }) => (
-      <Button className="flex justify-end rounded-full" variant="outline">
+      <Button
+        className="flex justify-end rounded-full"
+        variant="outline"
+        onClick={() => onInviteClick?.(row.original)}
+      >
         Invite
       </Button>
     ),
