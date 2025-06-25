@@ -82,6 +82,28 @@ export interface FamilyMember {
   orderOfMarriage?: number;
 }
 
+// Database family member structure from family-tree table
+export interface ProcessedMember {
+  id?: number;
+  picture_link: string;
+  unique_id: string;
+  gender: string;
+  first_name: string;
+  last_name: string;
+  fathers_first_name: string;
+  fathers_last_name: string;
+  mothers_first_name: string;
+  mothers_last_name: string;
+  order_of_birth: number | null;
+  order_of_marriage: number | null;
+  marital_status: string;
+  spouses_first_name: string;
+  spouses_last_name: string;
+  date_of_birth: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Event {
   id: string;
   name: string;

@@ -12,14 +12,26 @@ import FamilyMembersSection from "@/components/landing/home/family-members-secti
 import UpcomingEventsSection from "@/components/landing/home/upcoming-events-section";
 import FrameWrapper from "@/components/wrappers/frame-wrapper";
 import GalleryGrid from "@/components/gallery";
-import { galleryImages } from "@/lib/constants/landing";
 import { MoveRight } from "lucide-react";
 import { useLandingPageContent } from "@/hooks/use-landing-page-content";
+import { useGalleryStore } from "@/stores/gallery-store";
+import { useEffect } from "react";
 
 export default function Home() {
   const { sections, loading, error } = useLandingPageContent();
+  const {
+    gallery,
+    isLoading: galleryLoading,
+    fetchGallery,
+  } = useGalleryStore();
+
   const familyTreeSection = sections.family_tree;
   const gallerySection = sections.gallery_preview;
+
+  // Fetch gallery data on component mount
+  useEffect(() => {
+    fetchGallery();
+  }, [fetchGallery]);
 
   // Fallback content
   const defaultFamilyTree = {
@@ -119,16 +131,25 @@ export default function Home() {
           </div>
 
           {/* GALLERY GRID */}
-          <GalleryGrid gallery={galleryImages} />
+          {galleryLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground"></div>
+            </div>
+          ) : (
+            <GalleryGrid gallery={gallery} />
+          )}
 
           <div className="flex justify-center">
             <Button
               variant="alternative"
               size="lg"
               className="rounded-full items-center"
+              asChild
             >
-              View Details
-              <MoveRight className="size-5 ml-2" />
+              <Link href="/gallery">
+                View Details
+                <MoveRight className="size-5 ml-2" />
+              </Link>
             </Button>
           </div>
         </FrameWrapper>

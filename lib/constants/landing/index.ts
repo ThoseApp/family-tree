@@ -106,16 +106,18 @@ export const eventCategories = [
     items: [
       {
         imageUrl: dummyProfileImage,
+        name: "John's Birthday",
         date: {
           month: "January",
-          day: "1",
+          day: "15",
         },
       },
       {
         imageUrl: dummyProfileImage,
+        name: "Sarah's Birthday",
         date: {
-          month: "January",
-          day: "1",
+          month: "February",
+          day: "22",
         },
       },
     ],
@@ -125,13 +127,19 @@ export const eventCategories = [
     items: [
       {
         imageUrl: dummyProfileImage,
+        name: "Wedding Anniversary",
         date: {
-          month: "January",
-          day: "1",
+          month: "March",
+          day: "10",
         },
       },
       {
         imageUrl: dummyProfileImage,
+        name: "First Date Anniversary",
+        date: {
+          month: "April",
+          day: "5",
+        },
       },
     ],
   },
@@ -140,9 +148,19 @@ export const eventCategories = [
     items: [
       {
         imageUrl: dummyProfileImage,
+        name: "Memorial Service",
+        date: {
+          month: "May",
+          day: "18",
+        },
       },
       {
         imageUrl: dummyProfileImage,
+        name: "Dedication Ceremony",
+        date: {
+          month: "June",
+          day: "12",
+        },
       },
     ],
   },
@@ -151,9 +169,19 @@ export const eventCategories = [
     items: [
       {
         imageUrl: dummyProfileImage,
+        name: "Family Reunion",
+        date: {
+          month: "July",
+          day: "4",
+        },
       },
       {
         imageUrl: dummyProfileImage,
+        name: "Holiday Gathering",
+        date: {
+          month: "December",
+          day: "25",
+        },
       },
     ],
   },
