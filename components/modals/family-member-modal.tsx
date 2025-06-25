@@ -310,7 +310,7 @@ export const FamilyMemberModal = ({
           {/* Parents */}
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="fatherName">Father's Name</Label>
+              <Label htmlFor="fatherName">Father&apos;s Name</Label>
               <Input
                 id="fatherName"
                 name="fatherName"
@@ -322,7 +322,7 @@ export const FamilyMemberModal = ({
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="motherName">Mother's Name</Label>
+              <Label htmlFor="motherName">Mother&apos;s Name</Label>
               <Input
                 id="motherName"
                 name="motherName"
