@@ -7,6 +7,7 @@ import NoticeBoardTable from "@/components/tables/notice-board";
 import NoticeBoardSearchFilters, {
   SearchFilters,
 } from "@/components/search/notice-board-search-filters";
+import NoticeBoardForm from "@/components/forms/notice-board-form";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -18,6 +19,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { LoadingIcon } from "@/components/loading-icon";
 import { cn } from "@/lib/utils";
 import { Plus, Grid, Table } from "lucide-react";
@@ -45,6 +52,9 @@ const AdminNoticeBoardPage = () => {
   const [noticeBoardToDelete, setNoticeBoardToDelete] = useState<string | null>(
     null
   );
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedNoticeBoard, setSelectedNoticeBoard] =
+    useState<NoticeBoard | null>(null);
 
   // Search and filter state
   const [filters, setFilters] = useState<SearchFilters>({
@@ -98,10 +108,25 @@ const AdminNoticeBoardPage = () => {
     }
   };
 
-  // Handle editing a notice (inline editing for future implementation)
+  // Handle editing a notice
   const handleEdit = (noticeBoard: NoticeBoard) => {
-    // For now, just show a message - can be extended later
-    toast.info("Edit functionality can be added in a future update");
+    setSelectedNoticeBoard(noticeBoard);
+    setIsEditDialogOpen(true);
+  };
+
+  // Handle updating a notice
+  const handleUpdate = async (data: Omit<NoticeBoard, "id">) => {
+    if (!selectedNoticeBoard) return;
+
+    try {
+      await updateNoticeBoard(selectedNoticeBoard.id, data);
+      setIsEditDialogOpen(false);
+      setSelectedNoticeBoard(null);
+      toast.success("Notice updated successfully!");
+    } catch (error) {
+      console.error("Error updating notice:", error);
+      toast.error("Failed to update notice");
+    }
   };
 
   // Handle delete confirmation
@@ -244,7 +269,14 @@ const AdminNoticeBoardPage = () => {
             </div>
           ) : displayMode === "grid" ? (
             filteredNotices.map((noticeBoard) => (
-              <NoticeBoardCard key={noticeBoard.id} noticeBoard={noticeBoard} />
+              <NoticeBoardCard
+                key={noticeBoard.id}
+                noticeBoard={noticeBoard}
+                onEdit={handleEdit}
+                onDelete={handleDeleteClick}
+                onTogglePin={handleTogglePin}
+                showActions={true}
+              />
             ))
           ) : (
             <NoticeBoardTable
@@ -265,6 +297,23 @@ const AdminNoticeBoardPage = () => {
           </div>
         )}
       </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Edit Notice</DialogTitle>
+          </DialogHeader>
+          {selectedNoticeBoard && (
+            <NoticeBoardForm
+              defaultValues={selectedNoticeBoard}
+              loading={loading}
+              onSubmit={handleUpdate}
+              onCancel={() => setIsEditDialogOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog

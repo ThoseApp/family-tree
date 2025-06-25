@@ -3,36 +3,55 @@
 import { FamilyMember } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Edit, Trash2, MoreHorizontal, User } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-export const columns: ColumnDef<FamilyMember>[] = [
+export const createColumns = (
+  onEdit: (member: FamilyMember) => void,
+  onDelete: (member: FamilyMember) => void
+): ColumnDef<FamilyMember>[] => [
   {
     id: "s/n",
     header: "S/N",
     cell: ({ row }) => {
-      return <div className=" text-left">{row.index + 1}</div>;
+      return <div className="text-left">{row.index + 1}</div>;
     },
   },
 
   {
     id: "name",
     header: "Name",
+    accessorKey: "name",
     cell({ row }) {
       const user = row.original;
+      const initials = user.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2);
 
       return (
         <div className="flex items-center gap-2">
-          <div className="size-8 relative rounded-full overflow-hidden">
-            <Image
+          <Avatar className="h-8 w-8">
+            <AvatarImage
               src={user.imageSrc}
               alt={user.name}
-              fill
-              className="rounded-full object-cover"
+              className="object-cover"
             />
-          </div>
-          <p className="text-sm text-left ">{user.name}</p>
+            <AvatarFallback className="text-xs">
+              {initials || <User className="h-4 w-4" />}
+            </AvatarFallback>
+          </Avatar>
+          <p className="text-sm text-left">{user.name}</p>
         </div>
       );
     },
@@ -41,13 +60,12 @@ export const columns: ColumnDef<FamilyMember>[] = [
   {
     id: "gender",
     header: "Gender",
-
     accessorKey: "gender",
     cell(props) {
       const { row } = props;
       const user = row.original;
 
-      return <p className="text-sm text-left ">{user.gender}</p>;
+      return <p className="text-sm text-left">{user.gender || "N/A"}</p>;
     },
   },
 
@@ -55,12 +73,14 @@ export const columns: ColumnDef<FamilyMember>[] = [
     id: "birthDate",
     header: "Birth Date",
     accessorKey: "birthDate",
-
     cell: ({ row }) => {
       const user = row.original;
+      const birthDate = user.birthDate;
 
       return (
-        <div className="text-left text-xs md:text-sm ">{user.birthDate}</div>
+        <div className="text-left text-xs md:text-sm">
+          {birthDate ? new Date(birthDate).toLocaleDateString() : "N/A"}
+        </div>
       );
     },
   },
@@ -72,8 +92,8 @@ export const columns: ColumnDef<FamilyMember>[] = [
     cell: ({ row }) => {
       const user = row.original;
       return (
-        <div className={cn("text-left text-xs md:text-sm ")}>
-          {user.fatherName}
+        <div className={cn("text-left text-xs md:text-sm")}>
+          {user.fatherName || "N/A"}
         </div>
       );
     },
@@ -86,12 +106,13 @@ export const columns: ColumnDef<FamilyMember>[] = [
     cell: ({ row }) => {
       const user = row.original;
       return (
-        <div className={cn("text-left text-xs md:text-sm ")}>
-          {user.motherName}
+        <div className={cn("text-left text-xs md:text-sm")}>
+          {user.motherName || "N/A"}
         </div>
       );
     },
   },
+
   {
     id: "orderOfBirth",
     header: "Order of Birth",
@@ -99,10 +120,13 @@ export const columns: ColumnDef<FamilyMember>[] = [
     cell: ({ row }) => {
       const user = row.original;
       return (
-        <div className="text-left text-xs md:text-sm ">{user.orderOfBirth}</div>
+        <div className="text-left text-xs md:text-sm">
+          {user.orderOfBirth || "N/A"}
+        </div>
       );
     },
   },
+
   {
     id: "spouseName",
     header: "Spouse Name",
@@ -110,10 +134,13 @@ export const columns: ColumnDef<FamilyMember>[] = [
     cell: ({ row }) => {
       const user = row.original;
       return (
-        <div className="text-left text-xs md:text-sm ">{user.spouseName}</div>
+        <div className="text-left text-xs md:text-sm">
+          {user.spouseName || "N/A"}
+        </div>
       );
     },
   },
+
   {
     id: "orderOfMarriage",
     header: "Order of Marriage",
@@ -121,19 +148,48 @@ export const columns: ColumnDef<FamilyMember>[] = [
     cell: ({ row }) => {
       const user = row.original;
       return (
-        <div className="text-left text-xs md:text-sm ">
-          {user.orderOfMarriage}
+        <div className="text-left text-xs md:text-sm">
+          {user.orderOfMarriage || "N/A"}
         </div>
       );
     },
   },
+
   {
     id: "action",
     header: "Action",
-    cell: ({ row }) => (
-      <Button className="flex justify-end" variant="outline">
-        Edit
-      </Button>
-    ),
+    cell: ({ row }) => {
+      const member = row.original;
+
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onEdit(member)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onDelete(member)}
+              className="text-red-600"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
   },
 ];
+
+// Default columns for backwards compatibility
+export const columns: ColumnDef<FamilyMember>[] = createColumns(
+  () => {},
+  () => {}
+);
