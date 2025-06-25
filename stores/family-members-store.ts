@@ -1,13 +1,13 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-
-// TODO: Define a more specific type for FamilyMember if available
-interface FamilyMember {
-  id: string;
-  name: string;
-  relationship: string;
-  // Add other relevant properties, e.g., birthDate, contactInfo, etc.
-}
+import { FamilyMember, ProcessedMember } from "@/lib/types";
+import {
+  fetchFamilyMembers as fetchFamilyMembersAPI,
+  addFamilyMember as addFamilyMemberAPI,
+  updateFamilyMember as updateFamilyMemberAPI,
+  deleteFamilyMember as deleteFamilyMemberAPI,
+  processedMemberToFamilyMember,
+} from "@/lib/utils/family-tree-helpers";
 
 interface FamilyMembersState {
   familyMembers: FamilyMember[];
@@ -17,12 +17,14 @@ interface FamilyMembersState {
 
 interface FamilyMembersActions {
   fetchFamilyMembers: () => Promise<void>;
-  addFamilyMember: (member: Omit<FamilyMember, "id">) => Promise<void>; // Assuming ID is generated on add
+  addFamilyMember: (member: Omit<FamilyMember, "id">) => Promise<void>;
   updateFamilyMember: (
     memberId: string,
     updates: Partial<FamilyMember>
   ) => Promise<void>;
   removeFamilyMember: (memberId: string) => Promise<void>;
+  setFamilyMembers: (members: FamilyMember[]) => void;
+  clearError: () => void;
 }
 
 const initialState: FamilyMembersState = {
@@ -33,18 +35,17 @@ const initialState: FamilyMembersState = {
 
 export const useFamilyMembersStore = create(
   persist<FamilyMembersState & FamilyMembersActions>(
-    (set) => ({
+    (set, get) => ({
       ...initialState,
+
       fetchFamilyMembers: async () => {
         set({ isLoading: true, error: null });
         try {
-          // Simulate API call
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          const mockFamilyMembers: FamilyMember[] = [
-            { id: "1", name: "John Doe", relationship: "Father" },
-            { id: "2", name: "Jane Doe", relationship: "Mother" },
-          ]; // Replace with actual API call
-          set({ familyMembers: mockFamilyMembers, isLoading: false });
+          const processedMembers = await fetchFamilyMembersAPI();
+          const familyMembers = processedMembers.map(
+            processedMemberToFamilyMember
+          );
+          set({ familyMembers, isLoading: false });
         } catch (err: any) {
           set({
             error: err.message || "Failed to fetch family members",
@@ -52,17 +53,15 @@ export const useFamilyMembersStore = create(
           });
         }
       },
+
       addFamilyMember: async (member) => {
-        set({ isLoading: true });
+        set({ isLoading: true, error: null });
         try {
-          // Simulate API call
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          const newMember: FamilyMember = {
-            ...member,
-            id: Date.now().toString(),
-          }; // Example ID generation
+          const addedMember = await addFamilyMemberAPI(member);
+          const familyMember = processedMemberToFamilyMember(addedMember);
+
           set((state) => ({
-            familyMembers: [...state.familyMembers, newMember],
+            familyMembers: [familyMember, ...state.familyMembers],
             isLoading: false,
           }));
         } catch (err: any) {
@@ -70,16 +69,19 @@ export const useFamilyMembersStore = create(
             error: err.message || "Failed to add family member",
             isLoading: false,
           });
+          throw err; // Re-throw to allow UI to handle
         }
       },
+
       updateFamilyMember: async (memberId, updates) => {
-        set({ isLoading: true });
+        set({ isLoading: true, error: null });
         try {
-          // Simulate API call
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          const updatedMember = await updateFamilyMemberAPI(memberId, updates);
+          const familyMember = processedMemberToFamilyMember(updatedMember);
+
           set((state) => ({
             familyMembers: state.familyMembers.map((member) =>
-              member.id === memberId ? { ...member, ...updates } : member
+              member.id === memberId ? familyMember : member
             ),
             isLoading: false,
           }));
@@ -88,13 +90,15 @@ export const useFamilyMembersStore = create(
             error: err.message || "Failed to update family member",
             isLoading: false,
           });
+          throw err; // Re-throw to allow UI to handle
         }
       },
+
       removeFamilyMember: async (memberId) => {
-        set({ isLoading: true });
+        set({ isLoading: true, error: null });
         try {
-          // Simulate API call
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          await deleteFamilyMemberAPI(memberId);
+
           set((state) => ({
             familyMembers: state.familyMembers.filter(
               (member) => member.id !== memberId
@@ -106,12 +110,21 @@ export const useFamilyMembersStore = create(
             error: err.message || "Failed to remove family member",
             isLoading: false,
           });
+          throw err; // Re-throw to allow UI to handle
         }
+      },
+
+      setFamilyMembers: (members) => {
+        set({ familyMembers: members });
+      },
+
+      clearError: () => {
+        set({ error: null });
       },
     }),
     {
-      name: "family-members-storage", // unique name
-      storage: createJSONStorage(() => localStorage), // (optional) by default, 'localStorage' is used
+      name: "family-members-storage",
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );
