@@ -147,6 +147,9 @@ export const useEventsStore = create<EventsState>((set, get) => ({
         events: state.events.map((event) =>
           event.id === id ? updatedEvent : event
         ),
+        userEvents: state.userEvents.map((event) =>
+          event.id === id ? updatedEvent : event
+        ),
         loading: false,
       }));
 
@@ -170,6 +173,7 @@ export const useEventsStore = create<EventsState>((set, get) => ({
 
       set((state) => ({
         events: state.events.filter((event) => event.id !== id),
+        userEvents: state.userEvents.filter((event) => event.id !== id),
         loading: false,
       }));
 
