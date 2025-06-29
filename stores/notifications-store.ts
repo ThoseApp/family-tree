@@ -73,16 +73,15 @@ export const useNotificationsStore = create(
 
       createNotification: async (notification) => {
         try {
-          const newNotification = {
-            ...notification,
-            id: uuidv4(),
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          };
-
-          const { error } = await supabase
-            .from("notifications")
-            .insert(newNotification);
+          // Use secure system function for notification creation
+          const { error } = await supabase.rpc("create_system_notification", {
+            p_user_id: notification.user_id,
+            p_title: notification.title,
+            p_body: notification.body,
+            p_type: notification.type || null,
+            p_resource_id: notification.resource_id || null,
+            p_image: notification.image || null,
+          });
 
           if (error) throw error;
 

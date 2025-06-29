@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase/client";
 import { EventInvitation, UserProfile } from "@/lib/types";
+import { NotificationTypeEnum } from "@/lib/constants/enums";
 
 interface EventInvitationsState {
   invitations: EventInvitation[];
@@ -220,7 +221,7 @@ export const useEventInvitationsStore = create<EventInvitationsState>(
         // Get event details and inviter info for the notification
         const { data: eventData } = await supabase
           .from("events")
-          .select("name")
+          .select("name, image")
           .eq("id", eventId)
           .single();
 
@@ -235,43 +236,42 @@ export const useEventInvitationsStore = create<EventInvitationsState>(
           ? `${inviterData.first_name} ${inviterData.last_name}`
           : "someone";
 
-        // Create notifications for invitees
+        // Create notifications for invitees using secure database function
         const notificationsToCreate = newInviteeIds.map((inviteeId) => ({
           user_id: inviteeId,
           title: "Event Invitation",
           body: `${inviterName} has invited you to "${eventName}"${
             message ? `. Message: "${message}"` : ""
           }`,
-          type: "event_invitation",
+          type: NotificationTypeEnum.event_invitation,
           resource_id: eventId,
-          read: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          image: eventData?.image,
         }));
 
         console.log("Creating notifications:", notificationsToCreate);
 
-        const { data: notificationData, error: notificationError } =
-          await supabase
-            .from("notifications")
-            .insert(notificationsToCreate)
-            .select("*");
+        try {
+          const { data: createdCount, error: notificationError } =
+            await supabase.rpc("create_system_notifications", {
+              notifications: notificationsToCreate,
+            });
 
-        if (notificationError) {
-          console.error("Failed to create notifications:", notificationError);
-          console.error("Notification error details:", {
-            code: notificationError.code,
-            message: notificationError.message,
-            details: notificationError.details,
-            hint: notificationError.hint,
-          });
+          if (notificationError) {
+            console.error("Failed to create notifications:", notificationError);
+            console.error("Notification error details:", {
+              code: notificationError.code,
+              message: notificationError.message,
+              details: notificationError.details,
+              hint: notificationError.hint,
+            });
+            toast.error("Invitations sent but notifications failed to send");
+          } else {
+            console.log("Notifications created successfully");
+            console.log("Created notification count:", createdCount || 0);
+          }
+        } catch (notificationErr) {
+          console.error("Error creating notifications:", notificationErr);
           toast.error("Invitations sent but notifications failed to send");
-        } else {
-          console.log("Notifications created successfully:", notificationData);
-          console.log(
-            "Created notification count:",
-            notificationData?.length || 0
-          );
         }
 
         // Also check current user authentication
@@ -356,18 +356,18 @@ export const useEventInvitationsStore = create<EventInvitationsState>(
             ? `${inviteeProfile.first_name} ${inviteeProfile.last_name}`
             : "Someone";
 
-          const responseNotification = {
-            user_id: invitationData.inviter_id,
-            title: `Invitation ${status}`,
-            body: `${responderName} has ${status} your invitation to "${eventName}"`,
-            type: "event",
-            resource_id: invitationData.event_id,
-            read: false,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          };
-
-          await supabase.from("notifications").insert(responseNotification);
+          try {
+            await supabase.rpc("create_system_notification", {
+              p_user_id: invitationData.inviter_id,
+              p_title: `Invitation ${status}`,
+              p_body: `${responderName} has ${status} your invitation to "${eventName}"`,
+              p_type: "event",
+              p_resource_id: invitationData.event_id,
+            });
+          } catch (error) {
+            console.error("Failed to create response notification:", error);
+            // Don't throw here as the main invitation response was successful
+          }
         }
 
         // Update local state

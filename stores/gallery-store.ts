@@ -218,32 +218,20 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
         console.log("[ADMIN_ID]", ADMIN_ID);
 
         if (userId !== ADMIN_ID) {
-          // Create notification for admin about the gallery request
+          // Create notification for admin about the gallery request using secure function
           try {
-            const notificationData = {
-              title: "New Gallery Request",
-              body: `A new gallery item "${
+            await supabase.rpc("create_system_notification", {
+              p_user_id: ADMIN_ID,
+              p_title: "New Gallery Request",
+              p_body: `A new gallery item "${
                 caption || file.name
               }" has been uploaded and is pending approval.`,
-              type: NotificationTypeEnum.gallery_request,
-              resource_id: newImage.id,
-              user_id: ADMIN_ID,
-              read: false,
-              image: imageUrl,
-            };
+              p_type: NotificationTypeEnum.gallery_request,
+              p_resource_id: newImage.id,
+              p_image: imageUrl,
+            });
 
-            const { error: notificationError } = await supabase
-              .from("notifications")
-              .insert(notificationData);
-
-            if (notificationError) {
-              console.error("Error creating notification:", notificationError);
-              // Don't throw here as the main gallery upload was successful
-            } else {
-              console.log(
-                "Notification created for admin about gallery request"
-              );
-            }
+            console.log("Notification created for admin about gallery request");
           } catch (notificationErr) {
             console.error("Failed to create notification:", notificationErr);
             // Don't throw here as the main gallery upload was successful
