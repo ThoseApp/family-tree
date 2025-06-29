@@ -9,9 +9,15 @@ interface AuthWrapperProps {
   children: React.ReactNode;
   imageSrc: string;
   imageStyle?: string;
+  noActionButton?: boolean;
 }
 
-const AuthWrapper = ({ children, imageSrc, imageStyle }: AuthWrapperProps) => {
+const AuthWrapper = ({
+  children,
+  imageSrc,
+  imageStyle,
+  noActionButton,
+}: AuthWrapperProps) => {
   const pathname = usePathname();
 
   return (
@@ -38,7 +44,12 @@ const AuthWrapper = ({ children, imageSrc, imageStyle }: AuthWrapperProps) => {
           <div className="absolute inset-0 bg-black/80" />
 
           {/* CENTERED DIV */}
-          <div className="absolute top-0 bottom-0 left-32 flex items-center flex-col justify-center gap-4">
+          <div
+            className={cn(
+              "absolute top-0 bottom-0 left-32 flex items-center flex-col justify-center gap-4",
+              noActionButton ? "hidden" : ""
+            )}
+          >
             <h2 className="text-white text-3xl font-semibold">
               {pathname === "/sign-in" ||
               pathname === "/forgot-password" ||

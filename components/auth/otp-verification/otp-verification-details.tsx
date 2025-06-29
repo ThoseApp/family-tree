@@ -90,9 +90,8 @@ const OtpVerificationDetails = () => {
       }
 
       toast.success("Email verification successful!");
-      // router.push(
-      //   "/sign-in?message=Email verified successfully. Please log in."
-      // );
+      // Redirect the user to their dashboard now that their account is verified.
+      router.push("/dashboard");
     } catch (error: any) {
       toast.error("An unexpected error occurred. Please try again.");
       console.error("OTP verification error:", error);
