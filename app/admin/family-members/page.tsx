@@ -496,7 +496,7 @@ const FamilyMembersPage = () => {
             </span>
             {searchQuery && (
               <Badge variant="secondary" className="flex items-center gap-1">
-                Search: "{searchQuery}"
+                Search: &quot;{searchQuery}&quot;
                 <X
                   className="h-3 w-3 cursor-pointer"
                   onClick={() => setSearchQuery("")}

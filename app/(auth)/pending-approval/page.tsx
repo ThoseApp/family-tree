@@ -44,9 +44,11 @@ const PendingApprovalPage = () => {
             <div className="flex items-start text-left p-4 bg-blue-50 rounded-lg border border-blue-200">
               <Mail className="w-5 h-5 text-blue-600 mr-3 flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="font-medium text-blue-900 mb-1">What's next?</h3>
+                <h3 className="font-medium text-blue-900 mb-1">
+                  What&apos;s next?
+                </h3>
                 <p className="text-sm text-blue-700">
-                  You'll receive an email notification once your account is
+                  You&apos;ll receive an email notification once your account is
                   approved.
                 </p>
               </div>
@@ -59,7 +61,7 @@ const PendingApprovalPage = () => {
                   After approval
                 </h3>
                 <p className="text-sm text-green-700">
-                  You'll be able to log in and access all family features.
+                  You&apos;ll be able to log in and access all family features.
                 </p>
               </div>
             </div>
