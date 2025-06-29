@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import DashboardMobileSidebar from "./dashboard-mobile-sidebar";
 import { usePathname, useRouter } from "next/navigation";
 import { Bell, Heart, LogOut, Mail, Search, User } from "lucide-react";
@@ -6,6 +6,7 @@ import { Mic } from "lucide-react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
+import { Badge } from "../ui/badge";
 
 import {
   DropdownMenu,
@@ -21,11 +22,67 @@ import { dummyProfileImage } from "@/lib/constants";
 import Link from "next/link";
 import AdminMobileSidebar from "../admin/admin-mobile-sidebar";
 import { useUserStore } from "@/stores/user-store";
+import { useNotificationsStore } from "@/stores/notifications-store";
+import { useMemberRequestsStore } from "@/stores/member-requests-store";
 
 const DashboardNavbar = () => {
   const { user, logout } = useUserStore();
+  const { notifications, fetchNotifications, subscribeToNotifications } =
+    useNotificationsStore();
+  const { memberRequests, fetchMemberRequests } = useMemberRequestsStore();
   const pathname = usePathname();
   const router = useRouter();
+
+  // State for counters
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
+  const [pendingMemberRequestsCount, setPendingMemberRequestsCount] =
+    useState(0);
+
+  // Fetch notifications and member requests on component mount
+  useEffect(() => {
+    if (user?.id) {
+      fetchNotifications(user.id);
+      subscribeToNotifications(user.id);
+
+      // Only fetch member requests if user is admin
+      if (user?.user_metadata?.is_admin === true) {
+        fetchMemberRequests();
+      }
+    }
+  }, [
+    user?.id,
+    user?.user_metadata?.is_admin,
+    fetchNotifications,
+    subscribeToNotifications,
+    fetchMemberRequests,
+  ]);
+
+  // Update unread notifications count
+  useEffect(() => {
+    const unreadCount = notifications.filter(
+      (notification) => !notification.read
+    ).length;
+    setUnreadNotificationsCount(unreadCount);
+  }, [notifications]);
+
+  // Update pending member requests count
+  useEffect(() => {
+    const pendingCount = memberRequests.filter(
+      (request) => request.status === "pending"
+    ).length;
+    setPendingMemberRequestsCount(pendingCount);
+  }, [memberRequests]);
+
+  // Refresh member requests periodically for admins
+  useEffect(() => {
+    if (user?.user_metadata?.is_admin === true) {
+      const interval = setInterval(() => {
+        fetchMemberRequests();
+      }, 30000); // Refresh every 30 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [user?.user_metadata?.is_admin, fetchMemberRequests]);
 
   return (
     <div className="flex bg-border/30 backdrop-blur-sm items-center  px-3  py-4 lg:px-6">
@@ -61,23 +118,29 @@ const DashboardNavbar = () => {
               <Button
                 variant="outline"
                 size="icon"
-                className="rounded-full"
+                className="rounded-full relative"
                 asChild
               >
                 <Link href="/admin/member-requests">
                   <Mail className="size-6" />
+                  {pendingMemberRequestsCount > 0 && (
+                    <Badge
+                      className="absolute -top-2 -right-2 h-6 w-6 p-0 flex items-center justify-center text-xs bg-red-500 hover:bg-red-600 border-2 border-background"
+                      variant="destructive"
+                    >
+                      {pendingMemberRequestsCount > 99
+                        ? "99+"
+                        : pendingMemberRequestsCount}
+                    </Badge>
+                  )}
                 </Link>
               </Button>
             )}
-            {/* 
-            <Button variant="outline" size="icon" className="rounded-full">
-              <Heart className="size-6" />
-            </Button> */}
 
             <Button
               variant="outline"
               size="icon"
-              className="rounded-full"
+              className="rounded-full relative"
               asChild
             >
               <Link
@@ -88,6 +151,13 @@ const DashboardNavbar = () => {
                 }
               >
                 <Bell className="size-6" />
+                {unreadNotificationsCount > 0 && (
+                  <Badge className="absolute -top-2 -right-2 h-6 w-6 p-0 flex items-center justify-center text-xs bg-blue-500 hover:bg-blue-600 border-2 border-background">
+                    {unreadNotificationsCount > 99
+                      ? "99+"
+                      : unreadNotificationsCount}
+                  </Badge>
+                )}
               </Link>
             </Button>
           </div>

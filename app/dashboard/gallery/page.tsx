@@ -10,8 +10,12 @@ import {
   Filter,
   Folder,
   ImageIcon,
+  Calendar,
+  X,
+  FileImage,
+  FileVideo,
 } from "lucide-react";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import GalleryTable from "@/components/tables/gallery";
 import { useGalleryStore } from "@/stores/gallery-store";
 import { useAlbumStore } from "@/stores/album-store";
@@ -38,6 +42,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
 import { useUserStore } from "@/stores/user-store";
 import { MAX_IMAGE_SIZE_MB, MAX_VIDEO_SIZE_MB } from "@/lib/constants";
 import { GalleryStatusEnum } from "@/lib/constants/enums";
@@ -81,6 +91,13 @@ const Page = () => {
   const [selectedAlbum, setSelectedAlbum] = useState<any>(null);
   const [albumGallery, setAlbumGallery] = useState<any[]>([]);
 
+  // Enhanced filtering states
+  const [fileTypeFilter, setFileTypeFilter] = useState<string>("all");
+  const [albumFilter, setAlbumFilter] = useState<string>("all");
+  const [dateRangeFilter, setDateRangeFilter] = useState<string>("all");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<string>("newest");
+
   useEffect(() => {
     if (user) {
       if (statusFilter === "all") {
@@ -94,6 +111,127 @@ const Page = () => {
       fetchUserAlbums(user.id);
     }
   }, [user, statusFilter]);
+
+  // Enhanced filtering logic
+  const filteredGallery = useMemo(() => {
+    let filtered = [...userGallery];
+
+    // Search filter
+    if (searchQuery) {
+      filtered = filtered.filter((item) =>
+        (item.caption || item.file_name || "")
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // File type filter
+    if (fileTypeFilter !== "all") {
+      filtered = filtered.filter((item) => {
+        const fileName = item.file_name || "";
+        const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(fileName);
+        const isVideo = /\.(mp4|avi|mov|wmv|flv|webm)$/i.test(fileName);
+
+        if (fileTypeFilter === "images") return isImage;
+        if (fileTypeFilter === "videos") return isVideo;
+        return true;
+      });
+    }
+
+    // Album filter
+    if (albumFilter !== "all") {
+      if (albumFilter === "no-album") {
+        filtered = filtered.filter((item) => !item.album_id);
+      } else {
+        filtered = filtered.filter((item) => item.album_id === albumFilter);
+      }
+    }
+
+    // Date range filter
+    if (dateRangeFilter !== "all") {
+      const now = new Date();
+      const filterDate = new Date();
+
+      switch (dateRangeFilter) {
+        case "today":
+          filterDate.setHours(0, 0, 0, 0);
+          break;
+        case "week":
+          filterDate.setDate(now.getDate() - 7);
+          break;
+        case "month":
+          filterDate.setMonth(now.getMonth() - 1);
+          break;
+        case "year":
+          filterDate.setFullYear(now.getFullYear() - 1);
+          break;
+      }
+
+      if (dateRangeFilter !== "all") {
+        filtered = filtered.filter((item) => {
+          const itemDate = new Date(item.created_at);
+          return itemDate >= filterDate;
+        });
+      }
+    }
+
+    // Sort the filtered results
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.created_at);
+      const dateB = new Date(b.created_at);
+
+      switch (sortBy) {
+        case "newest":
+          return dateB.getTime() - dateA.getTime();
+        case "oldest":
+          return dateA.getTime() - dateB.getTime();
+        case "name":
+          return (a.caption || a.file_name || "").localeCompare(
+            b.caption || b.file_name || ""
+          );
+        default:
+          return dateB.getTime() - dateA.getTime();
+      }
+    });
+
+    return filtered;
+  }, [
+    userGallery,
+    searchQuery,
+    fileTypeFilter,
+    albumFilter,
+    dateRangeFilter,
+    sortBy,
+  ]);
+
+  // Clear all filters
+  const clearAllFilters = () => {
+    setSearchQuery("");
+    setStatusFilter("all");
+    setFileTypeFilter("all");
+    setAlbumFilter("all");
+    setDateRangeFilter("all");
+    setSortBy("newest");
+  };
+
+  // Check if any filters are active
+  const hasActiveFilters =
+    searchQuery ||
+    statusFilter !== "all" ||
+    fileTypeFilter !== "all" ||
+    albumFilter !== "all" ||
+    dateRangeFilter !== "all" ||
+    sortBy !== "newest";
+
+  // Count active filters
+  const activeFiltersCount = [
+    searchQuery,
+    statusFilter !== "all" ? statusFilter : null,
+    fileTypeFilter !== "all" ? fileTypeFilter : null,
+    albumFilter !== "all" ? albumFilter : null,
+    dateRangeFilter !== "all" ? dateRangeFilter : null,
+    sortBy !== "newest" ? sortBy : null,
+  ].filter(Boolean).length;
 
   /**
    * Handle Upload of image of video
@@ -318,10 +456,12 @@ const Page = () => {
 
   // Calculate status counts
   const statusCounts = {
-    total: userGallery.length,
-    approved: userGallery.filter((item) => item.status === "approved").length,
-    pending: userGallery.filter((item) => item.status === "pending").length,
-    rejected: userGallery.filter((item) => item.status === "rejected").length,
+    total: filteredGallery.length,
+    approved: filteredGallery.filter((item) => item.status === "approved")
+      .length,
+    pending: filteredGallery.filter((item) => item.status === "pending").length,
+    rejected: filteredGallery.filter((item) => item.status === "rejected")
+      .length,
   };
 
   return (
@@ -402,32 +542,237 @@ const Page = () => {
         </div>
       </div>
 
-      {viewMode === "grid" && (
-        <div className="flex items-center gap-4">
-          <div className="relative w-full flex-1">
-            <Input
-              placeholder="Search by caption..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      {/* ENHANCED FILTERING SECTION */}
+      {(viewMode === "grid" || viewMode === "table") && (
+        <div className="space-y-4">
+          {/* Search and Filter Controls */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="relative w-full flex-1">
+              <Input
+                placeholder="Search by caption or filename..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="rounded-full relative">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filters
+                    {activeFiltersCount > 0 && (
+                      <Badge className="ml-2 h-5 w-5 p-0 text-xs rounded-full">
+                        {activeFiltersCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-4" align="end">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium">Filter Options</h4>
+                      {hasActiveFilters && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={clearAllFilters}
+                          className="h-8 px-2 text-xs"
+                        >
+                          Clear All
+                        </Button>
+                      )}
+                    </div>
+
+                    <div className="space-y-3">
+                      {/* Status Filter */}
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">
+                          Status
+                        </label>
+                        <Select
+                          value={statusFilter}
+                          onValueChange={setStatusFilter}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Filter by status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Status</SelectItem>
+                            <SelectItem value="approved">Approved</SelectItem>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="rejected">Rejected</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* File Type Filter */}
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">
+                          File Type
+                        </label>
+                        <Select
+                          value={fileTypeFilter}
+                          onValueChange={setFileTypeFilter}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Filter by type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Types</SelectItem>
+                            <SelectItem value="images">
+                              <div className="flex items-center gap-2">
+                                <FileImage className="h-4 w-4" />
+                                Images
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="videos">
+                              <div className="flex items-center gap-2">
+                                <FileVideo className="h-4 w-4" />
+                                Videos
+                              </div>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Album Filter */}
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">
+                          Album
+                        </label>
+                        <Select
+                          value={albumFilter}
+                          onValueChange={setAlbumFilter}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Filter by album" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Albums</SelectItem>
+                            <SelectItem value="no-album">No Album</SelectItem>
+                            {userAlbums.map((album) => (
+                              <SelectItem key={album.id} value={album.id}>
+                                {album.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Date Range Filter */}
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">
+                          Date Range
+                        </label>
+                        <Select
+                          value={dateRangeFilter}
+                          onValueChange={setDateRangeFilter}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Filter by date" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Time</SelectItem>
+                            <SelectItem value="today">Today</SelectItem>
+                            <SelectItem value="week">This Week</SelectItem>
+                            <SelectItem value="month">This Month</SelectItem>
+                            <SelectItem value="year">This Year</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Sort By */}
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">
+                          Sort By
+                        </label>
+                        <Select value={sortBy} onValueChange={setSortBy}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Sort by" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="newest">Newest First</SelectItem>
+                            <SelectItem value="oldest">Oldest First</SelectItem>
+                            <SelectItem value="name">Name (A-Z)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* <Filter className="h-4 w-4 text-muted-foreground" /> */}
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Items</SelectItem>
-                <SelectItem value="approved">Approved</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Active Filters Display */}
+          {hasActiveFilters && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                Active filters:
+              </span>
+              {searchQuery && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  Search: &quot;{searchQuery}&quot;
+                  <X
+                    className="h-3 w-3 cursor-pointer"
+                    onClick={() => setSearchQuery("")}
+                  />
+                </Badge>
+              )}
+              {statusFilter !== "all" && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  Status: {statusFilter}
+                  <X
+                    className="h-3 w-3 cursor-pointer"
+                    onClick={() => setStatusFilter("all")}
+                  />
+                </Badge>
+              )}
+              {fileTypeFilter !== "all" && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  Type: {fileTypeFilter}
+                  <X
+                    className="h-3 w-3 cursor-pointer"
+                    onClick={() => setFileTypeFilter("all")}
+                  />
+                </Badge>
+              )}
+              {albumFilter !== "all" && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  Album:{" "}
+                  {albumFilter === "no-album"
+                    ? "No Album"
+                    : userAlbums.find((a) => a.id === albumFilter)?.name ||
+                      albumFilter}
+                  <X
+                    className="h-3 w-3 cursor-pointer"
+                    onClick={() => setAlbumFilter("all")}
+                  />
+                </Badge>
+              )}
+              {dateRangeFilter !== "all" && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  Date: {dateRangeFilter}
+                  <X
+                    className="h-3 w-3 cursor-pointer"
+                    onClick={() => setDateRangeFilter("all")}
+                  />
+                </Badge>
+              )}
+              {sortBy !== "newest" && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  Sort: {sortBy}
+                  <X
+                    className="h-3 w-3 cursor-pointer"
+                    onClick={() => setSortBy("newest")}
+                  />
+                </Badge>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -575,19 +920,16 @@ const Page = () => {
         </div>
       ) : viewMode === "table" ? (
         <GalleryTable
-          data={userGallery}
+          data={filteredGallery}
           onUserClick={handlePreviewImage}
           deleteImage={handleDeleteImage}
           previewImage={handlePreviewImage}
+          showSearchInput={false}
         />
       ) : (
         <div className="mt-4">
           <GalleryGrid
-            gallery={userGallery.filter((img) =>
-              (img.caption || img.file_name || "")
-                .toLowerCase()
-                .includes(searchQuery.toLowerCase())
-            )}
+            gallery={filteredGallery}
             onImageClick={(image) => {
               // Pass the image directly as the format is already correct
               handlePreviewImage(image);
@@ -598,17 +940,20 @@ const Page = () => {
 
       {/* Show a message when no results are found */}
       {!isLoading &&
-        viewMode === "grid" &&
-        searchQuery &&
-        userGallery.filter((img) =>
-          (img.caption || img.file_name || "")
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase())
-        ).length === 0 && (
+        (viewMode === "grid" || viewMode === "table") &&
+        filteredGallery.length === 0 &&
+        userGallery.length > 0 && (
           <div className="text-center py-10">
-            <p className="text-muted-foreground">
-              No images found matching &quot;{searchQuery}&quot;
+            <p className="text-muted-foreground mb-4">
+              No items found matching your filters
             </p>
+            <Button
+              variant="outline"
+              onClick={clearAllFilters}
+              className="rounded-full"
+            >
+              Clear All Filters
+            </Button>
           </div>
         )}
 

@@ -1,9 +1,10 @@
 import { NoticeBoard } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, Edit, Trash, Pin, PinOff } from "lucide-react";
+import { Edit, Trash, Pin, PinOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { DataTableColumnHeader } from "@/components/ui/table-reusuable/data-table-column-header";
 
 export const createColumns = (
   onEditClick: (noticeBoard: NoticeBoard) => void,
@@ -12,17 +13,9 @@ export const createColumns = (
 ): ColumnDef<NoticeBoard>[] => [
   {
     accessorKey: "title",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Title
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Title" />
+    ),
     cell: ({ row }) => {
       const isPinned = row.getValue("pinned") as boolean;
       return (
@@ -36,10 +29,13 @@ export const createColumns = (
         </div>
       );
     },
+    sortingFn: "alphanumeric",
   },
   {
     accessorKey: "description",
-    header: "Description",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Description" />
+    ),
     cell: ({ row }) => {
       const description: string = row.getValue("description") as string;
       return (
@@ -48,24 +44,20 @@ export const createColumns = (
         </div>
       );
     },
+    sortingFn: "alphanumeric",
   },
   {
     accessorKey: "editor",
-    header: "Posted By",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Posted By" />
+    ),
+    sortingFn: "alphanumeric",
   },
   {
     accessorKey: "posteddate",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Posted Date
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Posted Date" />
+    ),
     cell: ({ row }) => {
       const date = row.getValue("posteddate") as string;
       const formattedDate =
@@ -74,10 +66,18 @@ export const createColumns = (
           : format(new Date(date), "MMM dd, yyyy");
       return formattedDate;
     },
+    sortingFn: (rowA, rowB, columnId) => {
+      const dateA = rowA.getValue(columnId) as string;
+      const dateB = rowB.getValue(columnId) as string;
+
+      return new Date(dateA).getTime() - new Date(dateB).getTime();
+    },
   },
   {
     accessorKey: "tags",
-    header: "Tags",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Tags" />
+    ),
     cell: ({ row }) => {
       const tags = row.getValue("tags") as string[];
       return (
@@ -91,17 +91,38 @@ export const createColumns = (
         </div>
       );
     },
+    sortingFn: (rowA, rowB, columnId) => {
+      const tagsA = rowA.getValue(columnId) as string[];
+      const tagsB = rowB.getValue(columnId) as string[];
+
+      const tagsStringA = tagsA ? tagsA.join(", ") : "";
+      const tagsStringB = tagsB ? tagsB.join(", ") : "";
+
+      return tagsStringA.localeCompare(tagsStringB);
+    },
   },
   {
     accessorKey: "pinned",
-    header: "Pinned",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Pinned" />
+    ),
     cell: ({ row }) => {
       const pinned = row.getValue("pinned") as boolean;
       return pinned ? "Yes" : "No";
     },
+    sortingFn: (rowA, rowB, columnId) => {
+      const pinnedA = rowA.getValue(columnId) as boolean;
+      const pinnedB = rowB.getValue(columnId) as boolean;
+
+      // Sort pinned items first
+      if (pinnedA && !pinnedB) return -1;
+      if (!pinnedA && pinnedB) return 1;
+      return 0;
+    },
   },
   {
     id: "actions",
+    header: "Actions",
     cell: ({ row }) => {
       const noticeBoard = row.original;
       const isPinned = noticeBoard.pinned;
@@ -139,5 +160,6 @@ export const createColumns = (
         </div>
       );
     },
+    enableSorting: false,
   },
 ];

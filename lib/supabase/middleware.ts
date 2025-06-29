@@ -118,16 +118,16 @@ export async function updateSession(request: NextRequest) {
     if (user && userProfile && isPrivateRoute) {
       if (userProfile.status === "pending") {
         // Redirect to pending approval page
-        if (!path.startsWith("/auth/pending-approval")) {
-          const redirectUrl = new URL("/auth/pending-approval", request.url);
+        if (!path.startsWith("/pending-approval")) {
+          const redirectUrl = new URL("/pending-approval", request.url);
           return NextResponse.redirect(redirectUrl);
         }
       }
 
       if (userProfile.status === "rejected") {
         // Redirect to account rejected page
-        if (!path.startsWith("/auth/account-rejected")) {
-          const redirectUrl = new URL("/auth/account-rejected", request.url);
+        if (!path.startsWith("/account-rejected")) {
+          const redirectUrl = new URL("/account-rejected", request.url);
           return NextResponse.redirect(redirectUrl);
         }
       }

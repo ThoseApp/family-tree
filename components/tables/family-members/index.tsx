@@ -11,6 +11,7 @@ interface FamilyMembersTableProps {
   onUserClick?: (user: FamilyMember) => void;
   onEdit?: (member: FamilyMember) => void;
   onDelete?: (member: FamilyMember) => void;
+  showSearchInput?: boolean;
 }
 
 const FamilyMembersTable = ({
@@ -18,6 +19,7 @@ const FamilyMembersTable = ({
   onUserClick,
   onEdit = () => {},
   onDelete = () => {},
+  showSearchInput = true,
 }: FamilyMembersTableProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const columns = createColumns(onEdit, onDelete);
@@ -42,29 +44,12 @@ const FamilyMembersTable = ({
 
   return (
     <div className="space-y-4">
-      {/* Custom Search Input */}
-      <div className="flex flex-1 items-center justify-between">
-        <Input
-          placeholder="Search family members by name, gender, relations, or birth date..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className=""
-        />
-
-        {/* Search Results Indicator */}
-        {searchTerm.trim() && (
-          <div className="text-sm text-muted-foreground">
-            {filteredData.length} of {data.length} members found
-          </div>
-        )}
-      </div>
-
       {/* Data Table */}
       <DataTable
         columns={columns}
         data={filteredData}
         onRowClick={onUserClick}
-        showSearchInput={false} // We're using our custom search above
+        showSearchInput={showSearchInput} // We're using our custom search above
         // exportData
         // statusFilter
         // dateFilter

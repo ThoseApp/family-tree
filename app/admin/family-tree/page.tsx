@@ -2114,14 +2114,14 @@ const FamilyTreeUploadPage = () => {
             Upload Excel or CSV files to populate the family tree database
           </p>
         </div>
-        <Button
+        {/* <Button
           variant="outline"
           onClick={downloadTemplate}
           className="flex items-center gap-2"
         >
           <Download className="h-4 w-4" />
           Download Template
-        </Button>
+        </Button> */}
       </div>
 
       {/* Search Section */}
