@@ -129,6 +129,15 @@ export const createInvitationColumns = (
           </div>
         );
       },
+      sortingFn: (rowA, rowB, columnId) => {
+        const eventA = rowA.original.event;
+        const eventB = rowB.original.event;
+
+        const nameA = eventA?.name || "Unknown Event";
+        const nameB = eventB?.name || "Unknown Event";
+
+        return nameA.localeCompare(nameB);
+      },
     },
     {
       accessorKey: isReceived ? "inviter" : "invitee",
@@ -165,6 +174,23 @@ export const createInvitationColumns = (
           </div>
         );
       },
+      sortingFn: (rowA, rowB, columnId) => {
+        const userA = isReceived
+          ? rowA.original.inviter
+          : rowA.original.invitee;
+        const userB = isReceived
+          ? rowB.original.inviter
+          : rowB.original.invitee;
+
+        const nameA = userA
+          ? `${userA.first_name} ${userA.last_name}`
+          : "Unknown User";
+        const nameB = userB
+          ? `${userB.first_name} ${userB.last_name}`
+          : "Unknown User";
+
+        return nameA.localeCompare(nameB);
+      },
     },
     {
       accessorKey: "status",
@@ -196,6 +222,19 @@ export const createInvitationColumns = (
       filterFn: (row, id, value) => {
         return value.includes(row.getValue(id));
       },
+      sortingFn: (rowA, rowB, columnId) => {
+        const statusA = rowA.getValue(columnId) as string;
+        const statusB = rowB.getValue(columnId) as string;
+
+        // Define status priority for sorting
+        const statusPriority = { pending: 0, accepted: 1, declined: 2 };
+        const priorityA =
+          statusPriority[statusA as keyof typeof statusPriority] ?? 999;
+        const priorityB =
+          statusPriority[statusB as keyof typeof statusPriority] ?? 999;
+
+        return priorityA - priorityB;
+      },
     },
     {
       accessorKey: "message",
@@ -212,6 +251,7 @@ export const createInvitationColumns = (
           <span className="text-muted-foreground text-sm">No message</span>
         );
       },
+      sortingFn: "alphanumeric",
     },
     {
       accessorKey: "created_at",
@@ -225,6 +265,12 @@ export const createInvitationColumns = (
             {format(new Date(date), "MMM dd, yyyy")}
           </div>
         );
+      },
+      sortingFn: (rowA, rowB, columnId) => {
+        const dateA = rowA.getValue(columnId) as string;
+        const dateB = rowB.getValue(columnId) as string;
+
+        return new Date(dateA).getTime() - new Date(dateB).getTime();
       },
     },
     {
@@ -242,6 +288,16 @@ export const createInvitationColumns = (
           <span className="text-muted-foreground text-sm">-</span>
         );
       },
+      sortingFn: (rowA, rowB, columnId) => {
+        const dateA = rowA.getValue(columnId) as string;
+        const dateB = rowB.getValue(columnId) as string;
+
+        if (!dateA && !dateB) return 0;
+        if (!dateA) return 1;
+        if (!dateB) return -1;
+
+        return new Date(dateA).getTime() - new Date(dateB).getTime();
+      },
     },
     {
       id: "actions",
@@ -257,6 +313,7 @@ export const createInvitationColumns = (
           />
         );
       },
+      enableSorting: false,
     },
   ];
 };

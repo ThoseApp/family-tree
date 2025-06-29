@@ -8,6 +8,7 @@ import { cn, formatFileSize } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2, Eye } from "lucide-react";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { DataTableColumnHeader } from "@/components/ui/table-reusuable/data-table-column-header";
 
 export const columns: ColumnDef<GalleryType>[] = [
   {
@@ -16,6 +17,7 @@ export const columns: ColumnDef<GalleryType>[] = [
     cell: ({ row }) => {
       return <div className=" text-left">{row.index + 1}</div>;
     },
+    enableSorting: false,
   },
 
   {
@@ -37,22 +39,29 @@ export const columns: ColumnDef<GalleryType>[] = [
         </div>
       );
     },
+    enableSorting: false,
   },
 
   {
     id: "caption",
-    header: "Name",
+    accessorKey: "caption",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Name" />
+    ),
     cell({ row }) {
       const gallery = row.original;
 
       return <p className="text-sm text-left ">{gallery.caption}</p>;
     },
+    sortingFn: "alphanumeric",
   },
 
   {
     id: "fileSize",
-    header: "File Size",
     accessorKey: "file_size",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="File Size" />
+    ),
     cell(props) {
       const { row } = props;
       const gallery = row.original;
@@ -63,12 +72,20 @@ export const columns: ColumnDef<GalleryType>[] = [
         </p>
       );
     },
+    sortingFn: (rowA, rowB, columnId) => {
+      const sizeA = rowA.getValue(columnId) as number;
+      const sizeB = rowB.getValue(columnId) as number;
+
+      return (sizeA || 0) - (sizeB || 0);
+    },
   },
 
   {
     id: "uploadedDate",
-    header: "Uploaded Date",
-    accessorKey: "uploaded_at",
+    accessorKey: "created_at",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Uploaded Date" />
+    ),
     cell: ({ row }) => {
       const gallery = row.original;
       const dateString = gallery.uploaded_at || gallery.created_at;
@@ -79,12 +96,24 @@ export const columns: ColumnDef<GalleryType>[] = [
         return "Invalid date";
       }
     },
+    sortingFn: (rowA, rowB, columnId) => {
+      const dateA = rowA.original.uploaded_at || rowA.original.created_at;
+      const dateB = rowB.original.uploaded_at || rowB.original.created_at;
+
+      if (!dateA && !dateB) return 0;
+      if (!dateA) return 1;
+      if (!dateB) return -1;
+
+      return new Date(dateA).getTime() - new Date(dateB).getTime();
+    },
   },
 
   {
     id: "uploadedTime",
-    header: "Uploaded Time",
-    accessorKey: "uploaded_at",
+    accessorKey: "created_at",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Uploaded Time" />
+    ),
     cell: ({ row }) => {
       const gallery = row.original;
       const dateString = gallery.uploaded_at || gallery.created_at;
@@ -95,24 +124,39 @@ export const columns: ColumnDef<GalleryType>[] = [
         return "Invalid time";
       }
     },
+    sortingFn: (rowA, rowB, columnId) => {
+      const dateA = rowA.original.uploaded_at || rowA.original.created_at;
+      const dateB = rowB.original.uploaded_at || rowB.original.created_at;
+
+      if (!dateA && !dateB) return 0;
+      if (!dateA) return 1;
+      if (!dateB) return -1;
+
+      return new Date(dateA).getTime() - new Date(dateB).getTime();
+    },
   },
 
   {
     id: "uploader",
-    header: "Uploader",
     accessorKey: "user_id",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Uploader" />
+    ),
     cell: ({ row }) => {
       const gallery = row.original;
       // For now, show "You" since this is typically the user's own gallery
       // In the future, this could be enhanced to show actual user names
       return <p className="text-sm text-left ">You</p>;
     },
+    sortingFn: "alphanumeric",
   },
 
   {
     id: "status",
-    header: "Status",
     accessorKey: "status",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Status" />
+    ),
     cell: ({ row }) => {
       const gallery = row.original;
       const status = gallery.status as "pending" | "approved" | "rejected";
@@ -121,6 +165,19 @@ export const columns: ColumnDef<GalleryType>[] = [
           <StatusBadge status={status || "pending"} />
         </div>
       );
+    },
+    sortingFn: (rowA, rowB, columnId) => {
+      const statusA = rowA.getValue(columnId) as string;
+      const statusB = rowB.getValue(columnId) as string;
+
+      // Define status priority for sorting
+      const statusPriority = { pending: 0, approved: 1, rejected: 2 };
+      const priorityA =
+        statusPriority[statusA as keyof typeof statusPriority] ?? 999;
+      const priorityB =
+        statusPriority[statusB as keyof typeof statusPriority] ?? 999;
+
+      return priorityA - priorityB;
     },
   },
 
@@ -161,5 +218,6 @@ export const columns: ColumnDef<GalleryType>[] = [
         </div>
       );
     },
+    enableSorting: false,
   },
 ];

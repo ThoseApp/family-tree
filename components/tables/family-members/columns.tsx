@@ -13,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { DataTableColumnHeader } from "@/components/ui/table-reusuable/data-table-column-header";
 
 export const createColumns = (
   onEdit: (member: FamilyMember) => void,
@@ -24,12 +25,15 @@ export const createColumns = (
     cell: ({ row }) => {
       return <div className="text-left">{row.index + 1}</div>;
     },
+    enableSorting: false,
   },
 
   {
     id: "name",
-    header: "Name",
     accessorKey: "name",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Name" />
+    ),
     cell({ row }) {
       const user = row.original;
       const initials = user.name
@@ -55,24 +59,30 @@ export const createColumns = (
         </div>
       );
     },
+    sortingFn: "alphanumeric",
   },
 
   {
     id: "gender",
-    header: "Gender",
     accessorKey: "gender",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Gender" />
+    ),
     cell(props) {
       const { row } = props;
       const user = row.original;
 
       return <p className="text-sm text-left">{user.gender || "N/A"}</p>;
     },
+    sortingFn: "alphanumeric",
   },
 
   {
     id: "birthDate",
-    header: "Birth Date",
     accessorKey: "birthDate",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Birth Date" />
+    ),
     cell: ({ row }) => {
       const user = row.original;
       const birthDate = user.birthDate;
@@ -83,12 +93,24 @@ export const createColumns = (
         </div>
       );
     },
+    sortingFn: (rowA, rowB, columnId) => {
+      const dateA = rowA.getValue(columnId) as string;
+      const dateB = rowB.getValue(columnId) as string;
+
+      if (!dateA && !dateB) return 0;
+      if (!dateA) return 1;
+      if (!dateB) return -1;
+
+      return new Date(dateA).getTime() - new Date(dateB).getTime();
+    },
   },
 
   {
     id: "fatherName",
-    header: "Father Name",
     accessorKey: "fatherName",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Father Name" />
+    ),
     cell: ({ row }) => {
       const user = row.original;
       return (
@@ -97,12 +119,15 @@ export const createColumns = (
         </div>
       );
     },
+    sortingFn: "alphanumeric",
   },
 
   {
     id: "motherName",
-    header: "Mother Name",
     accessorKey: "motherName",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Mother Name" />
+    ),
     cell: ({ row }) => {
       const user = row.original;
       return (
@@ -111,12 +136,15 @@ export const createColumns = (
         </div>
       );
     },
+    sortingFn: "alphanumeric",
   },
 
   {
     id: "orderOfBirth",
-    header: "Order of Birth",
     accessorKey: "orderOfBirth",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Order of Birth" />
+    ),
     cell: ({ row }) => {
       const user = row.original;
       return (
@@ -125,12 +153,24 @@ export const createColumns = (
         </div>
       );
     },
+    sortingFn: (rowA, rowB, columnId) => {
+      const orderA = rowA.getValue(columnId) as number;
+      const orderB = rowB.getValue(columnId) as number;
+
+      if (!orderA && !orderB) return 0;
+      if (!orderA) return 1;
+      if (!orderB) return -1;
+
+      return orderA - orderB;
+    },
   },
 
   {
     id: "spouseName",
-    header: "Spouse Name",
     accessorKey: "spouseName",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Spouse Name" />
+    ),
     cell: ({ row }) => {
       const user = row.original;
       return (
@@ -139,12 +179,15 @@ export const createColumns = (
         </div>
       );
     },
+    sortingFn: "alphanumeric",
   },
 
   {
     id: "orderOfMarriage",
-    header: "Order of Marriage",
     accessorKey: "orderOfMarriage",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Order of Marriage" />
+    ),
     cell: ({ row }) => {
       const user = row.original;
       return (
@@ -152,6 +195,16 @@ export const createColumns = (
           {user.orderOfMarriage || "N/A"}
         </div>
       );
+    },
+    sortingFn: (rowA, rowB, columnId) => {
+      const orderA = rowA.getValue(columnId) as number;
+      const orderB = rowB.getValue(columnId) as number;
+
+      if (!orderA && !orderB) return 0;
+      if (!orderA) return 1;
+      if (!orderB) return -1;
+
+      return orderA - orderB;
     },
   },
 
@@ -185,6 +238,7 @@ export const createColumns = (
         </DropdownMenu>
       );
     },
+    enableSorting: false,
   },
 ];
 

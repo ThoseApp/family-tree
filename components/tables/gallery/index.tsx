@@ -10,6 +10,7 @@ interface GalleryTableProps {
   onUserClick?: (gallery: GalleryType) => void;
   deleteImage?: (id: string) => Promise<void>;
   previewImage?: (gallery: GalleryType) => void;
+  showSearchInput?: boolean;
 }
 
 const GalleryTable = ({
@@ -17,6 +18,7 @@ const GalleryTable = ({
   onUserClick,
   deleteImage,
   previewImage,
+  showSearchInput,
 }: GalleryTableProps) => {
   return (
     <DataTable
@@ -25,7 +27,7 @@ const GalleryTable = ({
       onRowClick={onUserClick}
       deleteImage={deleteImage}
       previewImage={previewImage}
-      showSearchInput={true}
+      showSearchInput={showSearchInput}
       // exportData
       // statusFilter
       // dateFilter
