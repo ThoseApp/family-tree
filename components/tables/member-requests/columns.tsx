@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useMemberRequestsStore } from "@/stores/member-requests-store";
+import { DataTableColumnHeader } from "@/components/ui/table-reusuable/data-table-column-header";
 
 // Action buttons component to handle loading states
 const ActionButtons = ({
@@ -73,17 +74,21 @@ export const createColumns = (
     cell: ({ row }) => {
       return <div className=" text-left">{row.index + 1}</div>;
     },
+    enableSorting: false,
   },
 
   {
     id: "name",
-    header: "Name",
+    accessorKey: "first_name",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Name" />
+    ),
     cell({ row }) {
       const user = row.original;
 
       return (
         <div className="flex items-center gap-2">
-          <div className="size-8 relative rounded-full overflow-hidden bg-gray-200">
+          <div className="size-8 flex-shrink-0 relative rounded-full overflow-hidden bg-gray-200">
             {user.image ? (
               <Image
                 src={user.image}
@@ -92,7 +97,7 @@ export const createColumns = (
                 className="rounded-full object-cover"
               />
             ) : (
-              <div className="flex items-center justify-center w-full h-full text-gray-500 text-xs">
+              <div className="flex  items-center justify-center w-full h-full text-gray-500 text-xs">
                 {user.first_name.charAt(0)}
                 {user.last_name.charAt(0)}
               </div>
@@ -104,22 +109,32 @@ export const createColumns = (
         </div>
       );
     },
-  },
-
-  {
-    id: "email",
-    header: "Email",
-    accessorKey: "email",
-    cell: ({ row }) => {
-      const user = row.original;
-      return <p className="text-sm text-left">{user.email}</p>;
+    sortingFn: (rowA, rowB, columnId) => {
+      const nameA = `${rowA.original.first_name} ${rowA.original.last_name}`;
+      const nameB = `${rowB.original.first_name} ${rowB.original.last_name}`;
+      return nameA.localeCompare(nameB);
     },
   },
 
   {
+    id: "email",
+    accessorKey: "email",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Email" />
+    ),
+    cell: ({ row }) => {
+      const user = row.original;
+      return <p className="text-sm text-left">{user.email}</p>;
+    },
+    sortingFn: "alphanumeric",
+  },
+
+  {
     id: "phone_number",
-    header: "Phone",
     accessorKey: "phone_number",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Phone" />
+    ),
     cell: ({ row }) => {
       const user = row.original;
       return (
@@ -128,12 +143,15 @@ export const createColumns = (
         </div>
       );
     },
+    sortingFn: "alphanumeric",
   },
 
   {
     id: "date_of_birth",
-    header: "Birth Date",
     accessorKey: "date_of_birth",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Birth Date" />
+    ),
     cell: ({ row }) => {
       const user = row.original;
       return (
@@ -144,12 +162,24 @@ export const createColumns = (
         </div>
       );
     },
+    sortingFn: (rowA, rowB, columnId) => {
+      const dateA = rowA.getValue(columnId) as string;
+      const dateB = rowB.getValue(columnId) as string;
+
+      if (!dateA && !dateB) return 0;
+      if (!dateA) return 1;
+      if (!dateB) return -1;
+
+      return new Date(dateA).getTime() - new Date(dateB).getTime();
+    },
   },
 
   {
     id: "relative",
-    header: "Relative",
     accessorKey: "relative",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Relative" />
+    ),
     cell: ({ row }) => {
       const user = row.original;
       return (
@@ -158,12 +188,15 @@ export const createColumns = (
         </div>
       );
     },
+    sortingFn: "alphanumeric",
   },
 
   {
     id: "relationship_to_relative",
-    header: "Relationship",
     accessorKey: "relationship_to_relative",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Relationship" />
+    ),
     cell: ({ row }) => {
       const user = row.original;
       return (
@@ -172,12 +205,15 @@ export const createColumns = (
         </div>
       );
     },
+    sortingFn: "alphanumeric",
   },
 
   {
     id: "created_at",
-    header: "Request Date",
     accessorKey: "created_at",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Request Date" />
+    ),
     cell: ({ row }) => {
       const user = row.original;
       return (
@@ -185,6 +221,12 @@ export const createColumns = (
           {new Date(user.created_at).toLocaleDateString()}
         </div>
       );
+    },
+    sortingFn: (rowA, rowB, columnId) => {
+      const dateA = rowA.getValue(columnId) as string;
+      const dateB = rowB.getValue(columnId) as string;
+
+      return new Date(dateA).getTime() - new Date(dateB).getTime();
     },
   },
 
@@ -195,5 +237,6 @@ export const createColumns = (
       const request = row.original;
       return <ActionButtons request={request} onRefresh={onRefresh} />;
     },
+    enableSorting: false,
   },
 ];

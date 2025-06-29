@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import { DataTableColumnHeader } from "@/components/ui/table-reusuable/data-table-column-header";
 
 // Helper function to format date strings
 const formatDate = (dateStr: string) => {
@@ -29,22 +30,28 @@ export const createColumns = (
     cell: ({ row }) => {
       return <div className="text-left">{row.index + 1}</div>;
     },
+    enableSorting: false,
   },
 
   {
     id: "name",
-    header: "Name",
     accessorKey: "name",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Name" />
+    ),
     cell({ row }) {
       const event = row.original;
       return <p className="text-sm text-left font-medium">{event.name}</p>;
     },
+    sortingFn: "alphanumeric",
   },
 
   {
     id: "date",
-    header: "Date",
     accessorKey: "date",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Date" />
+    ),
     cell(props) {
       const { row } = props;
       const event = row.original;
@@ -56,12 +63,39 @@ export const createColumns = (
         </p>
       );
     },
+    sortingFn: (rowA, rowB, columnId) => {
+      const dateA = rowA.getValue(columnId);
+      const dateB = rowB.getValue(columnId);
+
+      // Convert to comparable date strings
+      const getDateString = (date: any) => {
+        if (typeof date === "string") {
+          return date;
+        } else if (date && date.month && date.day) {
+          return `${date.month} ${date.day}`;
+        }
+        return "";
+      };
+
+      const dateStringA = getDateString(dateA);
+      const dateStringB = getDateString(dateB);
+
+      try {
+        const parsedA = new Date(dateStringA);
+        const parsedB = new Date(dateStringB);
+        return parsedA.getTime() - parsedB.getTime();
+      } catch {
+        return dateStringA.localeCompare(dateStringB);
+      }
+    },
   },
 
   {
     id: "category",
-    header: "Category",
     accessorKey: "category",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Category" />
+    ),
     cell: ({ row }) => {
       const event = row.original;
       return (
@@ -81,6 +115,7 @@ export const createColumns = (
         </div>
       );
     },
+    sortingFn: "alphanumeric",
   },
 
   {
@@ -111,6 +146,7 @@ export const createColumns = (
         )}
       </div>
     ),
+    enableSorting: false,
   },
 
   {
@@ -125,5 +161,6 @@ export const createColumns = (
         Invite
       </Button>
     ),
+    enableSorting: false,
   },
 ];

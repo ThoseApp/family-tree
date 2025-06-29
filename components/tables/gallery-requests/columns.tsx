@@ -10,6 +10,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { getUserProfile } from "@/lib/user";
 import { useEffect, useState } from "react";
 import { UserProfile } from "@/lib/types";
+import { DataTableColumnHeader } from "@/components/ui/table-reusuable/data-table-column-header";
 
 // Component to handle async user profile fetching
 const UploaderCell = ({ userId }: { userId: string }) => {
@@ -59,6 +60,7 @@ export const columns: ColumnDef<GalleryType>[] = [
     cell: ({ row }) => {
       return <div className=" text-left">{row.index + 1}</div>;
     },
+    enableSorting: false,
   },
 
   {
@@ -80,12 +82,15 @@ export const columns: ColumnDef<GalleryType>[] = [
         </div>
       );
     },
+    enableSorting: false,
   },
 
   {
     id: "caption",
-    header: "Caption",
     accessorKey: "caption",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Caption" />
+    ),
     cell({ row }) {
       const gallery = row.original;
 
@@ -95,13 +100,15 @@ export const columns: ColumnDef<GalleryType>[] = [
         </p>
       );
     },
+    sortingFn: "alphanumeric",
   },
 
   {
     id: "fileSize",
-    header: "File Size",
-
-    accessorKey: "fileSize",
+    accessorKey: "file_size",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="File Size" />
+    ),
     cell(props) {
       const { row } = props;
       const gallery = row.original;
@@ -112,12 +119,20 @@ export const columns: ColumnDef<GalleryType>[] = [
         </p>
       );
     },
+    sortingFn: (rowA, rowB, columnId) => {
+      const sizeA = rowA.getValue(columnId) as number;
+      const sizeB = rowB.getValue(columnId) as number;
+
+      return (sizeA || 0) - (sizeB || 0);
+    },
   },
 
   {
     id: "uploadedDate",
-    header: "Uploaded Date",
-    accessorKey: "uploadDate",
+    accessorKey: "created_at",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Uploaded Date" />
+    ),
     cell: ({ row }) => {
       const gallery = row.original;
       const dateString = gallery.uploaded_at || gallery.created_at;
@@ -128,12 +143,24 @@ export const columns: ColumnDef<GalleryType>[] = [
         return "Invalid date";
       }
     },
+    sortingFn: (rowA, rowB, columnId) => {
+      const dateA = rowA.original.uploaded_at || rowA.original.created_at;
+      const dateB = rowB.original.uploaded_at || rowB.original.created_at;
+
+      if (!dateA && !dateB) return 0;
+      if (!dateA) return 1;
+      if (!dateB) return -1;
+
+      return new Date(dateA).getTime() - new Date(dateB).getTime();
+    },
   },
 
   {
     id: "uploadedTime",
-    header: "Uploaded Time",
-    accessorKey: "uploadTime",
+    accessorKey: "created_at",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Uploaded Time" />
+    ),
     cell: ({ row }) => {
       const gallery = row.original;
       const dateString = gallery.uploaded_at || gallery.created_at;
@@ -144,16 +171,29 @@ export const columns: ColumnDef<GalleryType>[] = [
         return "Invalid time";
       }
     },
+    sortingFn: (rowA, rowB, columnId) => {
+      const dateA = rowA.original.uploaded_at || rowA.original.created_at;
+      const dateB = rowB.original.uploaded_at || rowB.original.created_at;
+
+      if (!dateA && !dateB) return 0;
+      if (!dateA) return 1;
+      if (!dateB) return -1;
+
+      return new Date(dateA).getTime() - new Date(dateB).getTime();
+    },
   },
 
   {
     id: "uploader",
-    header: "Uploader",
-    accessorKey: "uploader",
+    accessorKey: "user_id",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Uploader" />
+    ),
     cell: ({ row }) => {
       const gallery = row.original;
       return <UploaderCell userId={gallery.user_id} />;
     },
+    sortingFn: "alphanumeric",
   },
 
   {
@@ -197,5 +237,6 @@ export const columns: ColumnDef<GalleryType>[] = [
         </div>
       );
     },
+    enableSorting: false,
   },
 ];
