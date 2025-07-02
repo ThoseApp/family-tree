@@ -1,4 +1,3 @@
-import { Sidebar } from "lucide-react";
 import { Menu } from "lucide-react";
 import { SheetContent } from "../ui/sheet";
 import React, { useEffect, useState } from "react";
@@ -26,7 +25,7 @@ const AdminMobileSidebar = () => {
       </SheetTrigger>
 
       <SheetContent side="left" className="p-0">
-        <AdminSideBar />
+        <AdminSideBar forceMobileExpanded={true} />
       </SheetContent>
     </Sheet>
   );
