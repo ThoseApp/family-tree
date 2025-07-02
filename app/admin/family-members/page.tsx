@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import FamilyMembersTable from "@/components/tables/family-members";
 import { Button } from "@/components/ui/button";
 import {
@@ -50,6 +50,41 @@ import {
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 
+// Utility function to calculate age with proper validation
+const calculateAge = (birthDate?: string): number | null => {
+  if (!birthDate || typeof birthDate !== "string") return null;
+
+  const birth = new Date(birthDate);
+  if (isNaN(birth.getTime())) return null;
+
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+
+  return age >= 0 ? age : null;
+};
+
+// Debounce utility function
+const debounce = <T extends (...args: any[]) => void>(
+  func: T,
+  delay: number
+): ((...args: Parameters<T>) => void) => {
+  let timeoutId: NodeJS.Timeout;
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func(...args), delay);
+  };
+};
+
+// Utility function to safely get string value
+const safeString = (value?: string | null): string => {
+  return value && typeof value === "string" ? value : "";
+};
+
 const FamilyMembersPage = () => {
   const {
     familyMembers,
@@ -60,6 +95,7 @@ const FamilyMembersPage = () => {
     updateFamilyMember,
     removeFamilyMember,
     clearError,
+    clearStorage,
   } = useFamilyMembersStore();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -69,7 +105,15 @@ const FamilyMembersPage = () => {
     null
   );
 
-  // Enhanced filtering states
+  // Loading states for different operations
+  const [operationLoading, setOperationLoading] = useState({
+    adding: false,
+    editing: false,
+    deleting: false,
+  });
+
+  // Enhanced filtering states with debounced search
+  const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [genderFilter, setGenderFilter] = useState<string>("all");
   const [birthYearFilter, setBirthYearFilter] = useState<string>("all");
@@ -77,32 +121,99 @@ const FamilyMembersPage = () => {
   const [sortBy, setSortBy] = useState<string>("name");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
+  // Debounced search function
+  const debouncedSetSearch = useCallback(
+    debounce((value: string) => {
+      setSearchQuery(value);
+    }, 300),
+    []
+  );
+
+  // Update search query when input changes
+  useEffect(() => {
+    debouncedSetSearch(searchInput);
+  }, [searchInput, debouncedSetSearch]);
+
   useEffect(() => {
     fetchFamilyMembers();
   }, [fetchFamilyMembers]);
 
+  // Global error handler for quota exceeded errors
+  useEffect(() => {
+    const handleStorageError = (event: ErrorEvent) => {
+      if (
+        event.error?.name === "QuotaExceededError" ||
+        event.message?.includes("QuotaExceeded") ||
+        event.message?.includes("quota")
+      ) {
+        toast.error("Storage quota exceeded. Clear cached data to continue.", {
+          action: {
+            label: "Clear Storage",
+            onClick: () => {
+              clearStorage();
+              window.location.reload();
+            },
+          },
+        });
+      }
+    };
+
+    window.addEventListener("error", handleStorageError);
+
+    return () => {
+      window.removeEventListener("error", handleStorageError);
+    };
+  }, [clearStorage]);
+
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      // Check if it's a storage-related error
+      if (
+        error.includes("storage") ||
+        error.includes("quota") ||
+        error.includes("QuotaExceeded")
+      ) {
+        toast.error(
+          "Storage quota exceeded. Click here to clear cached data and continue.",
+          {
+            action: {
+              label: "Clear Storage",
+              onClick: () => {
+                clearStorage();
+                window.location.reload();
+              },
+            },
+          }
+        );
+      } else {
+        toast.error(error);
+      }
       clearError();
     }
-  }, [error, clearError]);
+  }, [error, clearError, clearStorage]);
 
-  // Enhanced filtering logic
+  // Enhanced filtering logic with better performance and error handling
   const filteredFamilyMembers = useMemo(() => {
     let filtered = [...familyMembers];
 
-    // Search filter
-    if (searchQuery) {
-      const searchLower = searchQuery.toLowerCase();
+    // Search filter with proper null/undefined handling
+    if (searchQuery.trim()) {
+      const searchLower = searchQuery.toLowerCase().trim();
       filtered = filtered.filter((member) => {
+        const name = safeString(member.name).toLowerCase();
+        const description = safeString(member.description).toLowerCase();
+        const fatherName = safeString(member.fatherName).toLowerCase();
+        const motherName = safeString(member.motherName).toLowerCase();
+        const spouseName = safeString(member.spouseName).toLowerCase();
+        const birthDate = safeString(member.birthDate);
+
         return (
-          member.name?.toLowerCase().includes(searchLower) ||
-          member.description?.toLowerCase().includes(searchLower) ||
-          member.fatherName?.toLowerCase().includes(searchLower) ||
-          member.motherName?.toLowerCase().includes(searchLower) ||
-          member.spouseName?.toLowerCase().includes(searchLower) ||
-          member.birthDate?.includes(searchQuery)
+          name.includes(searchLower) ||
+          description.includes(searchLower) ||
+          fatherName.includes(searchLower) ||
+          motherName.includes(searchLower) ||
+          spouseName.includes(searchLower) ||
+          birthDate.includes(searchQuery)
         );
       });
     }
@@ -112,14 +223,11 @@ const FamilyMembersPage = () => {
       filtered = filtered.filter((member) => member.gender === genderFilter);
     }
 
-    // Birth year filter
+    // Birth year filter with improved age calculation
     if (birthYearFilter !== "all") {
-      const currentYear = new Date().getFullYear();
       filtered = filtered.filter((member) => {
-        if (!member.birthDate) return false;
-
-        const birthYear = new Date(member.birthDate).getFullYear();
-        const age = currentYear - birthYear;
+        const age = calculateAge(member.birthDate);
+        if (age === null) return false;
 
         switch (birthYearFilter) {
           case "0-18":
@@ -138,57 +246,61 @@ const FamilyMembersPage = () => {
       });
     }
 
-    // Relationship filter
+    // Relationship filter with proper string handling
     if (relationshipFilter !== "all") {
       filtered = filtered.filter((member) => {
+        const spouseName = safeString(member.spouseName).trim();
+        const fatherName = safeString(member.fatherName).trim();
+        const motherName = safeString(member.motherName).trim();
+
         switch (relationshipFilter) {
           case "has-spouse":
-            return member.spouseName && member.spouseName.trim() !== "";
+            return spouseName !== "";
           case "no-spouse":
-            return !member.spouseName || member.spouseName.trim() === "";
+            return spouseName === "";
           case "has-parents":
-            return (
-              (member.fatherName && member.fatherName.trim() !== "") ||
-              (member.motherName && member.motherName.trim() !== "")
-            );
+            return fatherName !== "" || motherName !== "";
           case "no-parents":
-            return (
-              (!member.fatherName || member.fatherName.trim() === "") &&
-              (!member.motherName || member.motherName.trim() === "")
-            );
+            return fatherName === "" && motherName === "";
           default:
             return true;
         }
       });
     }
 
-    // Sort the filtered results
+    // Sort the filtered results with better fallback handling
     filtered.sort((a, b) => {
       switch (sortBy) {
         case "name":
-          return (a.name || "").localeCompare(b.name || "");
+          return safeString(a.name).localeCompare(safeString(b.name));
         case "birth-date":
-          if (!a.birthDate && !b.birthDate) return 0;
-          if (!a.birthDate) return 1;
-          if (!b.birthDate) return -1;
-          return (
-            new Date(a.birthDate).getTime() - new Date(b.birthDate).getTime()
-          );
+          const aDate = a.birthDate ? new Date(a.birthDate) : null;
+          const bDate = b.birthDate ? new Date(b.birthDate) : null;
+
+          if (!aDate && !bDate) return 0;
+          if (!aDate) return 1;
+          if (!bDate) return -1;
+
+          if (isNaN(aDate.getTime()) && isNaN(bDate.getTime())) return 0;
+          if (isNaN(aDate.getTime())) return 1;
+          if (isNaN(bDate.getTime())) return -1;
+
+          return aDate.getTime() - bDate.getTime();
         case "gender":
-          return (a.gender || "").localeCompare(b.gender || "");
+          return safeString(a.gender).localeCompare(safeString(b.gender));
         case "order-birth":
-          const orderA = a.orderOfBirth || 999;
-          const orderB = b.orderOfBirth || 999;
+          const orderA = a.orderOfBirth ?? Number.MAX_SAFE_INTEGER;
+          const orderB = b.orderOfBirth ?? Number.MAX_SAFE_INTEGER;
           return orderA - orderB;
         default:
-          return (a.name || "").localeCompare(b.name || "");
+          return safeString(a.name).localeCompare(safeString(b.name));
       }
     });
 
     return filtered;
   }, [
     familyMembers,
-    searchQuery,
+    searchQuery, // Using debounced searchQuery instead of searchInput
     genderFilter,
     birthYearFilter,
     relationshipFilter,
@@ -197,6 +309,7 @@ const FamilyMembersPage = () => {
 
   // Clear all filters
   const clearAllFilters = () => {
+    setSearchInput("");
     setSearchQuery("");
     setGenderFilter("all");
     setBirthYearFilter("all");
@@ -206,7 +319,7 @@ const FamilyMembersPage = () => {
 
   // Check if any filters are active
   const hasActiveFilters =
-    searchQuery ||
+    searchQuery.trim() ||
     genderFilter !== "all" ||
     birthYearFilter !== "all" ||
     relationshipFilter !== "all" ||
@@ -214,72 +327,115 @@ const FamilyMembersPage = () => {
 
   // Count active filters
   const activeFiltersCount = [
-    searchQuery,
+    searchQuery.trim(),
     genderFilter !== "all" ? genderFilter : null,
     birthYearFilter !== "all" ? birthYearFilter : null,
     relationshipFilter !== "all" ? relationshipFilter : null,
     sortBy !== "name" ? sortBy : null,
   ].filter(Boolean).length;
 
-  // Calculate filtered statistics
-  const filteredStats = {
-    total: filteredFamilyMembers.length,
-    male: filteredFamilyMembers.filter((m) => m.gender === "Male").length,
-    female: filteredFamilyMembers.filter((m) => m.gender === "Female").length,
-    withSpouse: filteredFamilyMembers.filter(
-      (m) => m.spouseName && m.spouseName.trim() !== ""
-    ).length,
-    averageAge:
-      filteredFamilyMembers.length > 0
-        ? Math.round(
-            filteredFamilyMembers
-              .filter((m) => m.birthDate)
-              .reduce((sum, m) => {
-                const age =
-                  new Date().getFullYear() -
-                  new Date(m.birthDate).getFullYear();
-                return sum + age;
-              }, 0) / filteredFamilyMembers.filter((m) => m.birthDate).length
-          )
-        : 0,
-  };
+  // Calculate filtered statistics with proper safety checks
+  const filteredStats = useMemo(() => {
+    const total = filteredFamilyMembers.length;
+    const male = filteredFamilyMembers.filter(
+      (m) => m.gender === "Male"
+    ).length;
+    const female = filteredFamilyMembers.filter(
+      (m) => m.gender === "Female"
+    ).length;
+    const withSpouse = filteredFamilyMembers.filter(
+      (m) => safeString(m.spouseName).trim() !== ""
+    ).length;
 
+    // Calculate average age with proper validation
+    const membersWithValidBirthDate = filteredFamilyMembers
+      .map((m) => ({ member: m, age: calculateAge(m.birthDate) }))
+      .filter(({ age }) => age !== null);
+
+    const averageAge =
+      membersWithValidBirthDate.length > 0
+        ? Math.round(
+            membersWithValidBirthDate.reduce(
+              (sum, { age }) => sum + (age || 0),
+              0
+            ) / membersWithValidBirthDate.length
+          )
+        : 0;
+
+    return {
+      total,
+      male,
+      female,
+      withSpouse,
+      averageAge,
+      malePercentage: total > 0 ? Math.round((male / total) * 100) : 0,
+      femalePercentage: total > 0 ? Math.round((female / total) * 100) : 0,
+    };
+  }, [filteredFamilyMembers]);
+
+  // Improved error handling for add operation
   const handleAddFamilyMember = async (
     memberData: Omit<FamilyMember, "id">
   ) => {
+    setOperationLoading((prev) => ({ ...prev, adding: true }));
     try {
       await addFamilyMember(memberData);
       toast.success("Family member added successfully!");
       setIsAddModalOpen(false);
     } catch (error) {
-      toast.error("Failed to add family member");
+      console.error("Failed to add family member:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "An unexpected error occurred while adding the family member";
+      toast.error(errorMessage);
+    } finally {
+      setOperationLoading((prev) => ({ ...prev, adding: false }));
     }
   };
 
+  // Improved error handling for edit operation
   const handleEditFamilyMember = async (
     memberData: Omit<FamilyMember, "id">
   ) => {
     if (!editingMember) return;
 
+    setOperationLoading((prev) => ({ ...prev, editing: true }));
     try {
       await updateFamilyMember(editingMember.id, memberData);
       toast.success("Family member updated successfully!");
       setIsEditModalOpen(false);
       setEditingMember(null);
     } catch (error) {
-      toast.error("Failed to update family member");
+      console.error("Failed to update family member:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "An unexpected error occurred while updating the family member";
+      toast.error(errorMessage);
+    } finally {
+      setOperationLoading((prev) => ({ ...prev, editing: false }));
     }
   };
 
+  // Improved error handling for delete operation
   const handleDeleteFamilyMember = async () => {
     if (!deletingMember) return;
 
+    setOperationLoading((prev) => ({ ...prev, deleting: true }));
     try {
       await removeFamilyMember(deletingMember.id);
       toast.success("Family member removed successfully!");
       setDeletingMember(null);
     } catch (error) {
-      toast.error("Failed to remove family member");
+      console.error("Failed to remove family member:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "An unexpected error occurred while removing the family member";
+      toast.error(errorMessage);
+    } finally {
+      setOperationLoading((prev) => ({ ...prev, deleting: false }));
     }
   };
 
@@ -295,6 +451,28 @@ const FamilyMembersPage = () => {
   const handleMemberClick = (member: FamilyMember) => {
     // Handle member click - could navigate to detail page
     console.log("Member clicked:", member);
+  };
+
+  // Improved filter clearing with proper accessibility
+  const clearFilter = (filterType: string) => {
+    switch (filterType) {
+      case "search":
+        setSearchInput("");
+        setSearchQuery("");
+        break;
+      case "gender":
+        setGenderFilter("all");
+        break;
+      case "birthYear":
+        setBirthYearFilter("all");
+        break;
+      case "relationship":
+        setRelationshipFilter("all");
+        break;
+      case "sortBy":
+        setSortBy("name");
+        break;
+    }
   };
 
   return (
@@ -331,9 +509,13 @@ const FamilyMembersPage = () => {
           <Button
             className="bg-foreground text-background rounded-full hover:bg-foreground/80"
             onClick={() => setIsAddModalOpen(true)}
-            disabled={isLoading}
+            disabled={operationLoading.adding}
           >
-            <Plus className="size-4 mr-2" />
+            {operationLoading.adding ? (
+              <LoadingIcon className="size-4 mr-2" />
+            ) : (
+              <Plus className="size-4 mr-2" />
+            )}
             Add Family Member
           </Button>
         </div>
@@ -346,9 +528,14 @@ const FamilyMembersPage = () => {
           <div className="relative w-full flex-1">
             <Input
               placeholder="Search by name, description, or family relations..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={searchInput}
+              onChange={(e) => {
+                // Limit input length for security
+                const value = e.target.value.slice(0, 100);
+                setSearchInput(value);
+              }}
               className="pl-10"
+              maxLength={100}
             />
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           </div>
@@ -488,55 +675,80 @@ const FamilyMembersPage = () => {
           </div>
         </div>
 
-        {/* Active Filters Display */}
+        {/* Active Filters Display with improved accessibility */}
         {hasActiveFilters && (
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm text-muted-foreground">
               Active filters:
             </span>
-            {searchQuery && (
+            {searchQuery.trim() && (
               <Badge variant="secondary" className="flex items-center gap-1">
                 Search: &quot;{searchQuery}&quot;
-                <X
-                  className="h-3 w-3 cursor-pointer"
-                  onClick={() => setSearchQuery("")}
-                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto w-auto p-0 hover:bg-transparent"
+                  onClick={() => clearFilter("search")}
+                  aria-label="Clear search filter"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
               </Badge>
             )}
             {genderFilter !== "all" && (
               <Badge variant="secondary" className="flex items-center gap-1">
                 Gender: {genderFilter}
-                <X
-                  className="h-3 w-3 cursor-pointer"
-                  onClick={() => setGenderFilter("all")}
-                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto w-auto p-0 hover:bg-transparent"
+                  onClick={() => clearFilter("gender")}
+                  aria-label="Clear gender filter"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
               </Badge>
             )}
             {birthYearFilter !== "all" && (
               <Badge variant="secondary" className="flex items-center gap-1">
                 Age: {birthYearFilter}
-                <X
-                  className="h-3 w-3 cursor-pointer"
-                  onClick={() => setBirthYearFilter("all")}
-                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto w-auto p-0 hover:bg-transparent"
+                  onClick={() => clearFilter("birthYear")}
+                  aria-label="Clear age filter"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
               </Badge>
             )}
             {relationshipFilter !== "all" && (
               <Badge variant="secondary" className="flex items-center gap-1">
                 Relationship: {relationshipFilter.replace("-", " ")}
-                <X
-                  className="h-3 w-3 cursor-pointer"
-                  onClick={() => setRelationshipFilter("all")}
-                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto w-auto p-0 hover:bg-transparent"
+                  onClick={() => clearFilter("relationship")}
+                  aria-label="Clear relationship filter"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
               </Badge>
             )}
             {sortBy !== "name" && (
               <Badge variant="secondary" className="flex items-center gap-1">
                 Sort: {sortBy.replace("-", " ")}
-                <X
-                  className="h-3 w-3 cursor-pointer"
-                  onClick={() => setSortBy("name")}
-                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto w-auto p-0 hover:bg-transparent"
+                  onClick={() => clearFilter("sortBy")}
+                  aria-label="Clear sort filter"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
               </Badge>
             )}
           </div>
@@ -570,10 +782,7 @@ const FamilyMembersPage = () => {
           <CardContent>
             <div className="text-2xl font-bold">{filteredStats.male}</div>
             <p className="text-xs text-muted-foreground">
-              {filteredStats.total > 0
-                ? Math.round((filteredStats.male / filteredStats.total) * 100)
-                : 0}
-              % of filtered members
+              {filteredStats.malePercentage}% of filtered members
             </p>
           </CardContent>
         </Card>
@@ -588,10 +797,7 @@ const FamilyMembersPage = () => {
           <CardContent>
             <div className="text-2xl font-bold">{filteredStats.female}</div>
             <p className="text-xs text-muted-foreground">
-              {filteredStats.total > 0
-                ? Math.round((filteredStats.female / filteredStats.total) * 100)
-                : 0}
-              % of filtered members
+              {filteredStats.femalePercentage}% of filtered members
             </p>
           </CardContent>
         </Card>
@@ -643,7 +849,7 @@ const FamilyMembersPage = () => {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onConfirm={handleAddFamilyMember}
-        isLoading={isLoading}
+        isLoading={operationLoading.adding}
         mode="add"
       />
 
@@ -655,7 +861,7 @@ const FamilyMembersPage = () => {
           setEditingMember(null);
         }}
         onConfirm={handleEditFamilyMember}
-        isLoading={isLoading}
+        isLoading={operationLoading.editing}
         editData={editingMember}
         mode="edit"
       />
@@ -670,17 +876,22 @@ const FamilyMembersPage = () => {
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete{" "}
-              <strong>{deletingMember?.name}</strong> from your family tree.
+              <strong>{safeString(deletingMember?.name)}</strong> from your
+              family tree.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={operationLoading.deleting}>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteFamilyMember}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={isLoading}
+              disabled={operationLoading.deleting}
             >
-              {isLoading && <LoadingIcon className="mr-2 h-4 w-4" />}
+              {operationLoading.deleting && (
+                <LoadingIcon className="mr-2 h-4 w-4" />
+              )}
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

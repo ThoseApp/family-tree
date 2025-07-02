@@ -53,24 +53,16 @@ const ForgotPasswordDetails = () => {
       const result = await passwordReset(values.email);
 
       if (result.success) {
-        toast.success(
-          "If an account exists with this email, a reset link has been sent."
-        );
         form.reset();
         // Optional: redirect to a confirmation page
         // router.push("/forgot-password/confirmation");
       } else {
         // We don't want to reveal if an email exists or not for security
         // So we still show a success message even if there was an error
-        toast.success(
-          "If an account exists with this email, a reset link has been sent."
-        );
       }
     } catch (error: any) {
       // For security reasons, we still show a success message
-      toast.success(
-        "If an account exists with this email, a reset link has been sent."
-      );
+
       console.error("Forgot password error:", error);
     } finally {
       setLoading(false);
