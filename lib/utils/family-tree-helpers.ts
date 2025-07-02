@@ -2,6 +2,13 @@ import { ProcessedMember, FamilyMember } from "@/lib/types";
 import { supabase } from "@/lib/supabase/client";
 
 /**
+ * Utility function to safely truncate strings to database field limits
+ */
+function truncateField(value: string, maxLength: number = 50): string {
+  return value ? value.trim().slice(0, maxLength) : "";
+}
+
+/**
  * Convert ProcessedMember (database format) to FamilyMember (UI format)
  */
 export function processedMemberToFamilyMember(
@@ -37,27 +44,27 @@ export function processedMemberToFamilyMember(
 export function familyMemberToProcessedMember(
   familyMember: Omit<FamilyMember, "id">
 ): Omit<ProcessedMember, "id"> {
-  // Parse names
+  // Parse names with length validation
   const nameParts = familyMember.name.split(" ");
-  const firstName = nameParts[0] || "";
-  const lastName = nameParts.slice(1).join(" ") || "";
+  const firstName = truncateField(nameParts[0] || "");
+  const lastName = truncateField(nameParts.slice(1).join(" ") || "");
 
   const fatherParts = familyMember.fatherName?.split(" ") || [];
-  const fatherFirstName = fatherParts[0] || "";
-  const fatherLastName = fatherParts.slice(1).join(" ") || "";
+  const fatherFirstName = truncateField(fatherParts[0] || "");
+  const fatherLastName = truncateField(fatherParts.slice(1).join(" ") || "");
 
   const motherParts = familyMember.motherName?.split(" ") || [];
-  const motherFirstName = motherParts[0] || "";
-  const motherLastName = motherParts.slice(1).join(" ") || "";
+  const motherFirstName = truncateField(motherParts[0] || "");
+  const motherLastName = truncateField(motherParts.slice(1).join(" ") || "");
 
   const spouseParts = familyMember.spouseName?.split(" ") || [];
-  const spouseFirstName = spouseParts[0] || "";
-  const spouseLastName = spouseParts.slice(1).join(" ") || "";
+  const spouseFirstName = truncateField(spouseParts[0] || "");
+  const spouseLastName = truncateField(spouseParts.slice(1).join(" ") || "");
 
   return {
     unique_id: `FM_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // Generate unique ID
     picture_link: familyMember.imageSrc,
-    gender: familyMember.gender || "",
+    gender: truncateField(familyMember.gender || ""),
     first_name: firstName,
     last_name: lastName,
     fathers_first_name: fatherFirstName,
@@ -66,10 +73,13 @@ export function familyMemberToProcessedMember(
     mothers_last_name: motherLastName,
     order_of_birth: familyMember.orderOfBirth || null,
     order_of_marriage: familyMember.orderOfMarriage || null,
-    marital_status: familyMember.description || "",
+    marital_status: truncateField(familyMember.description || "", 100), // Assuming longer field for description
     spouses_first_name: spouseFirstName,
     spouses_last_name: spouseLastName,
-    date_of_birth: familyMember.birthDate || null,
+    date_of_birth:
+      familyMember.birthDate && familyMember.birthDate.trim() !== ""
+        ? familyMember.birthDate
+        : null,
   };
 }
 
@@ -122,16 +132,18 @@ export async function updateFamilyMember(
 
   if (updates.name) {
     const nameParts = updates.name.split(" ");
-    processedUpdates.first_name = nameParts[0] || "";
-    processedUpdates.last_name = nameParts.slice(1).join(" ") || "";
+    processedUpdates.first_name = truncateField(nameParts[0] || "");
+    processedUpdates.last_name = truncateField(
+      nameParts.slice(1).join(" ") || ""
+    );
   }
 
   if (updates.gender !== undefined) {
-    processedUpdates.gender = updates.gender;
+    processedUpdates.gender = truncateField(updates.gender);
   }
 
   if (updates.description !== undefined) {
-    processedUpdates.marital_status = updates.description;
+    processedUpdates.marital_status = truncateField(updates.description, 100); // Assuming longer field for description
   }
 
   if (updates.imageSrc !== undefined) {
@@ -139,25 +151,33 @@ export async function updateFamilyMember(
   }
 
   if (updates.birthDate !== undefined) {
-    processedUpdates.date_of_birth = updates.birthDate;
+    // Convert empty string to null for database compatibility
+    processedUpdates.date_of_birth =
+      updates.birthDate.trim() === "" ? null : updates.birthDate;
   }
 
   if (updates.fatherName !== undefined) {
     const fatherParts = updates.fatherName?.split(" ") || [];
-    processedUpdates.fathers_first_name = fatherParts[0] || "";
-    processedUpdates.fathers_last_name = fatherParts.slice(1).join(" ") || "";
+    processedUpdates.fathers_first_name = truncateField(fatherParts[0] || "");
+    processedUpdates.fathers_last_name = truncateField(
+      fatherParts.slice(1).join(" ") || ""
+    );
   }
 
   if (updates.motherName !== undefined) {
     const motherParts = updates.motherName?.split(" ") || [];
-    processedUpdates.mothers_first_name = motherParts[0] || "";
-    processedUpdates.mothers_last_name = motherParts.slice(1).join(" ") || "";
+    processedUpdates.mothers_first_name = truncateField(motherParts[0] || "");
+    processedUpdates.mothers_last_name = truncateField(
+      motherParts.slice(1).join(" ") || ""
+    );
   }
 
   if (updates.spouseName !== undefined) {
     const spouseParts = updates.spouseName?.split(" ") || [];
-    processedUpdates.spouses_first_name = spouseParts[0] || "";
-    processedUpdates.spouses_last_name = spouseParts.slice(1).join(" ") || "";
+    processedUpdates.spouses_first_name = truncateField(spouseParts[0] || "");
+    processedUpdates.spouses_last_name = truncateField(
+      spouseParts.slice(1).join(" ") || ""
+    );
   }
 
   if (updates.orderOfBirth !== undefined) {
