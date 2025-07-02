@@ -32,6 +32,9 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { FamilyMember } from "@/lib/types";
 import Image from "next/image";
+import { toast } from "sonner";
+import { uploadImage } from "@/lib/file-upload";
+import { BucketFolderEnum } from "@/lib/constants/enums";
 
 interface FamilyMemberModalProps {
   isOpen: boolean;
@@ -42,6 +45,30 @@ interface FamilyMemberModalProps {
   mode: "add" | "edit";
 }
 
+// Utility function to safely parse date
+const parseDate = (dateString?: string): Date | undefined => {
+  if (!dateString || typeof dateString !== "string") return undefined;
+
+  try {
+    const date = new Date(dateString);
+    return isNaN(date.getTime()) ? undefined : date;
+  } catch (error) {
+    console.warn("Invalid date string:", dateString);
+    return undefined;
+  }
+};
+
+// Utility function to check if image is a default/placeholder
+const isDefaultImage = (imageSrc?: string): boolean => {
+  if (!imageSrc) return true;
+  return (
+    imageSrc === "" ||
+    imageSrc === "/images/default-profile.png" ||
+    imageSrc.includes("placeholder") ||
+    imageSrc.includes("default")
+  );
+};
+
 export const FamilyMemberModal = ({
   isOpen,
   onClose,
@@ -50,25 +77,47 @@ export const FamilyMemberModal = ({
   editData,
   mode,
 }: FamilyMemberModalProps) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Omit<FamilyMember, "id">>({
     name: "",
-    gender: "",
-    description: "",
-    imageSrc: "",
-    birthDate: "",
     fatherName: "",
     motherName: "",
-    orderOfBirth: 1,
     spouseName: "",
+    birthDate: "",
+    description: "",
+    imageSrc: "",
+    gender: "",
+    orderOfBirth: 1,
     orderOfMarriage: 1,
   });
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>("");
+  const [imagePreview, setImagePreview] = useState("");
+  const [imageUploading, setImageUploading] = useState(false);
+
+  // Reset form function
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      gender: "",
+      description: "",
+      imageSrc: "",
+      birthDate: "",
+      fatherName: "",
+      motherName: "",
+      orderOfBirth: 1,
+      spouseName: "",
+      orderOfMarriage: 1,
+    });
+    setSelectedDate(undefined);
+    setSelectedImage(null);
+    setImagePreview("");
+  };
 
   // Initialize form data when modal opens or editData changes
   useEffect(() => {
     if (editData && mode === "edit") {
+      const parsedDate = parseDate(editData.birthDate);
+
       setFormData({
         name: editData.name || "",
         gender: editData.gender || "",
@@ -81,31 +130,17 @@ export const FamilyMemberModal = ({
         spouseName: editData.spouseName || "",
         orderOfMarriage: editData.orderOfMarriage || 1,
       });
+
+      // Set image preview only if it's not a default image
       setImagePreview(
-        editData.imageSrc && editData.imageSrc !== "/images/default-profile.png"
-          ? editData.imageSrc
-          : ""
+        !isDefaultImage(editData.imageSrc) ? editData.imageSrc || "" : ""
       );
-      if (editData.birthDate) {
-        setSelectedDate(new Date(editData.birthDate));
-      }
+
+      // Set date only if it's valid
+      setSelectedDate(parsedDate);
     } else {
       // Reset form for add mode
-      setFormData({
-        name: "",
-        gender: "",
-        description: "",
-        imageSrc: "",
-        birthDate: "",
-        fatherName: "",
-        motherName: "",
-        orderOfBirth: 1,
-        spouseName: "",
-        orderOfMarriage: 1,
-      });
-      setSelectedDate(undefined);
-      setSelectedImage(null);
-      setImagePreview("");
+      resetForm();
     }
   }, [editData, mode, isOpen]);
 
@@ -131,28 +166,60 @@ export const FamilyMemberModal = ({
 
   const handleDateChange = (date: Date | undefined) => {
     setSelectedDate(date);
-    if (date) {
-      setFormData((prev) => ({
-        ...prev,
-        birthDate: format(date, "yyyy-MM-dd"),
-      }));
-    }
+    setFormData((prev) => ({
+      ...prev,
+      birthDate: date ? format(date, "yyyy-MM-dd") : "",
+    }));
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Clear date function
+  const clearDate = () => {
+    setSelectedDate(undefined);
+    setFormData((prev) => ({
+      ...prev,
+      birthDate: "",
+    }));
+  };
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validate file size (limit to 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image size must be less than 5MB");
+        return;
+      }
+
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please select a valid image file");
+        return;
+      }
+
       setSelectedImage(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setImagePreview(result);
-        setFormData((prev) => ({
-          ...prev,
-          imageSrc: result,
-        }));
-      };
-      reader.readAsDataURL(file);
+      setImageUploading(true);
+
+      try {
+        const result = await uploadImage(file, BucketFolderEnum.users);
+        if (result) {
+          setImagePreview(result);
+          setFormData((prev) => ({
+            ...prev,
+            imageSrc: result,
+          }));
+          toast.success("Image uploaded successfully!");
+        } else {
+          throw new Error("Upload failed");
+        }
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        toast.error("Failed to upload image");
+        // Reset the file input and selected image on error
+        setSelectedImage(null);
+        e.target.value = "";
+      } finally {
+        setImageUploading(false);
+      }
     }
   };
 
@@ -166,18 +233,53 @@ export const FamilyMemberModal = ({
   };
 
   const handleConfirm = async () => {
-    if (!formData.name.trim()) return;
+    // Validate required fields
+    if (!formData.name.trim()) {
+      toast.error("Name is required");
+      return;
+    }
+
+    // Validate order values with proper fallbacks
+    const orderOfBirth = formData.orderOfBirth ?? 1;
+    const orderOfMarriage = formData.orderOfMarriage ?? 1;
+
+    if (orderOfBirth < 1) {
+      toast.error("Order of birth must be at least 1");
+      return;
+    }
+
+    if (orderOfMarriage < 1) {
+      toast.error("Order of marriage must be at least 1");
+      return;
+    }
 
     try {
-      await onConfirm(formData);
-      onClose();
+      // Clean up form data before sending with proper null handling
+      const cleanedData = {
+        ...formData,
+        name: formData.name.trim(),
+        fatherName: (formData.fatherName || "").trim() || undefined,
+        motherName: (formData.motherName || "").trim() || undefined,
+        spouseName: (formData.spouseName || "").trim() || undefined,
+        description: (formData.description || "").trim() || "",
+        gender: formData.gender || undefined,
+        orderOfBirth,
+        orderOfMarriage,
+        // Ensure imageSrc is either a valid string or empty string
+        imageSrc: formData.imageSrc || "",
+      };
+
+      await onConfirm(cleanedData);
+      // Don't close here - let the parent handle it after successful update
     } catch (error) {
       // Error handling is done in the parent component
+      console.error("Error in modal confirm:", error);
     }
   };
 
   const handleClose = () => {
     if (!isLoading) {
+      resetForm(); // Reset form when closing
       onClose();
     }
   };
@@ -218,13 +320,18 @@ export const FamilyMemberModal = ({
                     size="sm"
                     className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
                     onClick={removeImage}
+                    disabled={imageUploading}
                   >
                     <X className="h-3 w-3" />
                   </Button>
                 </div>
               ) : (
                 <div className="w-20 h-20 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center">
-                  <Upload className="h-8 w-8 text-gray-400" />
+                  {imageUploading ? (
+                    <LoadingIcon className="h-6 w-6 text-gray-400" />
+                  ) : (
+                    <Upload className="h-8 w-8 text-gray-400" />
+                  )}
                 </div>
               )}
               <div>
@@ -232,16 +339,30 @@ export const FamilyMemberModal = ({
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
-                  disabled={isLoading}
+                  disabled={isLoading || imageUploading}
                   className="hidden"
                   id="image-upload"
                 />
                 <Label
                   htmlFor="image-upload"
-                  className="cursor-pointer inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
+                  className={cn(
+                    "cursor-pointer inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2",
+                    (isLoading || imageUploading) &&
+                      "pointer-events-none opacity-50"
+                  )}
                 >
-                  Choose Image
+                  {imageUploading ? (
+                    <>
+                      <LoadingIcon className="h-4 w-4 mr-2" />
+                      Uploading...
+                    </>
+                  ) : (
+                    "Choose Image"
+                  )}
                 </Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Max file size: 5MB. Supported formats: JPEG, PNG, WebP
+                </p>
               </div>
             </div>
           </div>
@@ -257,7 +378,15 @@ export const FamilyMemberModal = ({
                 value={formData.name}
                 onChange={handleInputChange}
                 disabled={isLoading}
+                required
+                maxLength={100}
               />
+              {formData.name.length > 90 && (
+                <p className="text-xs text-orange-600">
+                  Name is getting long. Names will be truncated to fit database
+                  limits.
+                </p>
+              )}
             </div>
 
             <div className="grid gap-2">
@@ -281,7 +410,21 @@ export const FamilyMemberModal = ({
 
           {/* Birth Date */}
           <div className="grid gap-2">
-            <Label>Birth Date</Label>
+            <div className="flex items-center justify-between">
+              <Label>Birth Date</Label>
+              {selectedDate && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearDate}
+                  disabled={isLoading}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  Clear Date
+                </Button>
+              )}
+            </div>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -302,6 +445,9 @@ export const FamilyMemberModal = ({
                   selected={selectedDate}
                   onSelect={handleDateChange}
                   initialFocus
+                  disabled={(date) =>
+                    date > new Date() || date < new Date("1900-01-01")
+                  }
                 />
               </PopoverContent>
             </Popover>
@@ -318,7 +464,13 @@ export const FamilyMemberModal = ({
                 value={formData.fatherName}
                 onChange={handleInputChange}
                 disabled={isLoading}
+                maxLength={100}
               />
+              {(formData.fatherName?.length || 0) > 90 && (
+                <p className="text-xs text-orange-600">
+                  Name is getting long and may be truncated.
+                </p>
+              )}
             </div>
 
             <div className="grid gap-2">
@@ -330,7 +482,13 @@ export const FamilyMemberModal = ({
                 value={formData.motherName}
                 onChange={handleInputChange}
                 disabled={isLoading}
+                maxLength={100}
               />
+              {(formData.motherName?.length || 0) > 90 && (
+                <p className="text-xs text-orange-600">
+                  Name is getting long and may be truncated.
+                </p>
+              )}
             </div>
           </div>
 
@@ -343,6 +501,7 @@ export const FamilyMemberModal = ({
                 name="orderOfBirth"
                 type="number"
                 min="1"
+                max="50"
                 placeholder="1"
                 value={formData.orderOfBirth}
                 onChange={handleInputChange}
@@ -359,7 +518,13 @@ export const FamilyMemberModal = ({
                 value={formData.spouseName}
                 onChange={handleInputChange}
                 disabled={isLoading}
+                maxLength={100}
               />
+              {(formData.spouseName?.length || 0) > 90 && (
+                <p className="text-xs text-orange-600">
+                  Name is getting long and may be truncated.
+                </p>
+              )}
             </div>
 
             <div className="grid gap-2">
@@ -369,6 +534,7 @@ export const FamilyMemberModal = ({
                 name="orderOfMarriage"
                 type="number"
                 min="1"
+                max="10"
                 placeholder="1"
                 value={formData.orderOfMarriage}
                 onChange={handleInputChange}
@@ -388,7 +554,11 @@ export const FamilyMemberModal = ({
               onChange={handleInputChange}
               disabled={isLoading}
               rows={3}
+              maxLength={500}
             />
+            <div className="text-xs text-muted-foreground text-right">
+              {formData.description.length}/500 characters
+            </div>
           </div>
         </div>
 
@@ -397,18 +567,22 @@ export const FamilyMemberModal = ({
             type="button"
             variant="outline"
             onClick={handleClose}
-            disabled={isLoading}
+            disabled={isLoading || imageUploading}
             className="rounded-full"
           >
             Cancel
           </Button>
           <Button
             onClick={handleConfirm}
-            disabled={isLoading || !formData.name.trim()}
+            disabled={isLoading || imageUploading || !formData.name.trim()}
             className="bg-foreground text-background rounded-full hover:bg-foreground/80"
           >
-            {isLoading && <LoadingIcon className="mr-2" />}
-            {mode === "add" ? "Add Family Member" : "Update Family Member"}
+            {(isLoading || imageUploading) && <LoadingIcon className="mr-2" />}
+            {imageUploading
+              ? "Uploading Image..."
+              : mode === "add"
+              ? "Add Family Member"
+              : "Update Family Member"}
           </Button>
         </DialogFooter>
       </DialogContent>
