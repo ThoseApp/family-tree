@@ -18,7 +18,10 @@ import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
-import { GalleryStatusEnum } from "@/lib/constants/enums";
+import {
+  GalleryStatusEnum,
+  NoticeBoardStatusEnum,
+} from "@/lib/constants/enums";
 import { useEventsStore } from "@/stores/events-store";
 import { useMemberRequestsStore } from "@/stores/member-requests-store";
 import { toast } from "sonner";
@@ -30,6 +33,7 @@ const DashboardPage = () => {
 
   // State for dashboard data
   const [galleryRequests, setGalleryRequests] = useState(0);
+  const [noticeBoardRequests, setNoticeBoardRequests] = useState(0);
   const [pendingMembers, setPendingMembers] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [featuredEvent, setFeaturedEvent] = useState<any>(null);
@@ -41,7 +45,7 @@ const DashboardPage = () => {
       setIsLoading(true);
       try {
         // Fetch pending gallery requests count
-        const { count, error: galleryError } = await supabase
+        const { count: galleryCount, error: galleryError } = await supabase
           .from("galleries")
           .select("*", { count: "exact", head: true })
           .eq("status", GalleryStatusEnum.pending);
@@ -49,7 +53,23 @@ const DashboardPage = () => {
         if (galleryError) {
           console.error("Error fetching gallery requests:", galleryError);
         } else {
-          setGalleryRequests(count || 0);
+          setGalleryRequests(galleryCount || 0);
+        }
+
+        // Fetch pending notice board requests count
+        const { count: noticeBoardCount, error: noticeBoardError } =
+          await supabase
+            .from("notice_boards")
+            .select("*", { count: "exact", head: true })
+            .eq("status", NoticeBoardStatusEnum.pending);
+
+        if (noticeBoardError) {
+          console.error(
+            "Error fetching notice board requests:",
+            noticeBoardError
+          );
+        } else {
+          setNoticeBoardRequests(noticeBoardCount || 0);
         }
 
         // Fetch pending member requests count using store
@@ -75,6 +95,10 @@ const DashboardPage = () => {
   // Navigation handlers
   const handleViewGalleryRequests = () => {
     router.push("/admin/gallery-requests");
+  };
+
+  const handleViewNoticeBoardRequests = () => {
+    router.push("/admin/notice-board-requests");
   };
 
   const handleAcceptGalleryRequests = async () => {
@@ -125,6 +149,57 @@ const DashboardPage = () => {
     } catch (error) {
       console.error("Error approving gallery requests:", error);
       toast.error("Failed to approve gallery requests");
+    }
+  };
+
+  const handleAcceptNoticeBoardRequests = async () => {
+    try {
+      // Get pending notice boards and approve them in bulk
+      const { data: pendingNoticeBoards, error } = await supabase
+        .from("notice_boards")
+        .select("*")
+        .eq("status", NoticeBoardStatusEnum.pending)
+        .limit(5); // Approve up to 5 at a time
+
+      if (error) {
+        throw error;
+      }
+
+      if (pendingNoticeBoards && pendingNoticeBoards.length > 0) {
+        const { error: updateError } = await supabase
+          .from("notice_boards")
+          .update({
+            status: NoticeBoardStatusEnum.approved,
+            updated_at: new Date().toISOString(),
+          })
+          .in(
+            "id",
+            pendingNoticeBoards.map((nb) => nb.id)
+          );
+
+        if (updateError) {
+          throw updateError;
+        }
+
+        toast.success(
+          `Approved ${pendingNoticeBoards.length} notice board request${
+            pendingNoticeBoards.length === 1 ? "" : "s"
+          }`
+        );
+
+        // Refresh the count
+        const { count } = await supabase
+          .from("notice_boards")
+          .select("*", { count: "exact", head: true })
+          .eq("status", NoticeBoardStatusEnum.pending);
+
+        setNoticeBoardRequests(count || 0);
+      } else {
+        toast.info("No pending notice board requests to approve");
+      }
+    } catch (error) {
+      console.error("Error approving notice board requests:", error);
+      toast.error("Failed to approve notice board requests");
     }
   };
 
@@ -257,6 +332,46 @@ const DashboardPage = () => {
                 size="lg"
                 onClick={handleAcceptGalleryRequests}
                 disabled={isLoading || galleryRequests === 0}
+              >
+                Accept
+              </Button>
+            </div>
+          </CardFooter>
+        </Card>
+
+        {/* Notice Board Requests Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-medium text-muted-foreground">
+              Notice Board Requests
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex items-center justify-between">
+            <span className="text-6xl font-bold">
+              {isLoading ? (
+                <LoadingIcon className="size-16" />
+              ) : (
+                noticeBoardRequests
+              )}
+            </span>
+          </CardContent>
+
+          <CardFooter>
+            <div className="flex items-center gap-4 w-full justify-end">
+              <Button
+                variant="outline"
+                className="w-full rounded-full"
+                size="lg"
+                onClick={handleViewNoticeBoardRequests}
+                disabled={isLoading}
+              >
+                View All
+              </Button>
+              <Button
+                className="w-full rounded-full bg-foreground text-background hover:bg-foreground/80"
+                size="lg"
+                onClick={handleAcceptNoticeBoardRequests}
+                disabled={isLoading || noticeBoardRequests === 0}
               >
                 Accept
               </Button>

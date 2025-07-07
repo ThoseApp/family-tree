@@ -16,6 +16,8 @@ import { MoveRight } from "lucide-react";
 import { useLandingPageContent } from "@/hooks/use-landing-page-content";
 import { useGalleryStore } from "@/stores/gallery-store";
 import { useEffect } from "react";
+import { useNoticeBoardStore } from "@/stores/notice-board-store";
+import Footer from "@/components/landing/footer";
 
 export default function Home() {
   const { sections, loading, error } = useLandingPageContent();
@@ -24,6 +26,7 @@ export default function Home() {
     isLoading: galleryLoading,
     fetchGallery,
   } = useGalleryStore();
+  const { fetchApprovedNoticeBoards } = useNoticeBoardStore();
 
   const familyTreeSection = sections.family_tree;
   const gallerySection = sections.gallery_preview;
@@ -32,6 +35,11 @@ export default function Home() {
   useEffect(() => {
     fetchGallery();
   }, [fetchGallery]);
+
+  useEffect(() => {
+    // Fetch only approved notice boards for the landing page
+    fetchApprovedNoticeBoards();
+  }, [fetchApprovedNoticeBoards]);
 
   // Fallback content
   const defaultFamilyTree = {
@@ -154,6 +162,7 @@ export default function Home() {
           </div>
         </FrameWrapper>
       </div>
+      <Footer />
     </motion.div>
   );
 }

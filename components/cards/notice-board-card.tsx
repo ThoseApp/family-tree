@@ -9,6 +9,7 @@ import {
   CardFooter,
 } from "../ui/card";
 import { Badge } from "../ui/badge";
+import { StatusBadge } from "../ui/status-badge";
 import { Button } from "../ui/button";
 import {
   ImageIcon,
@@ -31,6 +32,8 @@ interface NoticeBoardCardProps {
   onDelete?: (id: string) => void;
   onTogglePin?: (id: string, pinned: boolean) => void;
   showActions?: boolean;
+  showStatus?: boolean;
+  canEdit?: boolean;
 }
 
 const NoticeBoardCard = ({
@@ -39,6 +42,8 @@ const NoticeBoardCard = ({
   onDelete,
   onTogglePin,
   showActions = false,
+  showStatus = false,
+  canEdit = false,
 }: NoticeBoardCardProps) => {
   const formattedDate =
     typeof noticeBoard.posteddate === "string"
@@ -68,10 +73,13 @@ const NoticeBoardCard = ({
                 Pinned
               </Badge>
             )}
+            {showStatus && noticeBoard.status && (
+              <StatusBadge status={noticeBoard.status} />
+            )}
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-            {showActions && (
+            {(showActions || canEdit) && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -79,16 +87,18 @@ const NoticeBoardCard = ({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  {onEdit && (
+                  {onEdit && canEdit && (
                     <DropdownMenuItem onClick={() => onEdit(noticeBoard)}>
                       <Edit className="mr-2 h-4 w-4" />
-                      Edit
+                      {noticeBoard.status === "rejected"
+                        ? "Edit & Resubmit"
+                        : "Edit"}
                     </DropdownMenuItem>
                   )}
-                  {onTogglePin && (
+                  {showActions && onTogglePin && (
                     <DropdownMenuItem
                       onClick={() =>
-                        onTogglePin(noticeBoard.id, noticeBoard.pinned)
+                        onTogglePin(noticeBoard.id, !noticeBoard.pinned)
                       }
                     >
                       {noticeBoard.pinned ? (
@@ -104,7 +114,7 @@ const NoticeBoardCard = ({
                       )}
                     </DropdownMenuItem>
                   )}
-                  {onDelete && (
+                  {showActions && onDelete && (
                     <DropdownMenuItem
                       onClick={() => onDelete(noticeBoard.id)}
                       className="text-destructive focus:text-destructive"
@@ -142,12 +152,22 @@ const NoticeBoardCard = ({
           Editorial Admin: {noticeBoard.editor}
         </p>
         <p className="text-sm text-gray-500">Posted {formattedDate}</p>
+        {showStatus && noticeBoard.status === "rejected" && (
+          <p className="text-sm text-orange-600 mt-2 font-medium">
+            This notice was declined. Click edit to make changes and resubmit.
+          </p>
+        )}
+        {showStatus && noticeBoard.status === "pending" && (
+          <p className="text-sm text-blue-600 mt-2 font-medium">
+            This notice is awaiting admin approval.
+          </p>
+        )}
       </CardContent>
       <CardFooter className="p-4 pt-0">
         <div className="flex flex-wrap gap-2">
           {noticeBoard.tags &&
             noticeBoard.tags.map((tag: string, index: number) => (
-              <Badge key={index} variant="tag">
+              <Badge key={index} variant="secondary">
                 {tag}
               </Badge>
             ))}

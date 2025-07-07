@@ -10,6 +10,8 @@ interface NoticeBoardTableProps {
   onEditClick: (noticeBoard: NoticeBoard) => void;
   onDeleteClick: (id: string) => void;
   onTogglePinClick: (id: string, pinned: boolean) => void;
+  showStatus?: boolean;
+  canEdit?: (noticeBoard: NoticeBoard) => boolean;
 }
 
 const NoticeBoardTable = ({
@@ -17,8 +19,16 @@ const NoticeBoardTable = ({
   onEditClick,
   onDeleteClick,
   onTogglePinClick,
+  showStatus = false,
+  canEdit,
 }: NoticeBoardTableProps) => {
-  const columns = createColumns(onEditClick, onDeleteClick, onTogglePinClick);
+  const columns = createColumns(
+    onEditClick,
+    onDeleteClick,
+    onTogglePinClick,
+    showStatus,
+    canEdit
+  );
 
   return (
     <DataTable
