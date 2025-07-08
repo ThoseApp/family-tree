@@ -5,6 +5,7 @@ import {
   CalendarIcon,
   ImageIcon,
   TreesIcon,
+  Clipboard,
 } from "lucide-react";
 
 import { FamilyMember, NavLink } from "@/lib/types";
@@ -41,6 +42,11 @@ export const navLinks: NavLink[] = [
     label: "Gallery",
     href: "/gallery",
     icon: ImageIcon,
+  },
+  {
+    label: "Notice Board",
+    href: "/notice-board",
+    icon: Clipboard,
   },
 ];
 

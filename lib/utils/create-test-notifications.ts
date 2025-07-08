@@ -25,7 +25,7 @@ export const createTestNotifications = async (
     {
       title: "Notice Board Update",
       body: "Important family announcement posted. Please check the notice board for updates.",
-      type: NotificationTypeEnum.notice_board as keyof typeof NotificationTypeEnum,
+      type: NotificationTypeEnum.notice_board_request as keyof typeof NotificationTypeEnum,
       resource_id: GALLERY_RESOURCE_ID,
       user_id: userId,
       read: false,
@@ -54,7 +54,7 @@ export const createTestNotifications = async (
       {
         title: "Family Member Request",
         body: "A new user has requested to join the family tree. Please review their request.",
-        type: NotificationTypeEnum.family_member_request as keyof typeof NotificationTypeEnum,
+        type: NotificationTypeEnum.member_request as keyof typeof NotificationTypeEnum,
         resource_id: GALLERY_RESOURCE_ID,
         user_id: userId,
         read: false,

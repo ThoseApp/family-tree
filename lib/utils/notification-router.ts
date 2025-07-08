@@ -1,9 +1,8 @@
 import { NotificationTypeEnum } from "@/lib/constants/enums";
 import { Notification } from "@/lib/types";
 
-interface RoutingOptions {
-  isAdmin?: boolean;
-  resourceId?: string;
+interface NotificationRoutingOptions {
+  isAdmin: boolean;
 }
 
 /**
@@ -11,61 +10,36 @@ interface RoutingOptions {
  */
 export function getNotificationRoute(
   notification: Notification,
-  options: RoutingOptions = {}
+  options: NotificationRoutingOptions
 ): string {
-  const { isAdmin = false, resourceId = notification.resource_id } = options;
-  const baseRoute = isAdmin ? "/admin" : "/dashboard";
+  const { isAdmin } = options;
 
   switch (notification.type) {
-    // Event-related notifications
-    case NotificationTypeEnum.event:
-      if (resourceId) {
-        return `${baseRoute}/events?eventId=${resourceId}`;
-      }
-      return `${baseRoute}/events`;
-
-    // Notice board notifications
-    case NotificationTypeEnum.notice_board:
-      if (resourceId) {
-        return `${baseRoute}/notice-board?noticeId=${resourceId}`;
-      }
-      return `${baseRoute}/notice-board`;
-
-    // Gallery-related notifications
-    case NotificationTypeEnum.gallery:
-      if (resourceId) {
-        return `${baseRoute}/gallery?galleryId=${resourceId}`;
-      }
-      return `${baseRoute}/gallery`;
+    case NotificationTypeEnum.member_request:
+      return isAdmin ? "/admin/member-requests" : "/dashboard";
 
     case NotificationTypeEnum.gallery_request:
-      // Admin notification - redirect to gallery requests
-      if (isAdmin) {
-        return "/admin/gallery-requests";
-      }
-      // User notification - redirect to their gallery
-      return "/dashboard/gallery";
+      return isAdmin ? "/admin/gallery-requests" : "/dashboard";
 
     case NotificationTypeEnum.gallery_approved:
     case NotificationTypeEnum.gallery_declined:
-      // User notifications - redirect to gallery with specific item if available
-      if (resourceId) {
-        return `/dashboard/gallery?galleryId=${resourceId}`;
-      }
-      return "/dashboard/gallery";
+      return isAdmin ? "/admin/gallery" : "/dashboard/gallery";
 
-    // Family member request notifications
-    case NotificationTypeEnum.family_member_request:
-      // Admin notification - redirect to member requests
-      if (isAdmin) {
-        return "/admin/member-requests";
-      }
-      // User notification - redirect to family tree
-      return "/dashboard/family-tree";
+    case NotificationTypeEnum.notice_board_request:
+      return isAdmin ? "/admin/notice-board-requests" : "/dashboard";
 
-    // Default fallback - go to overview
+    case NotificationTypeEnum.notice_board_approved:
+    case NotificationTypeEnum.notice_board_declined:
+      return isAdmin ? "/admin/notice-board" : "/dashboard/notice-board";
+
+    case NotificationTypeEnum.event_invitation:
+      return isAdmin ? "/admin/events" : "/dashboard/invitations";
+
+    case NotificationTypeEnum.event:
+      return isAdmin ? "/admin/events" : "/dashboard/events";
+
     default:
-      return baseRoute;
+      return isAdmin ? "/admin" : "/dashboard";
   }
 }
 
@@ -82,19 +56,23 @@ export function isNotificationNavigable(notification: Notification): boolean {
  */
 export function getNotificationActionText(notification: Notification): string {
   switch (notification.type) {
-    case NotificationTypeEnum.event:
-      return "View Event";
-    case NotificationTypeEnum.notice_board:
-      return "View Notice";
-    case NotificationTypeEnum.gallery:
+    case NotificationTypeEnum.member_request:
+      return "Review Request";
+    case NotificationTypeEnum.gallery_request:
+      return "Review Gallery";
     case NotificationTypeEnum.gallery_approved:
     case NotificationTypeEnum.gallery_declined:
       return "View Gallery";
-    case NotificationTypeEnum.gallery_request:
-      return "Review Request";
-    case NotificationTypeEnum.family_member_request:
-      return "View Request";
+    case NotificationTypeEnum.notice_board_request:
+      return "Review Notice";
+    case NotificationTypeEnum.notice_board_approved:
+    case NotificationTypeEnum.notice_board_declined:
+      return "View Notice";
+    case NotificationTypeEnum.event_invitation:
+      return "View Event";
+    case NotificationTypeEnum.event:
+      return "View Event";
     default:
-      return "View Details";
+      return "View";
   }
 }
