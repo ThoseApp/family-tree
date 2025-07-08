@@ -27,10 +27,15 @@ export const navLinksTopSection: NavLink[] = [
     icon: Grid2x2,
   },
   {
-    label: "History",
-    href: "/dashboard/history",
-    icon: Hourglass,
+    label: "Timeline",
+    href: "/dashboard/timeline",
+    icon: ClipboardList,
   },
+  // {
+  //   label: "History",
+  //   href: "/dashboard/history",
+  //   icon: Hourglass,
+  // },
   {
     label: "Family Tree",
     href: "/dashboard/family-tree",
@@ -46,11 +51,6 @@ export const navLinksTopSection: NavLink[] = [
     label: "Events",
     href: "/dashboard/events",
     icon: CalendarIcon,
-  },
-  {
-    label: "Invitations",
-    href: "/dashboard/invitations",
-    icon: Mail,
   },
   {
     label: "Gallery",
