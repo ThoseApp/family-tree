@@ -1,7 +1,9 @@
 "use client";
 
 import EventsTable from "@/components/tables/events";
+import InvitationsComponent from "@/components/invitations-component";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
   CardContent,
@@ -19,6 +21,7 @@ import {
   Plus,
   Users,
   Send,
+  Mail,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useEventsStore } from "@/stores/events-store";
@@ -56,6 +59,7 @@ import { Event, UserProfile } from "@/lib/types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { dummyProfileImage } from "@/lib/constants";
+import { useSearchParams } from "next/navigation";
 
 const EVENT_CATEGORIES = [
   "Birthday",
@@ -84,6 +88,13 @@ const EventComponent = () => {
   } = useEventInvitationsStore();
 
   const { user } = useUserStore();
+  const searchParams = useSearchParams();
+
+  // Tab state - check URL parameter for initial tab
+  const [activeTab, setActiveTab] = useState(() => {
+    const tab = searchParams.get("tab");
+    return tab === "invitations" ? "invitations" : "events";
+  });
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
@@ -381,474 +392,513 @@ const EventComponent = () => {
     <div className="flex flex-col gap-y-8 lg:gap-y-12">
       {/* HEADER SECTION */}
       <div className="flex md:items-center md:flex-row flex-col md:justify-between gap-y-4">
-        <h1 className="text-2xl font-semibold">Upcoming Events</h1>
-
-        <div className="flex items-center gap-4">
-          <Button
-            className="bg-foreground text-background rounded-full hover:bg-foreground/80"
-            onClick={toggleForm}
-          >
-            {showForm ? (
-              <>
-                <ChevronUp className="size-5 mr-2" />
-                Hide Form
-              </>
-            ) : (
-              <>
-                <Plus className="size-5 mr-2" />
-                Add New Event
-              </>
-            )}
-          </Button>
-        </div>
+        <h1 className="text-2xl font-semibold">Events & Invitations</h1>
       </div>
 
-      {loading && userEvents.length === 0 ? (
-        <div className="flex items-center justify-center h-40">
-          <LoadingIcon className="size-8" />
-        </div>
-      ) : (
-        <EventsTable
-          data={userEvents}
-          onEditClick={handleEdit}
-          onDeleteClick={(id) => handleDelete(id)}
-          onInviteClick={handleInvite}
-        />
-      )}
+      {/* TABS */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="events" className="flex items-center gap-2">
+            <CalendarIcon className="h-4 w-4" />
+            Events
+          </TabsTrigger>
+          <TabsTrigger value="invitations" className="flex items-center gap-2">
+            <Mail className="h-4 w-4" />
+            Invitations
+          </TabsTrigger>
+        </TabsList>
 
-      {/* NEW EVENT FORM */}
-      {showForm && (
-        <Card className="animate-in fade-in-50 duration-300">
-          <CardHeader>
-            <CardTitle>Add New Event</CardTitle>
-          </CardHeader>
-
-          <CardContent>
-            <div className="flex flex-col gap-2 lg:gap-4">
-              {/* IMAGE UPLOAD (OPTIONAL) */}
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="image-upload">Event Image (Optional)</Label>
-                <Input
-                  id="image-upload"
-                  name="image-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  disabled={loading || isUploading}
-                />
-                {selectedFile && (
-                  <div className="mt-2">
-                    <p className="text-sm text-muted-foreground">Preview:</p>
-                    <Image
-                      src={URL.createObjectURL(selectedFile)}
-                      alt="Preview"
-                      width={100}
-                      height={100}
-                      className="rounded-md object-cover"
-                    />
-                  </div>
+        <TabsContent value="events" className="mt-6">
+          <div className="flex flex-col gap-y-8 lg:gap-y-12">
+            {/* ADD EVENT BUTTON */}
+            <div className="flex items-center justify-end">
+              <Button
+                className="bg-foreground text-background rounded-full hover:bg-foreground/80"
+                onClick={toggleForm}
+              >
+                {showForm ? (
+                  <>
+                    <ChevronUp className="size-5 mr-2" />
+                    Hide Form
+                  </>
+                ) : (
+                  <>
+                    <Plus className="size-5 mr-2" />
+                    Add New Event
+                  </>
                 )}
-              </div>
+              </Button>
+            </div>
 
-              {/* TITLE */}
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="name">Event Name</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  placeholder="E.g Grandma Beth's 80th Birthday Celebration"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  disabled={loading || isUploading}
-                  required
-                />
+            {loading && userEvents.length === 0 ? (
+              <div className="flex items-center justify-center h-40">
+                <LoadingIcon className="size-8" />
               </div>
+            ) : (
+              <EventsTable
+                data={userEvents}
+                onEditClick={handleEdit}
+                onDeleteClick={(id) => handleDelete(id)}
+                onInviteClick={handleInvite}
+              />
+            )}
 
-              {/* DATE */}
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="date">Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
+            {/* NEW EVENT FORM */}
+            {showForm && (
+              <Card className="animate-in fade-in-50 duration-300">
+                <CardHeader>
+                  <CardTitle>Add New Event</CardTitle>
+                </CardHeader>
+
+                <CardContent>
+                  <div className="flex flex-col gap-2 lg:gap-4">
+                    {/* IMAGE UPLOAD (OPTIONAL) */}
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="image-upload">
+                        Event Image (Optional)
+                      </Label>
+                      <Input
+                        id="image-upload"
+                        name="image-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        disabled={loading || isUploading}
+                      />
+                      {selectedFile && (
+                        <div className="mt-2">
+                          <p className="text-sm text-muted-foreground">
+                            Preview:
+                          </p>
+                          <Image
+                            src={URL.createObjectURL(selectedFile)}
+                            alt="Preview"
+                            width={100}
+                            height={100}
+                            className="rounded-md object-cover"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* TITLE */}
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="name">Event Name</Label>
+                      <Input
+                        id="name"
+                        name="name"
+                        placeholder="E.g Grandma Beth's 80th Birthday Celebration"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        disabled={loading || isUploading}
+                        required
+                      />
+                    </div>
+
+                    {/* DATE */}
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="date">Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "justify-start text-left font-normal",
+                              !selectedDate && "text-muted-foreground"
+                            )}
+                            disabled={loading || isUploading}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {selectedDate ? (
+                              format(selectedDate, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={selectedDate}
+                            onSelect={setSelectedDate}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    {/* CATEGORY */}
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="category">Category</Label>
+                      <Select
+                        value={formData.category}
+                        onValueChange={handleSelectChange}
+                        disabled={loading || isUploading}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {EVENT_CATEGORIES.map((category) => (
+                            <SelectItem key={category} value={category}>
+                              {category}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* DESCRIPTION */}
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="description">
+                        Description (Optional)
+                      </Label>
+                      <Textarea
+                        id="description"
+                        name="description"
+                        placeholder="Add event description..."
+                        value={formData.description}
+                        onChange={handleTextareaChange}
+                        disabled={loading || isUploading}
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+
+                <CardFooter className="w-full flex items-end justify-end">
+                  <div className="flex items-center justify-end gap-2">
+                    <Button
+                      className="bg-foreground text-background rounded-full hover:bg-foreground/80"
+                      disabled={loading || isUploading}
+                      onClick={handleMainFormSubmit}
+                    >
+                      {loading && <LoadingIcon className="mr-2" />}
+                      Save
+                    </Button>
                     <Button
                       variant="outline"
-                      className={cn(
-                        "justify-start text-left font-normal",
-                        !selectedDate && "text-muted-foreground"
-                      )}
+                      className="rounded-full"
+                      onClick={() => setShowForm(false)}
                       disabled={loading || isUploading}
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {selectedDate ? (
-                        format(selectedDate, "PPP")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
+                      Cancel
                     </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={selectedDate}
-                      onSelect={setSelectedDate}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              {/* CATEGORY */}
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="category">Category</Label>
-                <Select
-                  value={formData.category}
-                  onValueChange={handleSelectChange}
-                  disabled={loading || isUploading}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {EVENT_CATEGORIES.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* DESCRIPTION */}
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="description">Description (Optional)</Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  placeholder="Add event description..."
-                  value={formData.description}
-                  onChange={handleTextareaChange}
-                  disabled={loading || isUploading}
-                  rows={3}
-                />
-              </div>
-            </div>
-          </CardContent>
-
-          <CardFooter className="w-full flex items-end justify-end">
-            <div className="flex items-center justify-end gap-2">
-              <Button
-                className="bg-foreground text-background rounded-full hover:bg-foreground/80"
-                disabled={loading || isUploading}
-                onClick={handleMainFormSubmit}
-              >
-                {loading && <LoadingIcon className="mr-2" />}
-                Save
-              </Button>
-              <Button
-                variant="outline"
-                className="rounded-full"
-                onClick={() => setShowForm(false)}
-                disabled={loading || isUploading}
-              >
-                Cancel
-              </Button>
-            </div>
-          </CardFooter>
-        </Card>
-      )}
-
-      {/* EDIT EVENT DIALOG */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Edit Event</DialogTitle>
-            <DialogDescription>Update event details.</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleUpdate}>
-            <div className="grid gap-4 py-4">
-              {/* Edit Image Upload */}
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="edit-image-upload">
-                  Event Image (Optional)
-                </Label>
-                <Input
-                  id="edit-image-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleEditFileChange}
-                  disabled={loading || isUploading}
-                />
-                {selectedEditFile && (
-                  <div className="mt-2">
-                    <p className="text-sm text-muted-foreground">
-                      New Image Preview:
-                    </p>
-                    <Image
-                      src={URL.createObjectURL(selectedEditFile)}
-                      alt="New image preview"
-                      width={100}
-                      height={100}
-                      className="rounded-md object-cover"
-                    />
                   </div>
-                )}
-                {!selectedEditFile && editData.image && (
-                  <div className="mt-2">
-                    <p className="text-sm text-muted-foreground">
-                      Current Image:
-                    </p>
-                    <Image
-                      src={editData.image}
-                      alt="Current event image"
-                      width={100}
-                      height={100}
-                      className="rounded-md object-cover"
-                    />
-                  </div>
-                )}
-              </div>
+                </CardFooter>
+              </Card>
+            )}
 
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="edit-name">Event Name</Label>
-                <Input
-                  id="edit-name"
-                  name="name"
-                  value={editData.name}
-                  onChange={handleInputChange}
-                  disabled={loading || isUploading}
-                  required
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="edit-date">Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full pl-3 text-left font-normal",
-                        !selectedEditDate && "text-muted-foreground"
-                      )}
-                      disabled={loading || isUploading}
-                    >
-                      {selectedEditDate ? (
-                        format(selectedEditDate, "PPP")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={selectedEditDate}
-                      onSelect={setSelectedEditDate}
-                      disabled={(date) => date < new Date("1900-01-01")}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="edit-category">Category</Label>
-                <Select
-                  value={editData.category}
-                  onValueChange={handleSelectChange}
-                  disabled={loading || isUploading}
-                >
-                  <SelectTrigger id="edit-category">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {EVENT_CATEGORIES.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="edit-description">Description (Optional)</Label>
-                <Textarea
-                  id="edit-description"
-                  name="description"
-                  value={editData.description}
-                  onChange={handleTextareaChange}
-                  disabled={loading || isUploading}
-                  rows={3}
-                />
-              </div>
-            </div>
-            <div className="flex justify-end gap-2 mt-4">
-              <Button
-                type="submit"
-                disabled={loading || isUploading}
-                className="bg-foreground text-background rounded-full hover:bg-foreground/80"
-              >
-                {loading && <LoadingIcon className="mr-2" />}
-                Update Event
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="rounded-full"
-                onClick={() => setIsEditDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* DELETE CONFIRMATION DIALOG */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this event? This action cannot be
-              undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex justify-end gap-2 mt-4">
-            <Button
-              variant="destructive"
-              onClick={confirmDelete}
-              disabled={loading}
-              className="rounded-full"
-            >
-              {loading && <LoadingIcon className="mr-2" />}
-              Delete
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="rounded-full"
-              onClick={() => setIsDeleteDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* INVITE DIALOG */}
-      <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Users className="size-5" />
-              Invite Family Members
-            </DialogTitle>
-            <DialogDescription>
-              Send invitations to family members for &quot;
-              {eventToInvite?.name || "this event"}&quot;
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            {/* Message Input */}
-            <div>
-              <Label htmlFor="invite-message">
-                Personal Message (Optional)
-              </Label>
-              <Textarea
-                id="invite-message"
-                placeholder="Add a personal message to your invitation..."
-                value={inviteMessage}
-                onChange={(e) => setInviteMessage(e.target.value)}
-                rows={3}
-              />
-            </div>
-
-            {/* Family Members Selection */}
-            <div>
-              <Label className="text-sm font-medium">
-                Select Family Members
-              </Label>
-              <div className="mt-2 max-h-80 overflow-y-auto border rounded-md p-3">
-                {familyMembers.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    No family members available to invite
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {familyMembers.map((member) => (
-                      <div
-                        key={member.user_id}
-                        className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded"
-                      >
-                        <Checkbox
-                          id={`member-${member.user_id}`}
-                          checked={selectedInvitees.includes(member.user_id)}
-                          onCheckedChange={(checked) =>
-                            handleInviteeSelection(
-                              member.user_id,
-                              checked as boolean
-                            )
-                          }
-                        />
-                        <Avatar className="size-8">
-                          <AvatarImage
-                            src={member.image || dummyProfileImage}
-                            alt={`${member.first_name} ${member.last_name}`}
+            {/* EDIT EVENT DIALOG */}
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Edit Event</DialogTitle>
+                  <DialogDescription>Update event details.</DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleUpdate}>
+                  <div className="grid gap-4 py-4">
+                    {/* Edit Image Upload */}
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="edit-image-upload">
+                        Event Image (Optional)
+                      </Label>
+                      <Input
+                        id="edit-image-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleEditFileChange}
+                        disabled={loading || isUploading}
+                      />
+                      {selectedEditFile && (
+                        <div className="mt-2">
+                          <p className="text-sm text-muted-foreground">
+                            New Image Preview:
+                          </p>
+                          <Image
+                            src={URL.createObjectURL(selectedEditFile)}
+                            alt="New image preview"
+                            width={100}
+                            height={100}
+                            className="rounded-md object-cover"
                           />
-                          <AvatarFallback>
-                            {member.first_name?.[0]}
-                            {member.last_name?.[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">
-                            {member.first_name} {member.last_name}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {member.email}
-                          </p>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              {selectedInvitees.length > 0 && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  {selectedInvitees.length} family member
-                  {selectedInvitees.length === 1 ? "" : "s"} selected
-                </p>
-              )}
-            </div>
-          </div>
+                      )}
+                      {!selectedEditFile && editData.image && (
+                        <div className="mt-2">
+                          <p className="text-sm text-muted-foreground">
+                            Current Image:
+                          </p>
+                          <Image
+                            src={editData.image}
+                            alt="Current event image"
+                            width={100}
+                            height={100}
+                            className="rounded-md object-cover"
+                          />
+                        </div>
+                      )}
+                    </div>
 
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsInviteDialogOpen(false)}
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="edit-name">Event Name</Label>
+                      <Input
+                        id="edit-name"
+                        name="name"
+                        value={editData.name}
+                        onChange={handleInputChange}
+                        disabled={loading || isUploading}
+                        required
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="edit-date">Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !selectedEditDate && "text-muted-foreground"
+                            )}
+                            disabled={loading || isUploading}
+                          >
+                            {selectedEditDate ? (
+                              format(selectedEditDate, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={selectedEditDate}
+                            onSelect={setSelectedEditDate}
+                            disabled={(date) => date < new Date("1900-01-01")}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="edit-category">Category</Label>
+                      <Select
+                        value={editData.category}
+                        onValueChange={handleSelectChange}
+                        disabled={loading || isUploading}
+                      >
+                        <SelectTrigger id="edit-category">
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {EVENT_CATEGORIES.map((category) => (
+                            <SelectItem key={category} value={category}>
+                              {category}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="edit-description">
+                        Description (Optional)
+                      </Label>
+                      <Textarea
+                        id="edit-description"
+                        name="description"
+                        value={editData.description}
+                        onChange={handleTextareaChange}
+                        disabled={loading || isUploading}
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2 mt-4">
+                    <Button
+                      type="submit"
+                      disabled={loading || isUploading}
+                      className="bg-foreground text-background rounded-full hover:bg-foreground/80"
+                    >
+                      {loading && <LoadingIcon className="mr-2" />}
+                      Update Event
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-full"
+                      onClick={() => setIsEditDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+
+            {/* DELETE CONFIRMATION DIALOG */}
+            <Dialog
+              open={isDeleteDialogOpen}
+              onOpenChange={setIsDeleteDialogOpen}
             >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSendInvitations}
-              disabled={inviteLoading || selectedInvitees.length === 0}
-              className="bg-foreground text-background hover:bg-foreground/80"
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Confirm Deletion</DialogTitle>
+                  <DialogDescription>
+                    Are you sure you want to delete this event? This action
+                    cannot be undone.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter className="flex justify-end gap-2 mt-4">
+                  <Button
+                    variant="destructive"
+                    onClick={confirmDelete}
+                    disabled={loading}
+                    className="rounded-full"
+                  >
+                    {loading && <LoadingIcon className="mr-2" />}
+                    Delete
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="rounded-full"
+                    onClick={() => setIsDeleteDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* INVITE DIALOG */}
+            <Dialog
+              open={isInviteDialogOpen}
+              onOpenChange={setIsInviteDialogOpen}
             >
-              {inviteLoading ? (
-                <>
-                  <LoadingIcon className="size-4 mr-2" />
-                  Sending...
-                </>
-              ) : (
-                <>
-                  <Send className="size-4 mr-2" />
-                  Send Invitations ({selectedInvitees.length})
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              <DialogContent className="sm:max-w-[600px]">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Users className="size-5" />
+                    Invite Family Members
+                  </DialogTitle>
+                  <DialogDescription>
+                    Send invitations to family members for &quot;
+                    {eventToInvite?.name || "this event"}&quot;
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-4">
+                  {/* Message Input */}
+                  <div>
+                    <Label htmlFor="invite-message">
+                      Personal Message (Optional)
+                    </Label>
+                    <Textarea
+                      id="invite-message"
+                      placeholder="Add a personal message to your invitation..."
+                      value={inviteMessage}
+                      onChange={(e) => setInviteMessage(e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+
+                  {/* Family Members Selection */}
+                  <div>
+                    <Label className="text-sm font-medium">
+                      Select Family Members
+                    </Label>
+                    <div className="mt-2 max-h-80 overflow-y-auto border rounded-md p-3">
+                      {familyMembers.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                          No family members available to invite
+                        </p>
+                      ) : (
+                        <div className="space-y-3">
+                          {familyMembers.map((member) => (
+                            <div
+                              key={member.user_id}
+                              className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded"
+                            >
+                              <Checkbox
+                                id={`member-${member.user_id}`}
+                                checked={selectedInvitees.includes(
+                                  member.user_id
+                                )}
+                                onCheckedChange={(checked) =>
+                                  handleInviteeSelection(
+                                    member.user_id,
+                                    checked as boolean
+                                  )
+                                }
+                              />
+                              <Avatar className="size-8">
+                                <AvatarImage
+                                  src={member.image || dummyProfileImage}
+                                  alt={`${member.first_name} ${member.last_name}`}
+                                />
+                                <AvatarFallback>
+                                  {member.first_name?.[0]}
+                                  {member.last_name?.[0]}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1">
+                                <p className="text-sm font-medium">
+                                  {member.first_name} {member.last_name}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {member.email}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {selectedInvitees.length > 0 && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {selectedInvitees.length} family member
+                        {selectedInvitees.length === 1 ? "" : "s"} selected
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsInviteDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleSendInvitations}
+                    disabled={inviteLoading || selectedInvitees.length === 0}
+                    className="bg-foreground text-background hover:bg-foreground/80"
+                  >
+                    {inviteLoading ? (
+                      <>
+                        <LoadingIcon className="size-4 mr-2" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="size-4 mr-2" />
+                        Send Invitations ({selectedInvitees.length})
+                      </>
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="invitations" className="mt-6">
+          <InvitationsComponent />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

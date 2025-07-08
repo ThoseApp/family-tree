@@ -9,6 +9,7 @@ import { usePathname } from "next/navigation";
 import MobileSidebar from "./mobile-side-bar";
 import { navLinks } from "@/lib/constants/landing";
 import { useUserStore } from "@/stores/user-store";
+import { getFilteredNavLinks } from "@/lib/utils/navigation-helpers";
 
 const LandingNav = () => {
   const { user } = useUserStore();
@@ -27,6 +28,9 @@ const LandingNav = () => {
 
   const isHomePage = pathname === "/";
   const shouldUseTransparentBg = isHomePage && !scrolled;
+
+  // Filter navigation links based on user authentication
+  const filteredNavLinks = getFilteredNavLinks(navLinks, user);
 
   return (
     <div
@@ -47,7 +51,7 @@ const LandingNav = () => {
 
         {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center space-x-1">
-          {navLinks.map((route) => {
+          {filteredNavLinks.map((route) => {
             const isActive = pathname === route.href;
 
             return (
@@ -97,7 +101,11 @@ const LandingNav = () => {
                   "bg-white text-foreground hover:bg-white/90"
               )}
             >
-              <Link href="/dashboard">Dashboard</Link>
+              <Link
+                href={user.user_metadata?.is_admin ? "/admin" : "/dashboard"}
+              >
+                Dashboard
+              </Link>
             </Button>
           ) : (
             <>

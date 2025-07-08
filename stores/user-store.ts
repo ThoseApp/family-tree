@@ -98,7 +98,13 @@ export const useUserStore = create(
 
           set({ user: data.user, success: true, loading: false });
           toast.success("Login successful");
-          return { data, path: nextRoute || "/dashboard" };
+
+          return {
+            data,
+            path:
+              (nextRoute && nextRoute.trim()) ||
+              (data.user.user_metadata?.is_admin ? "/admin" : "/dashboard"),
+          };
         } catch (error: any) {
           const errorMessage = error?.message || "Login failed";
           set({ error: errorMessage, success: null });
@@ -113,9 +119,9 @@ export const useUserStore = create(
         set({ loading: true, success: null, error: null });
 
         try {
-          // Determine redirect URL
+          // Determine redirect URL - auth callback will handle admin vs user routing
           const redirectURL =
-            redirectTo || `${window.location.origin}/dashboard`;
+            redirectTo || `${window.location.origin}/auth/callback`;
 
           const { data, error } = await supabase.auth.signInWithOAuth({
             provider: "google",

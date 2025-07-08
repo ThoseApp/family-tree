@@ -53,10 +53,15 @@ export const navLinksTopSection: NavLink[] = [
     icon: UsersIcon,
   },
   {
-    label: "History",
-    href: "/admin/history",
-    icon: Hourglass,
+    label: "Timeline",
+    href: "/admin/timeline",
+    icon: ClipboardList,
   },
+  // {
+  //   label: "History",
+  //   href: "/admin/history",
+  //   icon: Hourglass,
+  // },
   {
     label: "Family Tree",
     href: "/admin/family-tree",
@@ -71,11 +76,6 @@ export const navLinksTopSection: NavLink[] = [
     label: "Events",
     href: "/admin/events",
     icon: CalendarIcon,
-  },
-  {
-    label: "Invitations",
-    href: "/admin/invitations",
-    icon: Mail,
   },
   {
     label: "Settings",
