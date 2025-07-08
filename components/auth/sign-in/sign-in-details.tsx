@@ -36,7 +36,7 @@ const SignInDetails = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   // const isMounted = useMountedState();
-  const { login, loginWithGoogle, loading } = useUserStore();
+  const { login, loginWithGoogle, loading, user } = useUserStore();
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [remember, setRemember] = useState<string>("off");
   const [displayRouteMessage, setDisplayRouteMessage] = useState<boolean>(true);
@@ -44,7 +44,7 @@ const SignInDetails = () => {
   const [googleLoading, setGoogleLoading] = useState<boolean>(false);
 
   const message = searchParams!.get("message");
-  const next = searchParams!.get("next") || "/dashboard";
+  const next = searchParams!.get("next"); // Don't set default here
 
   const toggleDisplayRouteMessage = () => {
     setDisplayRouteMessage(!displayRouteMessage);
@@ -69,10 +69,11 @@ const SignInDetails = () => {
     try {
       form.clearErrors();
 
-      const loggedIn = await login(values.email, values.password, next);
+      const loggedIn = await login(values.email, values.password, next || "");
 
       if (loggedIn && loggedIn.data) {
         // Successfully logged in, redirect user to the appropriate page
+        // The user store login function already determines the correct path for admins vs users
         router.push(loggedIn.path || "/dashboard");
       }
     } catch (error: any) {
@@ -86,7 +87,10 @@ const SignInDetails = () => {
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
-      await loginWithGoogle(next);
+      // Only pass next if it exists and is not empty
+      // Let auth callback handle admin vs regular user routing
+      const redirectTo = next && next.trim() ? next : undefined;
+      await loginWithGoogle(redirectTo);
       // Note: No need to redirect here as the OAuth flow will handle it
     } catch (error: any) {
       toast.error("Google sign-in failed");

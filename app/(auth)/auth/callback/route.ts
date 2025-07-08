@@ -17,12 +17,14 @@ export async function GET(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    // Determine redirect path based on user role
+    // Determine redirect path based on user role - prioritize admin check
     let redirectPath = "/dashboard";
 
     if (user?.user_metadata?.is_admin === true) {
+      // Always route admins to /admin regardless of next parameter
       redirectPath = "/admin";
     } else if (next && next !== "/sign-in") {
+      // For non-admins, respect the next parameter
       redirectPath = next;
     }
 

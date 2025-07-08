@@ -1,8 +1,18 @@
-import InvitationsComponent from "@/components/invitations-component";
-import React from "react";
+"use client";
 
-const InvitationsPage = () => {
-  return <InvitationsComponent />;
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+const DashboardInvitationsRedirect = () => {
+  const router = useRouter();
+
+  useEffect(() => {
+    // Redirect to events page with invitations tab
+    router.replace("/dashboard/events?tab=invitations");
+  }, [router]);
+
+  // Show nothing while redirecting
+  return null;
 };
 
-export default InvitationsPage;
+export default DashboardInvitationsRedirect;

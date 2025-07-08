@@ -16,6 +16,7 @@ import Logo from "../logo";
 import { navLinks } from "@/lib/constants/landing";
 import { useUserStore } from "@/stores/user-store";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { getFilteredNavLinks } from "@/lib/utils/navigation-helpers";
 
 const MobileSidebar = () => {
   const [isMounted, setIsMounted] = useState(false);
@@ -37,6 +38,9 @@ const MobileSidebar = () => {
   }
 
   const isHomePage = pathname === "/";
+
+  // Filter navigation links based on user authentication
+  const filteredNavLinks = getFilteredNavLinks(navLinks, user);
 
   const getUserInitials = () => {
     if (user?.user_metadata?.first_name && user?.user_metadata?.last_name) {
@@ -103,7 +107,7 @@ const MobileSidebar = () => {
 
           {/* Navigation Links */}
           <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-            {navLinks.map((route) => {
+            {filteredNavLinks.map((route) => {
               const isActive = pathname === route.href;
               const Icon = route.icon;
 
@@ -144,7 +148,10 @@ const MobileSidebar = () => {
                 className="w-full rounded-lg transition-all duration-200"
                 size="lg"
               >
-                <Link href="/dashboard" className="flex items-center gap-2">
+                <Link
+                  href={user.user_metadata?.is_admin ? "/admin" : "/dashboard"}
+                  className="flex items-center gap-2"
+                >
                   <User className="h-4 w-4" />
                   Dashboard
                 </Link>

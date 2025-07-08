@@ -96,6 +96,17 @@ export async function updateSession(request: NextRequest) {
     const isPrivateRoute =
       path.startsWith("/dashboard") || path.startsWith("/admin");
 
+    // Check if the route is a protected landing page
+    const protectedLandingPages = [
+      "/family-tree",
+      "/family-members",
+      "/events",
+      "/gallery",
+      "/notice-board",
+    ];
+    const isProtectedLandingRoute =
+      protectedLandingPages.includes(path) || path.startsWith("/profile/");
+
     // Check if the route is an auth route
     const isAuthRoute =
       path === "/sign-in" ||
@@ -110,6 +121,17 @@ export async function updateSession(request: NextRequest) {
       // Redirect unauthenticated users away from private routes
       const redirectUrl = new URL("/sign-in", request.url);
       redirectUrl.searchParams.set("message", "Please sign in to proceed");
+      redirectUrl.searchParams.set("next", path);
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    if (!user && isProtectedLandingRoute) {
+      // Redirect unauthenticated users away from protected landing pages
+      const redirectUrl = new URL("/sign-in", request.url);
+      redirectUrl.searchParams.set(
+        "message",
+        "Please sign in to access this page"
+      );
       redirectUrl.searchParams.set("next", path);
       return NextResponse.redirect(redirectUrl);
     }
@@ -133,12 +155,32 @@ export async function updateSession(request: NextRequest) {
       }
     }
 
+    // Check approval status for authenticated users on protected landing pages
+    if (user && userProfile && isProtectedLandingRoute) {
+      if (userProfile.status === "pending") {
+        // Redirect to pending approval page
+        if (!path.startsWith("/pending-approval")) {
+          const redirectUrl = new URL("/pending-approval", request.url);
+          return NextResponse.redirect(redirectUrl);
+        }
+      }
+
+      if (userProfile.status === "rejected") {
+        // Redirect to account rejected page
+        if (!path.startsWith("/account-rejected")) {
+          const redirectUrl = new URL("/account-rejected", request.url);
+          return NextResponse.redirect(redirectUrl);
+        }
+      }
+    }
+
     if (user && isAuthRoute) {
       // Only allow approved users to access dashboard/admin
       if (userProfile?.status === "approved") {
         // Redirect authenticated and approved users away from auth routes
         const redirectPath =
           user.user_metadata?.is_admin === true ? "/admin" : "/dashboard";
+
         const redirectUrl = new URL(redirectPath, request.url);
         return NextResponse.redirect(redirectUrl);
       }
