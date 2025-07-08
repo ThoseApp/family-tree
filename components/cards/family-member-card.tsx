@@ -4,6 +4,7 @@ import Image from "next/image";
 import React from "react";
 import { Card, CardContent } from "../ui/card";
 import { useRouter } from "next/navigation";
+import { dummyProfileImage } from "@/lib/constants";
 
 interface FamilyMemberCardProps {
   imageSrc: string;
@@ -29,7 +30,7 @@ const FamilyMemberCard = ({
       {/* TOP IMAGE */}
       <div className="relative h-[30vh] bg-border w-full">
         <Image
-          src={imageSrc}
+          src={dummyProfileImage}
           fill
           alt={name}
           className=" w-full h-full object-cover rounded-t-xl  transition-all duration-200 ease-in-out"

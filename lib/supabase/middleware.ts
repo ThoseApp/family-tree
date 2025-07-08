@@ -144,15 +144,8 @@ export async function updateSession(request: NextRequest) {
       }
     }
 
-    // Only redirect admin users if they're on the home page or dashboard
-    if (
-      user &&
-      user.user_metadata?.is_admin === true &&
-      (path === "/" || path.startsWith("/dashboard"))
-    ) {
-      const redirectUrl = new URL("/admin", request.url);
-      return NextResponse.redirect(redirectUrl);
-    }
+    // Remove the admin redirect logic to allow access to landing pages
+    // Authenticated users (admin and non-admin) can now freely navigate to landing area
 
     // Return the response with updated cookies
     return response;

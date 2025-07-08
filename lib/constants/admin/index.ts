@@ -17,6 +17,7 @@ import {
   CalendarIcon,
   LogOutIcon,
   Mail,
+  Clipboard,
 } from "lucide-react";
 import { dummyProfileImage } from "..";
 
@@ -40,6 +41,11 @@ export const navLinksTopSection: NavLink[] = [
     label: "Gallery Requests",
     href: "/admin/gallery-requests",
     icon: ClipboardList,
+  },
+  {
+    label: "Notice Board Requests",
+    href: "/admin/notice-board-requests",
+    icon: Clipboard,
   },
   {
     label: "Notice Board",

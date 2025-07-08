@@ -19,16 +19,18 @@ import { LoadingIcon } from "@/components/loading-icon";
 import { Plus, ChevronDown, ChevronUp, Grid, Table } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNoticeBoardStore } from "@/stores/notice-board-store";
+import { useUserStore } from "@/stores/user-store";
 import { NoticeBoard } from "@/lib/types";
 import { toast } from "sonner";
 import { getFilteredAndSortedNoticeBoards } from "@/lib/utils/notice-board-filters";
 import { cn } from "@/lib/utils";
 
 const NoticeBoardPage = () => {
+  const { user } = useUserStore();
   const {
     noticeBoards,
     loading,
-    fetchNoticeBoards,
+    fetchUserNoticeBoards,
     createNoticeBoard,
     updateNoticeBoard,
     deleteNoticeBoard,
@@ -56,8 +58,10 @@ const NoticeBoardPage = () => {
   });
 
   useEffect(() => {
-    fetchNoticeBoards();
-  }, [fetchNoticeBoards]);
+    if (user?.id) {
+      fetchUserNoticeBoards(user.id);
+    }
+  }, [fetchUserNoticeBoards, user?.id]);
 
   // Get filtered and sorted notices
   const filteredNotices = getFilteredAndSortedNoticeBoards(
@@ -66,8 +70,13 @@ const NoticeBoardPage = () => {
   );
 
   const handleSubmit = async (data: Omit<NoticeBoard, "id">) => {
+    if (!user?.id) {
+      toast.error("User not authenticated");
+      return;
+    }
+
     try {
-      await createNoticeBoard(data);
+      await createNoticeBoard(data, user.id);
       setShowForm(false);
     } catch (error) {
       toast.error("Failed to create notice");
@@ -75,6 +84,11 @@ const NoticeBoardPage = () => {
   };
 
   const handleEdit = (noticeBoard: NoticeBoard) => {
+    // Only allow editing of pending or rejected notices
+    if (noticeBoard.status === "approved") {
+      toast.error("Cannot edit approved notices");
+      return;
+    }
     setSelectedNoticeBoard(noticeBoard);
     setIsEditDialogOpen(true);
   };
@@ -83,9 +97,19 @@ const NoticeBoardPage = () => {
     if (!selectedNoticeBoard) return;
 
     try {
-      await updateNoticeBoard(selectedNoticeBoard.id, data);
+      // If updating a rejected notice, reset status to pending
+      const updateData =
+        selectedNoticeBoard.status === "rejected"
+          ? { ...data, status: "pending" as const }
+          : data;
+
+      await updateNoticeBoard(selectedNoticeBoard.id, updateData);
       setIsEditDialogOpen(false);
       setSelectedNoticeBoard(null);
+
+      if (selectedNoticeBoard.status === "rejected") {
+        toast.success("Notice updated and resubmitted for approval");
+      }
     } catch (error) {
       toast.error("Failed to update notice");
     }
@@ -111,11 +135,24 @@ const NoticeBoardPage = () => {
     }
   };
 
+  // Check if user can edit a notice
+  const canEditNotice = (noticeBoard: NoticeBoard) => {
+    return (
+      noticeBoard.status === "pending" || noticeBoard.status === "rejected"
+    );
+  };
+
   return (
     <div className="flex flex-col gap-y-8 lg:gap-y-12">
       {/* HEADER SECTION */}
       <div className="flex md:items-center md:flex-row flex-col md:justify-between gap-y-4">
-        <h1 className="text-2xl font-semibold">Family Notice Board</h1>
+        <div>
+          <h1 className="text-2xl font-semibold">My Notice Board</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Manage your family notice board posts. Notices require admin
+            approval before being visible to everyone.
+          </p>
+        </div>
         <div className="flex items-center gap-4">
           {/* Display Mode Toggle */}
           <div className="flex items-center space-x-2">
@@ -222,6 +259,9 @@ const NoticeBoardPage = () => {
                 <NoticeBoardCard
                   key={noticeBoard.id}
                   noticeBoard={noticeBoard}
+                  showStatus={true}
+                  canEdit={canEditNotice(noticeBoard)}
+                  onEdit={() => handleEdit(noticeBoard)}
                 />
               ))}
             </div>
@@ -234,6 +274,8 @@ const NoticeBoardPage = () => {
                 setIsDeleteDialogOpen(true);
               }}
               onTogglePinClick={handleTogglePin}
+              showStatus={true}
+              canEdit={canEditNotice}
             />
           )}
         </>
@@ -244,6 +286,12 @@ const NoticeBoardPage = () => {
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Edit Notice</DialogTitle>
+            {selectedNoticeBoard?.status === "rejected" && (
+              <DialogDescription className="text-orange-600">
+                This notice was previously declined. Making changes will
+                resubmit it for approval.
+              </DialogDescription>
+            )}
           </DialogHeader>
           {selectedNoticeBoard && (
             <NoticeBoardForm

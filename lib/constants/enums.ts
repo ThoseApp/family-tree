@@ -10,19 +10,24 @@ export enum BucketFolderEnum {
 }
 
 export enum NotificationTypeEnum {
+  member_request = "member_request",
+  gallery_request = "gallery_request",
+  gallery_approved = "gallery_approved",
+  gallery_declined = "gallery_declined",
+  notice_board_request = "notice_board_request",
+  notice_board_approved = "notice_board_approved",
+  notice_board_declined = "notice_board_declined",
+  event_invitation = "event_invitation",
   event = "event",
-  event_invitation = "event_invitation", // user notification when invited to an event
-  notice_board = "notice_board",
-  gallery = "gallery",
-  gallery_request = "gallery_request", // admin notification type
-  gallery_approved = "gallery_approved", // user notification when admin approves
-  gallery_declined = "gallery_declined", // user notification when admin declines
-  family_member_request = "family_member_request", // admin notification type
-
-  // TODO: ADD MORE NOTIFICATION TYPES
 }
 
 export enum GalleryStatusEnum {
+  pending = "pending",
+  approved = "approved",
+  rejected = "rejected",
+}
+
+export enum NoticeBoardStatusEnum {
   pending = "pending",
   approved = "approved",
   rejected = "rejected",

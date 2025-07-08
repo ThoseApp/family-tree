@@ -155,6 +155,8 @@ export interface NoticeBoard {
   posteddate: string;
   postedtime: string;
   tags: string[];
+  status?: "pending" | "approved" | "rejected";
+  user_id?: string;
 }
 
 export interface HistoryItem {
