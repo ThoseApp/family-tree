@@ -25,7 +25,7 @@ const FamilyMemberCard = ({
   return (
     <Card
       className="w-full rounded-xl border relative shadow-md overflow-hidden group cursor-pointer transition-all duration-200 ease-in-out"
-      onClick={routeUser}
+      // onClick={routeUser}
     >
       {/* TOP IMAGE */}
       <div className="relative h-[30vh] bg-border w-full">
@@ -43,9 +43,9 @@ const FamilyMemberCard = ({
             {name}
           </div>
           <div className="pl-6 py-2 space-y-2">
-            <div className="font-semibold">Born on dd-mm-yyyy</div>
+            {/* <div className="font-semibold">Born on dd-mm-yyyy</div> */}
 
-            <h3 className="pb-5">{description}</h3>
+            {/* <h3 className="pb-5">{description}</h3> */}
           </div>
         </div>
       </CardContent>

@@ -36,7 +36,7 @@ const ProfileHistoryCard = ({
         <CardDescription className="text-gray-600 mb-4 text-sm">
           {description}
         </CardDescription>
-        <button className="flex items-center text-gray-800 hover:text-gray-600 transition-colors">
+        {/* <button className="flex items-center text-gray-800 hover:text-gray-600 transition-colors">
           Read More
           <svg
             className="w-4 h-4 ml-2"
@@ -51,7 +51,7 @@ const ProfileHistoryCard = ({
               d="M9 5l7 7-7 7"
             />
           </svg>
-        </button>
+        </button> */}
       </CardContent>
     </Card>
   );
