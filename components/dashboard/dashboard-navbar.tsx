@@ -21,6 +21,7 @@ import Image from "next/image";
 import { dummyProfileImage } from "@/lib/constants";
 import Link from "next/link";
 import AdminMobileSidebar from "../admin/admin-mobile-sidebar";
+import PublisherMobileSidebar from "../publisher/publisher-mobile-sidebar";
 import { useUserStore } from "@/stores/user-store";
 import { useNotificationsStore } from "@/stores/notifications-store";
 import { useMemberRequestsStore } from "@/stores/member-requests-store";
@@ -88,6 +89,8 @@ const DashboardNavbar = () => {
     <div className="flex bg-border/30 backdrop-blur-sm items-center  px-3  py-4 lg:px-6">
       {pathname.includes("/admin") ? (
         <AdminMobileSidebar />
+      ) : pathname.includes("/publisher") ? (
+        <PublisherMobileSidebar />
       ) : (
         <DashboardMobileSidebar />
       )}
@@ -147,6 +150,8 @@ const DashboardNavbar = () => {
                 href={
                   user?.user_metadata?.is_admin === true
                     ? "/admin/notifications"
+                    : user?.user_metadata?.is_publisher === true
+                    ? "/publisher/notifications"
                     : "/dashboard/notifications"
                 }
               >
@@ -180,11 +185,15 @@ const DashboardNavbar = () => {
             <DropdownMenuContent align="end" className="w-56 p-2">
               <DropdownMenuItem
                 className="cursor-pointer flex items-center gap-2 rounded-md"
-                onClick={() =>
-                  user?.user_metadata?.is_admin
-                    ? router.push("/admin/profile")
-                    : router.push("/dashboard/profile")
-                }
+                onClick={() => {
+                  if (user?.user_metadata?.is_admin === true) {
+                    router.push("/admin/profile");
+                  } else if (user?.user_metadata?.is_publisher === true) {
+                    router.push("/publisher/profile");
+                  } else {
+                    router.push("/dashboard/profile");
+                  }
+                }}
               >
                 <User className="size-5" />
                 <span>Profile</span>
