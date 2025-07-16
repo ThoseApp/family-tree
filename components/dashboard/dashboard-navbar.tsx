@@ -1,13 +1,35 @@
-import React, { useEffect, useState } from "react";
-import DashboardMobileSidebar from "./dashboard-mobile-sidebar";
-import { usePathname, useRouter } from "next/navigation";
-import { Bell, Heart, LogOut, Mail, Search, User } from "lucide-react";
-import { Mic } from "lucide-react";
-import { Input } from "../ui/input";
-import { Button } from "../ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
-import { Badge } from "../ui/badge";
+"use client";
 
+import { useState, useEffect, useMemo } from "react";
+import { usePathname } from "next/navigation";
+import {
+  Search,
+  Bell,
+  Mic,
+  User,
+  Calendar,
+  FileText,
+  Users,
+  Image,
+  Megaphone,
+  X,
+  Mail,
+  LogOut,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,44 +39,74 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import Image from "next/image";
-import { dummyProfileImage } from "@/lib/constants";
-import Link from "next/link";
-import AdminMobileSidebar from "../admin/admin-mobile-sidebar";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { LoadingIcon } from "@/components/loading-icon";
+import AdminMobileSidebar from "@/components/admin/admin-mobile-sidebar";
+import PublisherMobileSidebar from "@/components/publisher/publisher-mobile-sidebar";
+import DashboardMobileSidebar from "@/components/dashboard/dashboard-mobile-sidebar";
 import { useUserStore } from "@/stores/user-store";
-import { useNotificationsStore } from "@/stores/notifications-store";
 import { useMemberRequestsStore } from "@/stores/member-requests-store";
+import { useNotificationsStore } from "@/stores/notifications-store";
+import { useFamilyMembersStore } from "@/stores/family-members-store";
+import { useEventsStore } from "@/stores/events-store";
+import { useNoticeBoardStore } from "@/stores/notice-board-store";
+import { useGalleryStore } from "@/stores/gallery-store";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+
+// Define search result types
+interface SearchResult {
+  id: string;
+  title: string;
+  description: string;
+  type: "family-member" | "event" | "notice" | "gallery" | "notification";
+  icon: any;
+  href: string;
+  metadata?: string;
+}
 
 const DashboardNavbar = () => {
-  const { user, logout } = useUserStore();
-  const { notifications, fetchNotifications, subscribeToNotifications } =
-    useNotificationsStore();
-  const { memberRequests, fetchMemberRequests } = useMemberRequestsStore();
   const pathname = usePathname();
   const router = useRouter();
-
-  // State for counters
-  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
+  const { user, logout } = useUserStore();
+  const { memberRequests, fetchMemberRequests } = useMemberRequestsStore();
+  const { notifications, fetchNotifications } = useNotificationsStore();
+  const { familyMembers, fetchFamilyMembers } = useFamilyMembersStore();
+  const { userEvents, fetchUserEvents } = useEventsStore();
+  const { noticeBoards, fetchUserNoticeBoards } = useNoticeBoardStore();
+  const { userGallery, fetchUserGallery } = useGalleryStore();
   const [pendingMemberRequestsCount, setPendingMemberRequestsCount] =
     useState(0);
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
 
-  // Fetch notifications and member requests on component mount
+  // Compute unread count
+  const unreadCount = useMemo(() => {
+    return notifications.filter((notification) => !notification.read).length;
+  }, [notifications]);
+
+  // Search states
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+
   useEffect(() => {
     if (user?.id) {
       fetchNotifications(user.id);
-      subscribeToNotifications(user.id);
 
-      // Only fetch member requests if user is admin
-      if (user?.user_metadata?.is_admin === true) {
-        fetchMemberRequests();
-      }
+      // Load search data
+      fetchFamilyMembers();
+      fetchUserEvents(user.id);
+      fetchUserNoticeBoards(user.id);
+      fetchUserGallery(user.id);
     }
   }, [
     user?.id,
-    user?.user_metadata?.is_admin,
     fetchNotifications,
-    subscribeToNotifications,
-    fetchMemberRequests,
+    fetchFamilyMembers,
+    fetchUserEvents,
+    fetchUserNoticeBoards,
+    fetchUserGallery,
   ]);
 
   // Update unread notifications count
@@ -73,9 +125,11 @@ const DashboardNavbar = () => {
     setPendingMemberRequestsCount(pendingCount);
   }, [memberRequests]);
 
-  // Refresh member requests periodically for admins
   useEffect(() => {
     if (user?.user_metadata?.is_admin === true) {
+      fetchMemberRequests();
+
+      // Set up polling for real-time updates
       const interval = setInterval(() => {
         fetchMemberRequests();
       }, 30000); // Refresh every 30 seconds
@@ -84,10 +138,118 @@ const DashboardNavbar = () => {
     }
   }, [user?.user_metadata?.is_admin, fetchMemberRequests]);
 
+  // Search functionality
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+
+    const query = searchQuery.toLowerCase();
+    const results: SearchResult[] = [];
+
+    // Search family members
+    familyMembers.forEach((member) => {
+      if (
+        member.name?.toLowerCase().includes(query) ||
+        member.description?.toLowerCase().includes(query)
+      ) {
+        results.push({
+          id: `family-${member.id}`,
+          title: member.name || "Unknown",
+          description: member.description || "Family member",
+          type: "family-member",
+          icon: Users,
+          href: `/dashboard/family-members`,
+          metadata: undefined,
+        });
+      }
+    });
+
+    // Search events
+    userEvents.forEach((event) => {
+      if (
+        event.name?.toLowerCase().includes(query) ||
+        event.description?.toLowerCase().includes(query) ||
+        event.category?.toLowerCase().includes(query)
+      ) {
+        results.push({
+          id: `event-${event.id}`,
+          title: event.name,
+          description: event.description || "No description",
+          type: "event",
+          icon: Calendar,
+          href: `/dashboard/events`,
+          metadata: event.date.toString(),
+        });
+      }
+    });
+
+    // Search notices
+    noticeBoards.forEach((notice) => {
+      if (
+        notice.title?.toLowerCase().includes(query) ||
+        notice.description?.toLowerCase().includes(query)
+      ) {
+        results.push({
+          id: `notice-${notice.id}`,
+          title: notice.title,
+          description: notice.description,
+          type: "notice",
+          icon: Megaphone,
+          href: `/dashboard/notice-board`,
+          metadata: notice.posteddate,
+        });
+      }
+    });
+
+    // Search gallery
+    userGallery.forEach((item) => {
+      if (
+        item.caption?.toLowerCase().includes(query) ||
+        item.file_name?.toLowerCase().includes(query)
+      ) {
+        results.push({
+          id: `gallery-${item.id}`,
+          title: item.caption || item.file_name || "Untitled",
+          description: "Gallery item",
+          type: "gallery",
+          icon: Image,
+          href: `/dashboard/gallery`,
+          metadata: item.created_at,
+        });
+      }
+    });
+
+    return results.slice(0, 10); // Limit to 10 results
+  }, [searchQuery, familyMembers, userEvents, noticeBoards, userGallery]);
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchResults.length > 0) {
+      router.push(searchResults[0].href);
+      setIsSearchOpen(false);
+      setSearchQuery("");
+    }
+  };
+
+  const handleResultClick = (result: SearchResult) => {
+    router.push(result.href);
+    setIsSearchOpen(false);
+    setSearchQuery("");
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+  };
+
+  const openSearch = () => {
+    setIsSearchOpen(true);
+  };
+
   return (
     <div className="flex bg-border/30 backdrop-blur-sm items-center  px-3  py-4 lg:px-6">
       {pathname.includes("/admin") ? (
         <AdminMobileSidebar />
+      ) : pathname.includes("/publisher") ? (
+        <PublisherMobileSidebar />
       ) : (
         <DashboardMobileSidebar />
       )}
@@ -100,8 +262,11 @@ const DashboardNavbar = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-muted-foreground pointer-events-none" />
               <Input
                 type="text"
-                placeholder="Search"
-                className="w-full pl-10 focus-visible:ring-offset-0 rounded-full h-12 bg-background"
+                placeholder="Search family members, events, notices..."
+                className="w-full pl-10 focus-visible:ring-offset-0 rounded-full h-12 bg-background cursor-pointer"
+                onClick={openSearch}
+                onFocus={openSearch}
+                readOnly
               />
             </div>
           </div>
@@ -110,6 +275,110 @@ const DashboardNavbar = () => {
             <Mic className="size-5" />
           </div>
         </div>
+
+        {/* SEARCH MODAL */}
+        <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+            <DialogHeader>
+              <DialogTitle>Search</DialogTitle>
+              <DialogDescription>
+                Search across family members, events, notices, and gallery
+              </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleSearchSubmit} className="space-y-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Type to search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-10 text-lg h-12"
+                  autoFocus
+                />
+                {searchQuery && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearSearch}
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </form>
+
+            {/* Search Results */}
+            <div className="flex-1 overflow-y-auto">
+              {isSearching ? (
+                <div className="flex items-center justify-center py-8">
+                  <LoadingIcon className="size-6" />
+                  <span className="ml-2">Searching...</span>
+                </div>
+              ) : searchQuery.trim() && searchResults.length === 0 ? (
+                <div className="text-center py-8">
+                  <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-1">
+                    No results found
+                  </h3>
+                  <p className="text-gray-500">
+                    Try searching with different keywords
+                  </p>
+                </div>
+              ) : searchResults.length > 0 ? (
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground px-2">
+                    {searchResults.length} result
+                    {searchResults.length !== 1 ? "s" : ""}
+                  </p>
+                  {searchResults.map((result) => (
+                    <button
+                      key={result.id}
+                      onClick={() => handleResultClick(result)}
+                      className="w-full text-left p-3 rounded-lg hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-colors"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="mt-1">
+                          <result.icon className="h-5 w-5 text-gray-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-900 truncate">
+                            {result.title}
+                          </p>
+                          <p className="text-sm text-gray-500 truncate">
+                            {result.description}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="secondary" className="text-xs">
+                              {result.type.charAt(0).toUpperCase() +
+                                result.type.slice(1).replace("-", " ")}
+                            </Badge>
+                            {result.metadata && (
+                              <span className="text-xs text-gray-400">
+                                {new Date(result.metadata).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Search className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <p>Start typing to search...</p>
+                  <p className="text-sm mt-2">
+                    Search family members, events, notices, and gallery items
+                  </p>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* ACTION ICONS */}
         <div className="flex items-center gap-4">
@@ -147,6 +416,8 @@ const DashboardNavbar = () => {
                 href={
                   user?.user_metadata?.is_admin === true
                     ? "/admin/notifications"
+                    : user?.user_metadata?.is_publisher === true
+                    ? "/publisher/notifications"
                     : "/dashboard/notifications"
                 }
               >

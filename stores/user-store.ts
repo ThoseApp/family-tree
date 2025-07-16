@@ -20,6 +20,7 @@ interface UserStore {
     relative?: string;
     relationshipToRelative?: string;
     isAdmin?: boolean;
+    isPublisher?: boolean;
   }) => Promise<any>;
   login: (email: string, password: string, nextRoute: string) => Promise<any>;
   loginWithGoogle: (redirectTo?: string) => Promise<any>;
@@ -99,11 +100,20 @@ export const useUserStore = create(
           set({ user: data.user, success: true, loading: false });
           toast.success("Login successful");
 
+          set({ user: data.user, success: true, loading: false });
+          toast.success("Login successful");
+
+          // Determine redirect path based on user role
+          let redirectPath = "/dashboard";
+          if (data.user.user_metadata?.is_admin) {
+            redirectPath = "/admin";
+          } else if (data.user.user_metadata?.is_publisher) {
+            redirectPath = "/publisher";
+          }
+
           return {
             data,
-            path:
-              (nextRoute && nextRoute.trim()) ||
-              (data.user.user_metadata?.is_admin ? "/admin" : "/dashboard"),
+            path: (nextRoute && nextRoute.trim()) || redirectPath,
           };
         } catch (error: any) {
           const errorMessage = error?.message || "Login failed";
@@ -158,6 +168,7 @@ export const useUserStore = create(
           relative,
           relationshipToRelative,
           isAdmin = false,
+          isPublisher = false,
         } = userData;
         set({ loading: true, success: null, error: null });
 
@@ -174,6 +185,7 @@ export const useUserStore = create(
                   full_name: `${firstName} ${lastName}`,
                   date_of_birth: dateOfBirth ? dateOfBirth.toISOString() : null,
                   is_admin: isAdmin,
+                  is_publisher: isPublisher,
                 },
               },
             });
@@ -193,7 +205,7 @@ export const useUserStore = create(
                 date_of_birth: dateOfBirth ? dateOfBirth.toISOString() : null,
                 relative: relative || null,
                 relationship_to_relative: relationshipToRelative || null,
-                status: isAdmin ? "approved" : "pending", // Set status based on admin flag
+                status: isAdmin || isPublisher ? "approved" : "pending", // Set status based on admin/publisher flag
               });
 
             if (profileError) {
