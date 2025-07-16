@@ -18,6 +18,7 @@ import {
   LogOutIcon,
   Mail,
   Clipboard,
+  Shield,
 } from "lucide-react";
 import { dummyProfileImage } from "..";
 
@@ -36,6 +37,11 @@ export const navLinksTopSection: NavLink[] = [
     label: "Member Requests",
     href: "/admin/member-requests",
     icon: UsersIcon,
+  },
+  {
+    label: "Publisher Management",
+    href: "/admin/publisher-management",
+    icon: Shield,
   },
   {
     label: "Gallery Requests",

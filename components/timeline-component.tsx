@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { useUserStore } from "@/stores/user-store";
 import { useLifeEventsStore } from "@/stores/life-events-store";
 import { toast } from "sonner";
 import { LifeEvent } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
-import { Plus, Edit2, Trash2, Calendar } from "lucide-react";
+import { Plus, Edit2, Trash2, Calendar, Search, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { LoadingIcon } from "@/components/loading-icon";
 
 const TimelineComponent = () => {
@@ -45,6 +52,35 @@ const TimelineComponent = () => {
   });
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
+
+  // Search functionality states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchFilter, setSearchFilter] = useState("all");
+
+  // Filter life events based on search query and filter
+  const filteredLifeEvents = useMemo(() => {
+    if (!searchQuery.trim()) return lifeEvents;
+
+    return lifeEvents.filter((event) => {
+      const query = searchQuery.toLowerCase();
+
+      switch (searchFilter) {
+        case "title":
+          return event.title.toLowerCase().includes(query);
+        case "description":
+          return (event.description || "").toLowerCase().includes(query);
+        case "year":
+          return event.year.includes(query);
+        case "all":
+        default:
+          return (
+            event.title.toLowerCase().includes(query) ||
+            (event.description || "").toLowerCase().includes(query) ||
+            event.year.includes(query)
+          );
+      }
+    });
+  }, [lifeEvents, searchQuery, searchFilter]);
 
   useEffect(() => {
     if (!user) {
@@ -126,6 +162,53 @@ const TimelineComponent = () => {
         </Button>
       </div>
 
+      {/* SEARCH SECTION */}
+      {lifeEvents.length > 0 && (
+        <div className="bg-white p-6 rounded-xl shadow-sm border">
+          <div className="flex flex-col md:flex-row gap-4 items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 size-4" />
+              <Input
+                placeholder="Search timeline by title, description, or year..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Label
+                htmlFor="search-filter"
+                className="text-sm font-medium whitespace-nowrap"
+              >
+                Search in:
+              </Label>
+              <Select value={searchFilter} onValueChange={setSearchFilter}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All fields</SelectItem>
+                  <SelectItem value="title">Title only</SelectItem>
+                  <SelectItem value="description">Description only</SelectItem>
+                  <SelectItem value="year">Year only</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {searchQuery && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSearchQuery("")}
+                className="shrink-0"
+              >
+                <X className="size-4 mr-1" />
+                Clear
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* TIMELINE CONTENT */}
       <div className="bg-white p-6 rounded-xl shadow-sm border">
         {lifeEventsLoading ? (
@@ -133,9 +216,9 @@ const TimelineComponent = () => {
             <LoadingIcon className="size-6" />
             <span className="ml-2">Loading life events...</span>
           </div>
-        ) : lifeEvents.length > 0 ? (
+        ) : filteredLifeEvents.length > 0 ? (
           <div className="space-y-4">
-            {lifeEvents.map((event) => (
+            {filteredLifeEvents.map((event) => (
               <div
                 key={event.id}
                 className="flex items-start justify-between p-4 border rounded-lg hover:bg-gray-50"
@@ -151,13 +234,11 @@ const TimelineComponent = () => {
                     </span>
                   </div>
                   {event.description && (
-                    <p className="text-gray-600 text-sm ml-6">
-                      {event.description}
-                    </p>
+                    <p className="text-gray-600 mt-2">{event.description}</p>
                   )}
                   {event.date && (
-                    <p className="text-gray-500 text-xs ml-6 mt-1">
-                      Date: {formatDate(new Date(event.date))}
+                    <p className="text-sm text-gray-500 mt-1">
+                      Date: {formatDate(event.date)}
                     </p>
                   )}
                 </div>
@@ -173,7 +254,7 @@ const TimelineComponent = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => handleDeleteLifeEvent(event.id)}
-                    className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                    className="text-red-600 hover:text-red-700"
                   >
                     <Trash2 className="size-4" />
                   </Button>
@@ -181,13 +262,32 @@ const TimelineComponent = () => {
               </div>
             ))}
           </div>
-        ) : (
-          <div className="text-center py-8 text-gray-500">
-            <Calendar className="size-12 mx-auto mb-2 text-gray-300" />
-            <p>No life events added yet.</p>
-            <p className="text-sm">
-              Click &quot;Add Life Event&quot; to get started!
+        ) : lifeEvents.length > 0 && searchQuery ? (
+          <div className="text-center py-12">
+            <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-1">
+              No matching events found
+            </h3>
+            <p className="text-gray-500 mb-4">
+              Try adjusting your search terms or search filter.
             </p>
+            <Button variant="outline" onClick={() => setSearchQuery("")}>
+              Clear Search
+            </Button>
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <Calendar className="size-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No life events yet
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Start building your timeline by adding your first life event.
+            </p>
+            <Button onClick={handleAddLifeEvent}>
+              <Plus className="size-4 mr-2" />
+              Add Life Event
+            </Button>
           </div>
         )}
       </div>

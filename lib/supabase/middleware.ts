@@ -92,9 +92,11 @@ export async function updateSession(request: NextRequest) {
     // Get the current path
     const path = request.nextUrl.pathname;
 
-    // Check if the route is private (dashboard or admin)
+    // Check if the route is private (dashboard, admin, or publisher)
     const isPrivateRoute =
-      path.startsWith("/dashboard") || path.startsWith("/admin");
+      path.startsWith("/dashboard") ||
+      path.startsWith("/admin") ||
+      path.startsWith("/publisher");
 
     // Check if the route is a protected landing page
     const protectedLandingPages = [
@@ -178,8 +180,12 @@ export async function updateSession(request: NextRequest) {
       // Only allow approved users to access dashboard/admin
       if (userProfile?.status === "approved") {
         // Redirect authenticated and approved users away from auth routes
-        const redirectPath =
-          user.user_metadata?.is_admin === true ? "/admin" : "/dashboard";
+        let redirectPath = "/dashboard";
+        if (user.user_metadata?.is_admin === true) {
+          redirectPath = "/admin";
+        } else if (user.user_metadata?.is_publisher === true) {
+          redirectPath = "/publisher";
+        }
 
         const redirectUrl = new URL(redirectPath, request.url);
         return NextResponse.redirect(redirectUrl);

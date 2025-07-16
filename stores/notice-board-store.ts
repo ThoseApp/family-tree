@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase/client";
-import { NoticeBoard } from "@/lib/types";
+import { NoticeBoard, getUserRoleFromMetadata } from "@/lib/types";
 import {
   NoticeBoardStatusEnum,
   NotificationTypeEnum,
@@ -138,12 +138,20 @@ export const useNoticeBoardStore = create<NoticeBoardState>((set, get) => ({
     try {
       // Add current date and time if not provided
       const now = new Date();
+
+      // Get current user to check role
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const userRole = user ? getUserRoleFromMetadata(user) : "user";
       const isAdmin = userId === ADMIN_ID;
+      const isPublisher = userRole === "publisher";
+      const canAutoApprove = isAdmin || isPublisher;
 
       const formattedNoticeBoard = {
         ...noticeBoard,
         user_id: userId,
-        status: isAdmin
+        status: canAutoApprove
           ? NoticeBoardStatusEnum.approved
           : NoticeBoardStatusEnum.pending,
         posteddate: noticeBoard.posteddate || now.toISOString().split("T")[0],
@@ -166,8 +174,8 @@ export const useNoticeBoardStore = create<NoticeBoardState>((set, get) => ({
         loading: false,
       }));
 
-      // Create notification for admin if user is not admin
-      if (!isAdmin && userId) {
+      // Create notification for admin if user is not admin or publisher
+      if (!canAutoApprove && userId) {
         try {
           await supabase.rpc("create_system_notification", {
             p_user_id: ADMIN_ID,
@@ -188,7 +196,7 @@ export const useNoticeBoardStore = create<NoticeBoardState>((set, get) => ({
       }
 
       toast.success(
-        isAdmin
+        canAutoApprove
           ? "Notice board created successfully"
           : "Notice board submitted for approval"
       );
