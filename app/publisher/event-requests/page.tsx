@@ -329,14 +329,14 @@ const PublisherEventRequestsPage = () => {
               {actionDialog.action === "approve" ? (
                 <>
                   Are you sure you want to approve the event{" "}
-                  <strong>"{actionDialog.event?.name}"</strong>? It will become
-                  visible to all family members.
+                  <strong>&quot;{actionDialog.event?.name}&quot;</strong>? It
+                  will become visible to all family members.
                 </>
               ) : (
                 <>
                   Are you sure you want to reject the event{" "}
-                  <strong>"{actionDialog.event?.name}"</strong>? The submitter
-                  will be notified of the rejection.
+                  <strong>&quot;{actionDialog.event?.name}&quot;</strong>? The
+                  submitter will be notified of the rejection.
                 </>
               )}
             </AlertDialogDescription>
