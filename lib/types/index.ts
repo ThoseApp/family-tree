@@ -93,13 +93,16 @@ export interface ProcessedMember {
   last_name: string;
   fathers_first_name: string;
   fathers_last_name: string;
+  fathers_uid?: string;
   mothers_first_name: string;
   mothers_last_name: string;
+  mothers_uid?: string;
   order_of_birth: number | null;
   order_of_marriage: number | null;
   marital_status: string;
   spouses_first_name: string;
   spouses_last_name: string;
+  spouse_uid?: string;
   date_of_birth: string | null;
   created_at?: string;
   updated_at?: string;
