@@ -59,6 +59,7 @@ export interface UserProfile {
   email: string;
   status?: keyof typeof UserStatusEnum;
   role?: "admin" | "publisher" | "user";
+  family_tree_uid?: string; // Link to family-tree table unique_id
 
   gender?: string;
   timeline?: any; // JSONB type
@@ -298,3 +299,42 @@ export const getRolePermissions = (role: UserRole): UserRolePermissions => {
       };
   }
 };
+
+// Family Member Account Creation Types
+export interface FamilyMemberAccountCreation {
+  familyMemberId: string; // unique_id from family-tree table
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  phoneNumber?: string;
+  dateOfBirth?: string;
+}
+
+export interface AccountCreationResult {
+  success: boolean;
+  userId?: string;
+  email?: string;
+  password?: string;
+  error?: string;
+}
+
+export interface BulkAccountCreationRequest {
+  accounts: FamilyMemberAccountCreation[];
+}
+
+export interface BulkAccountCreationResult {
+  totalRequested: number;
+  successCount: number;
+  failureCount: number;
+  results: AccountCreationResult[];
+  errors: string[];
+}
+
+export interface EmailCredentials {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  familyMemberId: string;
+}
