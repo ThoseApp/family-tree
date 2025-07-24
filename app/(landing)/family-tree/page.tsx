@@ -1,6 +1,7 @@
 import PageHeader from "@/components/page-header";
 import FamilyTreeVisualization from "@/components/family-tree-visualization";
 import React from "react";
+import FamilyTreeComponent from "@/components/family-tree-component";
 
 const FamilyTreePage = () => {
   return (
@@ -14,7 +15,7 @@ const FamilyTreePage = () => {
 
       {/* FAMILY TREE VISUALIZATION */}
       <div className="container mx-auto p-6">
-        <FamilyTreeVisualization />
+        {/* <FamilyTreeComponent /> */}
       </div>
     </div>
   );

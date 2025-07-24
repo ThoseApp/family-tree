@@ -58,6 +58,8 @@ export interface UserProfile {
   bio: string;
   email: string;
   status?: keyof typeof UserStatusEnum;
+  role?: "admin" | "publisher" | "user";
+  family_tree_uid?: string; // Link to family-tree table unique_id
 
   gender?: string;
   timeline?: any; // JSONB type
@@ -92,13 +94,16 @@ export interface ProcessedMember {
   last_name: string;
   fathers_first_name: string;
   fathers_last_name: string;
+  fathers_uid?: string;
   mothers_first_name: string;
   mothers_last_name: string;
+  mothers_uid?: string;
   order_of_birth: number | null;
   order_of_marriage: number | null;
   marital_status: string;
   spouses_first_name: string;
   spouses_last_name: string;
+  spouse_uid?: string;
   date_of_birth: string | null;
   created_at?: string;
   updated_at?: string;
@@ -112,6 +117,8 @@ export interface Event {
   category: string;
   description?: string;
   image?: string;
+  status?: "pending" | "approved" | "rejected";
+  is_public?: boolean;
   created_at?: string;
   updated_at?: string;
 }
@@ -240,4 +247,94 @@ export interface MemberRequest {
   image?: string;
   created_at: string;
   updated_at?: string;
+}
+
+// User role utility types and functions
+export type UserRole = "admin" | "publisher" | "user";
+
+export interface UserRolePermissions {
+  canManageUsers: boolean;
+  canManageSettings: boolean;
+  canApproveContent: boolean;
+  canCreatePublicContent: boolean;
+  canAccessAdminPanel: boolean;
+  canAccessPublisherPanel: boolean;
+}
+
+// Role permission helpers
+export const getUserRoleFromMetadata = (user: any): UserRole => {
+  if (user?.user_metadata?.is_admin === true) return "admin";
+  if (user?.user_metadata?.is_publisher === true) return "publisher";
+  return "user";
+};
+
+export const getRolePermissions = (role: UserRole): UserRolePermissions => {
+  switch (role) {
+    case "admin":
+      return {
+        canManageUsers: true,
+        canManageSettings: true,
+        canApproveContent: true,
+        canCreatePublicContent: true,
+        canAccessAdminPanel: true,
+        canAccessPublisherPanel: false,
+      };
+    case "publisher":
+      return {
+        canManageUsers: false,
+        canManageSettings: false,
+        canApproveContent: true,
+        canCreatePublicContent: true,
+        canAccessAdminPanel: false,
+        canAccessPublisherPanel: true,
+      };
+    case "user":
+      return {
+        canManageUsers: false,
+        canManageSettings: false,
+        canApproveContent: false,
+        canCreatePublicContent: false,
+        canAccessAdminPanel: false,
+        canAccessPublisherPanel: false,
+      };
+  }
+};
+
+// Family Member Account Creation Types
+export interface FamilyMemberAccountCreation {
+  familyMemberId: string; // unique_id from family-tree table
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  phoneNumber?: string;
+  dateOfBirth?: string;
+}
+
+export interface AccountCreationResult {
+  success: boolean;
+  userId?: string;
+  email?: string;
+  password?: string;
+  error?: string;
+}
+
+export interface BulkAccountCreationRequest {
+  accounts: FamilyMemberAccountCreation[];
+}
+
+export interface BulkAccountCreationResult {
+  totalRequested: number;
+  successCount: number;
+  failureCount: number;
+  results: AccountCreationResult[];
+  errors: string[];
+}
+
+export interface EmailCredentials {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  familyMemberId: string;
 }

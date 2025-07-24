@@ -69,13 +69,16 @@ export function familyMemberToProcessedMember(
     last_name: lastName,
     fathers_first_name: fatherFirstName,
     fathers_last_name: fatherLastName,
+    fathers_uid: undefined, // Will be populated separately when relationships are established
     mothers_first_name: motherFirstName,
     mothers_last_name: motherLastName,
+    mothers_uid: undefined, // Will be populated separately when relationships are established
     order_of_birth: familyMember.orderOfBirth || null,
     order_of_marriage: familyMember.orderOfMarriage || null,
     marital_status: truncateField(familyMember.description || "", 100), // Assuming longer field for description
     spouses_first_name: spouseFirstName,
     spouses_last_name: spouseLastName,
+    spouse_uid: undefined, // Will be populated separately when relationships are established
     date_of_birth:
       familyMember.birthDate && familyMember.birthDate.trim() !== ""
         ? familyMember.birthDate

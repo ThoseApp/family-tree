@@ -23,8 +23,11 @@ export async function GET(request: NextRequest) {
     if (user?.user_metadata?.is_admin === true) {
       // Always route admins to /admin regardless of next parameter
       redirectPath = "/admin";
+    } else if (user?.user_metadata?.is_publisher === true) {
+      // Always route publishers to /publisher regardless of next parameter
+      redirectPath = "/publisher";
     } else if (next && next !== "/sign-in") {
-      // For non-admins, respect the next parameter
+      // For regular users, respect the next parameter
       redirectPath = next;
     }
 

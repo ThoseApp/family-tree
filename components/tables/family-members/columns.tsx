@@ -6,7 +6,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Edit, Trash2, MoreHorizontal, User } from "lucide-react";
+import { Edit, Trash2, MoreHorizontal, User, UserPlus } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +17,8 @@ import { DataTableColumnHeader } from "@/components/ui/table-reusuable/data-tabl
 
 export const createColumns = (
   onEdit: (member: FamilyMember) => void,
-  onDelete: (member: FamilyMember) => void
+  onDelete: (member: FamilyMember) => void,
+  onCreateAccount?: (member: FamilyMember) => void
 ): ColumnDef<FamilyMember>[] => [
   {
     id: "s/n",
@@ -227,6 +228,12 @@ export const createColumns = (
               <Edit className="mr-2 h-4 w-4" />
               Edit
             </DropdownMenuItem>
+            {onCreateAccount && (
+              <DropdownMenuItem onClick={() => onCreateAccount(member)}>
+                <UserPlus className="mr-2 h-4 w-4" />
+                Create Account
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem
               onClick={() => onDelete(member)}
               className="text-red-600"

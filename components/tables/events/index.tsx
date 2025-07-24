@@ -10,6 +10,7 @@ interface EventsTableProps {
   onEditClick?: (event: Event) => void;
   onDeleteClick?: (id: string) => void;
   onInviteClick?: (event: Event) => void;
+  showSearchInput?: boolean;
 }
 
 const EventsTable = ({
@@ -17,6 +18,7 @@ const EventsTable = ({
   onEditClick,
   onDeleteClick,
   onInviteClick,
+  showSearchInput = true,
 }: EventsTableProps) => {
   const columns = createColumns(onEditClick, onDeleteClick, onInviteClick);
 
@@ -24,7 +26,9 @@ const EventsTable = ({
     <DataTable
       columns={columns}
       data={data}
-      // showSearchInput
+      showSearchInput={showSearchInput}
+      searchKey="name"
+      placeholder="Search events by name..."
       // exportData
       // statusFilter
       // dateFilter
