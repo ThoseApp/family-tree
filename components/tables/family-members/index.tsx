@@ -11,6 +11,7 @@ interface FamilyMembersTableProps {
   onUserClick?: (user: FamilyMember) => void;
   onEdit?: (member: FamilyMember) => void;
   onDelete?: (member: FamilyMember) => void;
+  onCreateAccount?: (member: FamilyMember) => void;
   showSearchInput?: boolean;
 }
 
@@ -19,10 +20,11 @@ const FamilyMembersTable = ({
   onUserClick,
   onEdit = () => {},
   onDelete = () => {},
+  onCreateAccount,
   showSearchInput = true,
 }: FamilyMembersTableProps) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const columns = createColumns(onEdit, onDelete);
+  const columns = createColumns(onEdit, onDelete, onCreateAccount);
 
   // Filter data based on search term across multiple fields
   const filteredData = useMemo(() => {

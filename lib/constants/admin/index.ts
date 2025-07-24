@@ -19,6 +19,7 @@ import {
   Mail,
   Clipboard,
   Shield,
+  UserCheck,
 } from "lucide-react";
 import { dummyProfileImage } from "..";
 
@@ -42,6 +43,11 @@ export const navLinksTopSection: NavLink[] = [
     label: "Publisher Management",
     href: "/admin/publisher-management",
     icon: Shield,
+  },
+  {
+    label: "User Accounts",
+    href: "/admin/user-accounts",
+    icon: UserCheck,
   },
   {
     label: "Gallery Requests",

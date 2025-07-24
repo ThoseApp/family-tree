@@ -55,13 +55,16 @@ interface FamilyMember {
   "Last Name": string;
   "Fathers' First Name": string;
   "Fathers' Last Name": string;
+  "Fathers' UID": string;
   "Mothers' First Name": string;
   "Mothers' Last Name": string;
+  "Mothers' UID": string;
   "Order of Birth": number;
   "Order of Marriage": number;
   "Marital Status": string;
   "Spouses' First Name": string;
   "Spouses' Last Name": string;
+  "Spouse UID": string;
   "Date of Birth": string;
 }
 
@@ -74,13 +77,16 @@ interface ProcessedMember {
   last_name: string;
   fathers_first_name: string;
   fathers_last_name: string;
+  fathers_uid?: string;
   mothers_first_name: string;
   mothers_last_name: string;
+  mothers_uid?: string;
   order_of_birth: number | null;
   order_of_marriage: number | null;
   marital_status: string;
   spouses_first_name: string;
   spouses_last_name: string;
+  spouse_uid?: string;
   date_of_birth: string | null;
 }
 
@@ -378,8 +384,10 @@ const FamilyTreeUploadPage = () => {
       last_name: row["Last Name"] || "",
       fathers_first_name: row["Fathers' First Name"] || "",
       fathers_last_name: row["Fathers' Last Name"] || "",
+      fathers_uid: row["Fathers' UID"] || undefined,
       mothers_first_name: row["Mothers' First Name"] || "",
       mothers_last_name: row["Mothers' Last Name"] || "",
+      mothers_uid: row["Mothers' UID"] || undefined,
       order_of_birth: row["Order of Birth"]
         ? Number(row["Order of Birth"])
         : null,
@@ -389,6 +397,7 @@ const FamilyTreeUploadPage = () => {
       marital_status: row["Marital Status"] || "",
       spouses_first_name: row["Spouses' First Name"] || "",
       spouses_last_name: row["Spouses' Last Name"] || "",
+      spouse_uid: row["Spouse UID"] || undefined,
       date_of_birth:
         row["Date of Birth"] && isValidDate(row["Date of Birth"])
           ? new Date(row["Date of Birth"]).toISOString().split("T")[0]
@@ -2409,11 +2418,17 @@ const FamilyTreeUploadPage = () => {
                         <TableHead className="min-w-[150px]">
                           Father&apos;s Last Name
                         </TableHead>
+                        <TableHead className="min-w-[120px]">
+                          Father&apos;s UID
+                        </TableHead>
                         <TableHead className="min-w-[150px]">
                           Mother&apos;s First Name
                         </TableHead>
                         <TableHead className="min-w-[150px]">
                           Mother&apos;s Last Name
+                        </TableHead>
+                        <TableHead className="min-w-[120px]">
+                          Mother&apos;s UID
                         </TableHead>
                         <TableHead className="min-w-[100px]">
                           Order of Birth
@@ -2429,6 +2444,9 @@ const FamilyTreeUploadPage = () => {
                         </TableHead>
                         <TableHead className="min-w-[150px]">
                           Spouse&apos;s Last Name
+                        </TableHead>
+                        <TableHead className="min-w-[120px]">
+                          Spouse UID
                         </TableHead>
                         <TableHead className="min-w-[200px]">
                           Picture Link
@@ -2471,13 +2489,16 @@ const FamilyTreeUploadPage = () => {
                           </TableCell>
                           <TableCell>{member.fathers_first_name}</TableCell>
                           <TableCell>{member.fathers_last_name}</TableCell>
+                          <TableCell>{member.fathers_uid || ""}</TableCell>
                           <TableCell>{member.mothers_first_name}</TableCell>
                           <TableCell>{member.mothers_last_name}</TableCell>
+                          <TableCell>{member.mothers_uid || ""}</TableCell>
                           <TableCell>{member.order_of_birth}</TableCell>
                           <TableCell>{member.order_of_marriage}</TableCell>
                           <TableCell>{member.marital_status}</TableCell>
                           <TableCell>{member.spouses_first_name}</TableCell>
                           <TableCell>{member.spouses_last_name}</TableCell>
+                          <TableCell>{member.spouse_uid || ""}</TableCell>
                           <TableCell>
                             {member.picture_link && (
                               <a
@@ -2763,8 +2784,11 @@ const FamilyTreeUploadPage = () => {
                       <TableHead>Gender</TableHead>
                       <TableHead>Date of Birth</TableHead>
                       <TableHead>Father</TableHead>
+                      <TableHead>Father UID</TableHead>
                       <TableHead>Mother</TableHead>
+                      <TableHead>Mother UID</TableHead>
                       <TableHead>Spouse</TableHead>
+                      <TableHead>Spouse UID</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -2782,14 +2806,17 @@ const FamilyTreeUploadPage = () => {
                           {member["Fathers' First Name"]}{" "}
                           {member["Fathers' Last Name"]}
                         </TableCell>
+                        <TableCell>{member["Fathers' UID"] || ""}</TableCell>
                         <TableCell>
                           {member["Mothers' First Name"]}{" "}
                           {member["Mothers' Last Name"]}
                         </TableCell>
+                        <TableCell>{member["Mothers' UID"] || ""}</TableCell>
                         <TableCell>
                           {member["Spouses' First Name"]}{" "}
                           {member["Spouses' Last Name"]}
                         </TableCell>
+                        <TableCell>{member["Spouse UID"] || ""}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

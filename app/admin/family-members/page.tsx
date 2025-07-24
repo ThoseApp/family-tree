@@ -14,6 +14,7 @@ import {
   UserX,
 } from "lucide-react";
 import { FamilyMemberModal } from "@/components/modals/family-member-modal";
+import { CreateAccountModal } from "@/components/modals/create-account-modal";
 import { useFamilyMembersStore } from "@/stores/family-members-store";
 import { FamilyMember } from "@/lib/types";
 import { toast } from "sonner";
@@ -104,6 +105,12 @@ const FamilyMembersPage = () => {
   const [deletingMember, setDeletingMember] = useState<FamilyMember | null>(
     null
   );
+
+  // Create Account Modal state
+  const [isCreateAccountModalOpen, setIsCreateAccountModalOpen] =
+    useState(false);
+  const [creatingAccountFor, setCreatingAccountFor] =
+    useState<FamilyMember | null>(null);
 
   // Loading states for different operations
   const [operationLoading, setOperationLoading] = useState({
@@ -437,6 +444,17 @@ const FamilyMembersPage = () => {
     } finally {
       setOperationLoading((prev) => ({ ...prev, deleting: false }));
     }
+  };
+
+  // Handle creating user account for family member
+  const handleCreateAccount = (member: FamilyMember) => {
+    setCreatingAccountFor(member);
+    setIsCreateAccountModalOpen(true);
+  };
+
+  const handleCreateAccountSuccess = () => {
+    // Optionally refresh data or show additional success feedback
+    toast.success("User account created successfully!");
   };
 
   const openEditModal = (member: FamilyMember) => {
@@ -837,6 +855,7 @@ const FamilyMembersPage = () => {
               data={filteredFamilyMembers}
               onEdit={openEditModal}
               onDelete={openDeleteDialog}
+              onCreateAccount={handleCreateAccount}
               onUserClick={handleMemberClick}
               showSearchInput={false}
             />
@@ -897,6 +916,17 @@ const FamilyMembersPage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* CREATE ACCOUNT MODAL */}
+      <CreateAccountModal
+        isOpen={isCreateAccountModalOpen}
+        onClose={() => {
+          setIsCreateAccountModalOpen(false);
+          setCreatingAccountFor(null);
+        }}
+        familyMember={creatingAccountFor}
+        onSuccess={handleCreateAccountSuccess}
+      />
     </div>
   );
 };
