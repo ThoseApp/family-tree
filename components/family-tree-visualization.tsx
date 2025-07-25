@@ -68,12 +68,12 @@ interface FamilyChartMember {
 // Color scheme for the 4 main lineages
 const LINEAGE_COLORS = {
   LAKETU: "#8B4513", // Brown for originator
-  EGUNDEBI: "#2563EB", // Blue for first Mosuro
-  ADELAJA: "#DC2626", // Red for first child
-  CHILD2: "#059669", // Green for second child
-  CHILD3: "#7C3AED", // Purple for third child
-  CHILD4: "#EA580C", // Orange for fourth child
-  DEFAULT: "#6B7280", // Gray for others
+  EGUNDEBI: "#DC2626", // Red for Egundebi
+  EGUNDEBI_MALE_CHILD_1: "#059669", // Green
+  EGUNDEBI_MALE_CHILD_2: "#2563EB", // Blue
+  EGUNDEBI_MALE_CHILD_3: "#7C3AED", // Purple
+  EGUNDEBI_FEMALE_CHILD: "#FBBF24", // Yellow
+  DEFAULT: "#6B7280", // Gray for others/spouses
 };
 
 const FamilyTreeVisualization = () => {
@@ -82,325 +82,376 @@ const FamilyTreeVisualization = () => {
   const [familyChartData, setFamilyChartData] = useState<FamilyChartMember[]>(
     []
   );
+  const lineageColorCache = useRef(new Map<string, string>());
 
   // Ref for the family chart container
   const familyTreeRef = useRef<HTMLDivElement>(null);
   const familyChartInstance = useRef<any>(null);
 
-  // Business Rules Logic
-  const findParentLineage = (
-    member: ProcessedMember,
-    allMembers: ProcessedMember[]
-  ): string => {
-    const father = allMembers.find(
-      (m) =>
-        m.first_name === member.fathers_first_name &&
-        m.last_name === member.fathers_last_name
-    );
+  const getLineageColor = useCallback(
+    (member: ProcessedMember, allMembers: ProcessedMember[]): string => {
+      const uid = member.unique_id;
 
-    if (father) {
-      if (
-        father.unique_id === "LAKETU" ||
-        father.first_name?.toUpperCase() === "LAKETU"
-      ) {
+      if (lineageColorCache.current.has(uid)) {
+        return lineageColorCache.current.get(uid)!;
+      }
+
+      // Helper to find member by name
+      const findMemberByName = (firstName: string, lastName: string) => {
+        return allMembers.find(
+          (m) =>
+            m.first_name?.toLowerCase().trim() ===
+              firstName.toLowerCase().trim() &&
+            m.last_name?.toLowerCase().trim() === lastName.toLowerCase().trim()
+        );
+      };
+
+      // Rule 1: Originator (LAKETU)
+      if (uid === "LAKETU" || member.first_name?.toUpperCase() === "LAKETU") {
+        lineageColorCache.current.set(uid, LINEAGE_COLORS.LAKETU);
         return LINEAGE_COLORS.LAKETU;
-      } else if (
-        father.unique_id === "EGUNDEBI" ||
-        father.first_name?.toUpperCase() === "EGUNDEBI"
+      }
+
+      // Rule 2: Egundebi (ID D01Z00002) is red
+      if (
+        uid === "D01Z00002" ||
+        uid === "EGUNDEBI" ||
+        member.first_name?.toUpperCase() === "EGUNDEBI"
       ) {
+        lineageColorCache.current.set(uid, LINEAGE_COLORS.EGUNDEBI);
         return LINEAGE_COLORS.EGUNDEBI;
-      } else if (father.first_name?.toUpperCase() === "ADELAJA") {
-        return LINEAGE_COLORS.ADELAJA;
       }
-
-      const fatherParent = allMembers.find(
-        (m) =>
-          m.first_name === father.fathers_first_name &&
-          m.last_name === father.fathers_last_name &&
-          (m.unique_id === "EGUNDEBI" ||
-            m.first_name?.toUpperCase() === "EGUNDEBI")
-      );
-
-      if (fatherParent) {
-        const birthOrder = father.order_of_birth || 0;
-        switch (birthOrder) {
-          case 1:
-            return father.first_name?.toUpperCase() === "ADELAJA"
-              ? LINEAGE_COLORS.ADELAJA
-              : LINEAGE_COLORS.CHILD2;
-          case 2:
-            return LINEAGE_COLORS.CHILD2;
-          case 3:
-            return LINEAGE_COLORS.CHILD3;
-          case 4:
-            return LINEAGE_COLORS.CHILD4;
-          default:
-            if (father.first_name?.toUpperCase() === "ADELAJA")
-              return LINEAGE_COLORS.ADELAJA;
-            return LINEAGE_COLORS.CHILD2;
-        }
-      }
-    }
-
-    return LINEAGE_COLORS.DEFAULT;
-  };
-
-  const applyBusinessRules = (
-    member: ProcessedMember,
-    allMembers: ProcessedMember[]
-  ) => {
-    const uid = member.unique_id;
-
-    const isDescendant = uid?.charAt(0).toUpperCase() === "D";
-    const isSpouse = uid?.charAt(0).toUpperCase() === "S";
-    const isOriginator =
-      uid === "LAKETU" || member.first_name?.toUpperCase() === "LAKETU";
-
-    const isTwin =
-      allMembers.filter(
-        (m) =>
-          m.unique_id !== member.unique_id &&
-          m.fathers_first_name === member.fathers_first_name &&
-          m.fathers_last_name === member.fathers_last_name &&
-          m.mothers_first_name === member.mothers_first_name &&
-          m.mothers_last_name === member.mothers_last_name &&
-          m.order_of_birth === member.order_of_birth &&
-          m.order_of_birth !== null &&
-          m.order_of_birth !== 0
-      ).length > 0;
-
-    const isPolygamous =
-      member.gender?.toLowerCase() === "male" &&
-      member.order_of_marriage !== null &&
-      member.order_of_marriage > 1 &&
-      member.marital_status?.toLowerCase() === "married";
-
-    const isOutOfWedlock =
-      (!member.fathers_first_name || !member.fathers_last_name) &&
-      (!member.mothers_first_name || !member.mothers_last_name);
-
-    const isSpouseByRules =
-      (!isOriginator &&
-        (!member.fathers_first_name || !member.mothers_first_name)) ||
-      (!isOriginator &&
-        (member.order_of_birth === null || member.order_of_birth === 0));
-
-    let lineageColor = LINEAGE_COLORS.DEFAULT;
-
-    if (isOriginator) {
-      lineageColor = LINEAGE_COLORS.LAKETU;
-    } else if (
-      uid === "EGUNDEBI" ||
-      member.first_name?.toUpperCase() === "EGUNDEBI"
-    ) {
-      lineageColor = LINEAGE_COLORS.EGUNDEBI;
-    } else if (member.first_name?.toUpperCase() === "ADELAJA") {
-      lineageColor = LINEAGE_COLORS.ADELAJA;
-    } else {
-      const isEgundebisChild =
-        member.fathers_first_name?.toUpperCase() === "EGUNDEBI" ||
-        member.mothers_first_name?.toUpperCase() === "EGUNDEBI";
-
-      if (isEgundebisChild) {
-        const birthOrder = member.order_of_birth || 0;
-        switch (birthOrder) {
-          case 1:
-            lineageColor =
-              member.first_name?.toUpperCase() === "ADELAJA"
-                ? LINEAGE_COLORS.ADELAJA
-                : LINEAGE_COLORS.CHILD2;
-            break;
-          case 2:
-            lineageColor = LINEAGE_COLORS.CHILD2;
-            break;
-          case 3:
-            lineageColor = LINEAGE_COLORS.CHILD3;
-            break;
-          case 4:
-            lineageColor = LINEAGE_COLORS.CHILD4;
-            break;
-          default:
-            if (member.first_name?.toUpperCase() === "ADELAJA") {
-              lineageColor = LINEAGE_COLORS.ADELAJA;
-            } else {
-              lineageColor = LINEAGE_COLORS.CHILD2;
-            }
-        }
-      } else {
-        const parentLineage = findParentLineage(member, allMembers);
-        lineageColor = parentLineage || LINEAGE_COLORS.DEFAULT;
-      }
-    }
-
-    return {
-      isOriginator,
-      isDescendant: isDescendant || (!isSpouse && !isSpouseByRules),
-      isSpouse: isSpouse || isSpouseByRules,
-      isTwin,
-      isPolygamous,
-      isOutOfWedlock,
-      lineageColor,
-    };
-  };
-
-  // Convert ProcessedMember data to FamilyChart format
-  const convertToFamilyChartFormat = (
-    members: ProcessedMember[]
-  ): FamilyChartMember[] => {
-    console.log("Converting family data - total members:", members.length);
-
-    // Create a lookup map for faster searching
-    const memberMap = new Map<string, ProcessedMember>();
-    const nameMap = new Map<string, ProcessedMember>();
-
-    members.forEach((member) => {
-      memberMap.set(member.unique_id, member);
-      const nameKey = `${member.first_name?.toLowerCase()}_${member.last_name?.toLowerCase()}`;
-      nameMap.set(nameKey, member);
-    });
-
-    const chartMembers = members.map((member) => {
-      const rules = applyBusinessRules(member, members);
 
       // Find father
       let father: ProcessedMember | undefined;
       if (member.fathers_first_name && member.fathers_last_name) {
-        const fatherKey = `${member.fathers_first_name.toLowerCase()}_${member.fathers_last_name.toLowerCase()}`;
-        father = nameMap.get(fatherKey);
+        father = findMemberByName(
+          member.fathers_first_name,
+          member.fathers_last_name
+        );
+      }
 
-        if (!father) {
-          father = members.find(
-            (m) =>
-              m.first_name?.toLowerCase().trim() ===
-                member.fathers_first_name?.toLowerCase().trim() &&
-              m.last_name?.toLowerCase().trim() ===
-                member.fathers_last_name?.toLowerCase().trim()
-          );
+      // Special case for Egundebi's father
+      if (
+        !father &&
+        (uid === "D01Z00002" ||
+          uid === "EGUNDEBI" ||
+          member.first_name?.toUpperCase() === "EGUNDEBI")
+      ) {
+        father = allMembers.find(
+          (m) =>
+            m.unique_id === "LAKETU" || m.first_name?.toUpperCase() === "LAKETU"
+        );
+      }
+
+      if (father) {
+        const fatherUid = father.unique_id;
+        const fatherIsEgundebi =
+          fatherUid === "D01Z00002" ||
+          fatherUid === "EGUNDEBI" ||
+          father.first_name?.toUpperCase() === "EGUNDEBI";
+
+        // Rule 3: Children of Egundebi
+        if (fatherIsEgundebi) {
+          const isFemale =
+            member.gender?.toLowerCase() === "female" ||
+            member.gender?.toLowerCase() === "f";
+          let color;
+
+          if (isFemale) {
+            color = LINEAGE_COLORS.EGUNDEBI_FEMALE_CHILD;
+          } else {
+            // Male children
+            const maleChildrenOfEgundebi = allMembers
+              .filter((m) => {
+                const isChild =
+                  (m.fathers_first_name?.toLowerCase().trim() ===
+                    father!.first_name?.toLowerCase().trim() &&
+                    m.fathers_last_name?.toLowerCase().trim() ===
+                      father!.last_name?.toLowerCase().trim()) ||
+                  (m.mothers_first_name?.toLowerCase().trim() ===
+                    father!.first_name?.toLowerCase().trim() &&
+                    m.mothers_last_name?.toLowerCase().trim() ===
+                      father!.last_name?.toLowerCase().trim());
+                return (
+                  isChild &&
+                  (m.gender?.toLowerCase() === "male" ||
+                    m.gender?.toLowerCase() === "m")
+                );
+              })
+              .sort(
+                (a, b) => (a.order_of_birth || 99) - (b.order_of_birth || 99)
+              );
+
+            const maleIndex = maleChildrenOfEgundebi.findIndex(
+              (m) => m.unique_id === uid
+            );
+
+            switch (maleIndex) {
+              case 0:
+                color = LINEAGE_COLORS.EGUNDEBI_MALE_CHILD_1;
+                break;
+              case 1:
+                color = LINEAGE_COLORS.EGUNDEBI_MALE_CHILD_2;
+                break;
+              case 2:
+                color = LINEAGE_COLORS.EGUNDEBI_MALE_CHILD_3;
+                break;
+              default:
+                color = LINEAGE_COLORS.DEFAULT;
+            }
+          }
+          lineageColorCache.current.set(uid, color);
+          return color;
         }
 
-        // Special case for EGUNDEBI->LAKETU relationship
-        if (
-          !father &&
-          (member.unique_id === "EGUNDEBI" ||
-            member.first_name?.toUpperCase() === "EGUNDEBI")
-        ) {
-          father = members.find(
-            (m) =>
-              m.unique_id === "LAKETU" ||
-              m.first_name?.toUpperCase() === "LAKETU"
-          );
+        // Rule 4: Male descendants inherit father's color
+        const isMale =
+          member.gender?.toLowerCase() === "male" ||
+          member.gender?.toLowerCase() === "m";
+        if (isMale) {
+          const isOriginator =
+            member.unique_id === "LAKETU" ||
+            member.first_name?.toUpperCase() === "LAKETU";
+          const isSpouseByRules =
+            (!isOriginator &&
+              (!member.fathers_first_name || !member.mothers_first_name)) ||
+            (!isOriginator &&
+              (member.order_of_birth === null || member.order_of_birth === 0));
+          const isSpouse =
+            member.unique_id?.charAt(0).toUpperCase() === "S" ||
+            isSpouseByRules;
+
+          if (!isSpouse) {
+            const fatherColor = getLineageColor(father, allMembers);
+            lineageColorCache.current.set(uid, fatherColor);
+            return fatherColor;
+          }
         }
       }
 
-      // Find mother
-      let mother: ProcessedMember | undefined;
-      if (member.mothers_first_name && member.mothers_last_name) {
-        const motherKey = `${member.mothers_first_name.toLowerCase()}_${member.mothers_last_name.toLowerCase()}`;
-        mother = nameMap.get(motherKey);
+      // Default for spouses and females not covered by other rules
+      lineageColorCache.current.set(uid, LINEAGE_COLORS.DEFAULT);
+      return LINEAGE_COLORS.DEFAULT;
+    },
+    []
+  );
 
-        if (!mother) {
-          mother = members.find(
-            (m) =>
-              m.first_name?.toLowerCase().trim() ===
-                member.mothers_first_name?.toLowerCase().trim() &&
-              m.last_name?.toLowerCase().trim() ===
-                member.mothers_last_name?.toLowerCase().trim()
-          );
-        }
-      }
+  // Business Rules Logic
+  const applyBusinessRules = useCallback(
+    (member: ProcessedMember, allMembers: ProcessedMember[]) => {
+      const uid = member.unique_id;
 
-      // Find spouses
-      const spouses: string[] = [];
-      if (member.spouses_first_name && member.spouses_last_name) {
-        const spouseKey = `${member.spouses_first_name.toLowerCase()}_${member.spouses_last_name.toLowerCase()}`;
-        let spouse = nameMap.get(spouseKey);
+      const isOriginator =
+        uid === "LAKETU" || member.first_name?.toUpperCase() === "LAKETU";
 
-        if (!spouse) {
-          spouse = members.find(
-            (m) =>
-              m.unique_id !== member.unique_id &&
-              m.first_name?.toLowerCase().trim() ===
-                member.spouses_first_name?.toLowerCase().trim() &&
-              m.last_name?.toLowerCase().trim() ===
-                member.spouses_last_name?.toLowerCase().trim()
-          );
-        }
+      const isTwin =
+        allMembers.filter(
+          (m) =>
+            m.unique_id !== member.unique_id &&
+            m.fathers_first_name === member.fathers_first_name &&
+            m.fathers_last_name === member.fathers_last_name &&
+            m.mothers_first_name === member.mothers_first_name &&
+            m.mothers_last_name === member.mothers_last_name &&
+            m.order_of_birth === member.order_of_birth &&
+            m.order_of_birth !== null &&
+            m.order_of_birth !== 0
+        ).length > 0;
 
-        if (spouse) {
-          spouses.push(spouse.unique_id);
-        }
-      }
+      const isPolygamous =
+        member.gender?.toLowerCase() === "male" &&
+        member.order_of_marriage !== null &&
+        member.order_of_marriage > 1 &&
+        member.marital_status?.toLowerCase() === "married";
 
-      // Find back-reference spouses
-      const backRefSpouses = members.filter(
-        (m) =>
-          m.unique_id !== member.unique_id &&
-          m.spouses_first_name?.toLowerCase().trim() ===
-            member.first_name?.toLowerCase().trim() &&
-          m.spouses_last_name?.toLowerCase().trim() ===
-            member.last_name?.toLowerCase().trim()
-      );
+      const isOutOfWedlock =
+        (!member.fathers_first_name || !member.fathers_last_name) &&
+        (!member.mothers_first_name || !member.mothers_last_name);
 
-      backRefSpouses.forEach((spouse) => {
-        if (!spouses.includes(spouse.unique_id)) {
-          spouses.push(spouse.unique_id);
-        }
+      const isSpouseByRules =
+        (!isOriginator &&
+          (!member.fathers_first_name || !member.mothers_first_name)) ||
+        (!isOriginator &&
+          (member.order_of_birth === null || member.order_of_birth === 0));
+
+      const lineageColor = getLineageColor(member, allMembers);
+
+      return {
+        isOriginator,
+        isDescendant:
+          uid?.charAt(0).toUpperCase() === "D" ||
+          (!isSpouseByRules &&
+            member.unique_id?.charAt(0).toUpperCase() !== "S"),
+        isSpouse:
+          member.unique_id?.charAt(0).toUpperCase() === "S" || isSpouseByRules,
+        isTwin,
+        isPolygamous,
+        isOutOfWedlock,
+        lineageColor,
+      };
+    },
+    [getLineageColor]
+  );
+
+  // Convert ProcessedMember data to FamilyChart format
+  const convertToFamilyChartFormat = useCallback(
+    (members: ProcessedMember[]): FamilyChartMember[] => {
+      console.log("Converting family data - total members:", members.length);
+
+      // Create a lookup map for faster searching
+      const memberMap = new Map<string, ProcessedMember>();
+      const nameMap = new Map<string, ProcessedMember>();
+
+      members.forEach((member) => {
+        memberMap.set(member.unique_id, member);
+        const nameKey = `${member.first_name?.toLowerCase()}_${member.last_name?.toLowerCase()}`;
+        nameMap.set(nameKey, member);
       });
 
-      // Find children
-      const children = members
-        .filter((m) => {
-          const isFatherMatch =
-            m.fathers_first_name?.toLowerCase().trim() ===
+      const chartMembers = members.map((member) => {
+        const rules = applyBusinessRules(member, members);
+
+        // Find father
+        let father: ProcessedMember | undefined;
+        if (member.fathers_first_name && member.fathers_last_name) {
+          const fatherKey = `${member.fathers_first_name.toLowerCase()}_${member.fathers_last_name.toLowerCase()}`;
+          father = nameMap.get(fatherKey);
+
+          if (!father) {
+            father = members.find(
+              (m) =>
+                m.first_name?.toLowerCase().trim() ===
+                  member.fathers_first_name?.toLowerCase().trim() &&
+                m.last_name?.toLowerCase().trim() ===
+                  member.fathers_last_name?.toLowerCase().trim()
+            );
+          }
+
+          // Special case for EGUNDEBI->LAKETU relationship
+          if (
+            !father &&
+            (member.unique_id === "EGUNDEBI" ||
+              member.first_name?.toUpperCase() === "EGUNDEBI")
+          ) {
+            father = members.find(
+              (m) =>
+                m.unique_id === "LAKETU" ||
+                m.first_name?.toUpperCase() === "LAKETU"
+            );
+          }
+        }
+
+        // Find mother
+        let mother: ProcessedMember | undefined;
+        if (member.mothers_first_name && member.mothers_last_name) {
+          const motherKey = `${member.mothers_first_name.toLowerCase()}_${member.mothers_last_name.toLowerCase()}`;
+          mother = nameMap.get(motherKey);
+
+          if (!mother) {
+            mother = members.find(
+              (m) =>
+                m.first_name?.toLowerCase().trim() ===
+                  member.mothers_first_name?.toLowerCase().trim() &&
+                m.last_name?.toLowerCase().trim() ===
+                  member.mothers_last_name?.toLowerCase().trim()
+            );
+          }
+        }
+
+        // Find spouses
+        const spouses: string[] = [];
+        if (member.spouses_first_name && member.spouses_last_name) {
+          const spouseKey = `${member.spouses_first_name.toLowerCase()}_${member.spouses_last_name.toLowerCase()}`;
+          let spouse = nameMap.get(spouseKey);
+
+          if (!spouse) {
+            spouse = members.find(
+              (m) =>
+                m.unique_id !== member.unique_id &&
+                m.first_name?.toLowerCase().trim() ===
+                  member.spouses_first_name?.toLowerCase().trim() &&
+                m.last_name?.toLowerCase().trim() ===
+                  member.spouses_last_name?.toLowerCase().trim()
+            );
+          }
+
+          if (spouse) {
+            spouses.push(spouse.unique_id);
+          }
+        }
+
+        // Find back-reference spouses
+        const backRefSpouses = members.filter(
+          (m) =>
+            m.unique_id !== member.unique_id &&
+            m.spouses_first_name?.toLowerCase().trim() ===
               member.first_name?.toLowerCase().trim() &&
-            m.fathers_last_name?.toLowerCase().trim() ===
-              member.last_name?.toLowerCase().trim();
+            m.spouses_last_name?.toLowerCase().trim() ===
+              member.last_name?.toLowerCase().trim()
+        );
 
-          const isMotherMatch =
-            m.mothers_first_name?.toLowerCase().trim() ===
-              member.first_name?.toLowerCase().trim() &&
-            m.mothers_last_name?.toLowerCase().trim() ===
-              member.last_name?.toLowerCase().trim();
+        backRefSpouses.forEach((spouse) => {
+          if (!spouses.includes(spouse.unique_id)) {
+            spouses.push(spouse.unique_id);
+          }
+        });
 
-          // Special case: Ensure LAKETU is recognized as EGUNDEBI's father
-          const isSpecialCase =
-            (member.unique_id === "LAKETU" ||
-              member.first_name?.toUpperCase() === "LAKETU") &&
-            (m.unique_id === "EGUNDEBI" ||
-              m.first_name?.toUpperCase() === "EGUNDEBI");
+        // Find children
+        const children = members
+          .filter((m) => {
+            const isFatherMatch =
+              m.fathers_first_name?.toLowerCase().trim() ===
+                member.first_name?.toLowerCase().trim() &&
+              m.fathers_last_name?.toLowerCase().trim() ===
+                member.last_name?.toLowerCase().trim();
 
-          return isFatherMatch || isMotherMatch || isSpecialCase;
-        })
-        .map((child) => child.unique_id);
+            const isMotherMatch =
+              m.mothers_first_name?.toLowerCase().trim() ===
+                member.first_name?.toLowerCase().trim() &&
+              m.mothers_last_name?.toLowerCase().trim() ===
+                member.last_name?.toLowerCase().trim();
 
-      const chartMember: FamilyChartMember = {
-        id: member.unique_id,
-        data: {
-          first_name: member.first_name || "",
-          last_name: member.last_name || "",
-          birthday: member.date_of_birth || "",
-          avatar: member.picture_link || "",
-          gender: member.gender?.toLowerCase() || "unknown",
-          unique_id: member.unique_id,
-          order_of_birth: member.order_of_birth,
-          order_of_marriage: member.order_of_marriage,
-          marital_status: member.marital_status,
-          ...rules,
-        },
-        rels: {
-          father: father?.unique_id,
-          mother: mother?.unique_id,
-          spouses: spouses.length > 0 ? spouses : undefined,
-          children: children.length > 0 ? children : undefined,
-        },
-      };
+            // Special case: Ensure LAKETU is recognized as EGUNDEBI's father
+            const isSpecialCase =
+              (member.unique_id === "LAKETU" ||
+                member.first_name?.toUpperCase() === "LAKETU") &&
+              (m.unique_id === "EGUNDEBI" ||
+                m.first_name?.toUpperCase() === "EGUNDEBI");
 
-      return chartMember;
-    });
+            return isFatherMatch || isMotherMatch || isSpecialCase;
+          })
+          .map((child) => child.unique_id);
 
-    // Apply bidirectional relationship fixing
-    return applyBidirectionalRelationshipFix(chartMembers);
-  };
+        const chartMember: FamilyChartMember = {
+          id: member.unique_id,
+          data: {
+            first_name: member.first_name || "",
+            last_name: member.last_name || "",
+            birthday: member.date_of_birth || "",
+            avatar: member.picture_link || "",
+            gender: member.gender?.toLowerCase() || "unknown",
+            unique_id: member.unique_id,
+            order_of_birth: member.order_of_birth,
+            order_of_marriage: member.order_of_marriage,
+            marital_status: member.marital_status,
+            ...rules,
+          },
+          rels: {
+            father: father?.unique_id,
+            mother: mother?.unique_id,
+            spouses: spouses.length > 0 ? spouses : undefined,
+            children: children.length > 0 ? children : undefined,
+          },
+        };
+
+        return chartMember;
+      });
+
+      // Apply bidirectional relationship fixing
+      return applyBidirectionalRelationshipFix(chartMembers);
+    },
+    [applyBusinessRules]
+  );
 
   // Bidirectional relationship fixing function
   const applyBidirectionalRelationshipFix = (
@@ -532,7 +583,7 @@ const FamilyTreeVisualization = () => {
       const tree_data = f3.CalculateTree({
         data: data,
         node_separation: 500,
-        level_separation: 350,
+        level_separation: 450,
         main_id: originator.id,
       });
 
@@ -540,135 +591,114 @@ const FamilyTreeVisualization = () => {
         throw new Error("Failed to calculate tree data");
       }
 
+      const wrap = (
+        text: d3.Selection<SVGTextElement, unknown, null, undefined>,
+        width: number
+      ) => {
+        text.each(function () {
+          const text = d3.select(this);
+          const words = text.text().split(/\s+/).reverse();
+          let word: string | undefined;
+          let line: string[] = [];
+          let lineNumber = 0;
+          const lineHeight = 1.2; // ems
+          const x = text.attr("x");
+          const y = text.attr("y");
+          const dy = parseFloat(text.attr("dy") || "0");
+          text.text(null);
+
+          let tspan = text
+            .append("tspan")
+            .attr("x", x)
+            .attr("y", y)
+            .attr("dy", dy + "em");
+
+          while ((word = words.pop())) {
+            line.push(word);
+            tspan.text(line.join(" "));
+            const node = tspan.node() as SVGTextContentElement;
+            if (node.getComputedTextLength() > width && line.length > 1) {
+              line.pop();
+              tspan.text(line.join(" "));
+              line = [word];
+              tspan = text
+                .append("tspan")
+                .attr("x", x)
+                .attr("y", y)
+                .attr("dy", ++lineNumber * lineHeight + dy + "em")
+                .text(word);
+            }
+          }
+        });
+      };
+
       // Custom card function for styling nodes
       const Card = (onClick: (d: any) => void) => {
         return function (this: any, d: any) {
           const member = d.data.data || d.data;
-          const isCircular =
-            member.gender === "female" || member.gender === "f";
-          const backgroundColor = member.lineageColor || LINEAGE_COLORS.DEFAULT;
+          const isFemale = member.gender === "female" || member.gender === "f";
+          const lineageColor = member.lineageColor || LINEAGE_COLORS.DEFAULT;
+          const placeholderBgColor = "#d1d5db"; // gray-300
+          const textColor = "white"; // white text for better contrast
 
           this.innerHTML = "";
+
+          const width = 140;
+          const height = 180;
+          const borderRadius = 15;
 
           const g = d3
             .select(this)
             .append("g")
-            .attr("transform", `translate(${[-100, isCircular ? -100 : -75]})`)
+            .attr("transform", `translate(${-width / 2}, ${-height / 2})`)
             .attr("class", "card")
             .attr("data-id", member.unique_id)
             .attr("cursor", "pointer")
             .on("click", () => onClick.call(this, d));
 
-          // Create shape
-          if (isCircular) {
+          // Main card rect for both genders
+          g.append("rect")
+            .attr("width", width)
+            .attr("height", height)
+            .attr("rx", borderRadius)
+            .attr("ry", borderRadius)
+            .attr("fill", lineageColor)
+            .attr("stroke", "#4b5563") // gray-600
+            .attr("stroke-width", 2);
+
+          // Image placeholder
+          if (isFemale) {
+            // Circular image placeholder for females
             g.append("circle")
-              .attr("cx", 100)
-              .attr("cy", 100)
-              .attr("r", 100)
-              .attr("fill", backgroundColor)
-              .attr("stroke", "#000")
-              .attr("stroke-width", member.isOriginator ? 3 : 1);
+              .attr("cx", width / 2)
+              .attr("cy", 60)
+              .attr("r", 45)
+              .attr("fill", placeholderBgColor);
           } else {
+            // Rectangular image placeholder for males
             g.append("rect")
-              .attr("width", 200)
-              .attr("height", 150)
-              .attr("rx", 8)
-              .attr("ry", 8)
-              .attr("fill", backgroundColor)
-              .attr("stroke", "#000")
-              .attr("stroke-width", member.isOriginator ? 3 : 1);
+              .attr("x", 20)
+              .attr("y", 15)
+              .attr("width", width - 40)
+              .attr("height", 90)
+              .attr("rx", borderRadius - 5)
+              .attr("ry", borderRadius - 5)
+              .attr("fill", placeholderBgColor);
           }
 
           // Add name text
           const nameText = `${member.first_name} ${member.last_name}`;
-          const nameParts = nameText.split(" ");
 
-          if (nameParts.length > 1 && nameText.length > 15) {
-            g.append("text")
-              .attr("x", 100)
-              .attr("y", isCircular ? 85 : 60)
-              .attr("text-anchor", "middle")
-              .attr("fill", "white")
-              .attr("font-size", "14px")
-              .attr("font-weight", "bold")
-              .text(nameParts[0]);
-
-            g.append("text")
-              .attr("x", 100)
-              .attr("y", isCircular ? 105 : 80)
-              .attr("text-anchor", "middle")
-              .attr("fill", "white")
-              .attr("font-size", "14px")
-              .attr("font-weight", "bold")
-              .text(nameParts.slice(1).join(" "));
-          } else {
-            g.append("text")
-              .attr("x", 100)
-              .attr("y", isCircular ? 95 : 70)
-              .attr("text-anchor", "middle")
-              .attr("fill", "white")
-              .attr("font-size", "14px")
-              .attr("font-weight", "bold")
-              .text(nameText);
-          }
-
-          // Add ID text
           g.append("text")
-            .attr("x", 100)
-            .attr("y", isCircular ? 120 : 95)
+            .attr("x", width / 2)
+            .attr("y", 130)
+            .attr("dy", 0)
             .attr("text-anchor", "middle")
-            .attr("fill", "white")
-            .attr("font-size", "12px")
-            .attr("opacity", 0.8)
-            .text(member.unique_id);
-
-          // Add birth year if available
-          if (member.birthday) {
-            g.append("text")
-              .attr("x", 100)
-              .attr("y", isCircular ? 135 : 115)
-              .attr("text-anchor", "middle")
-              .attr("fill", "white")
-              .attr("font-size", "11px")
-              .attr("opacity", 0.7)
-              .text(new Date(member.birthday).getFullYear());
-          }
-
-          // Add badges for special attributes
-          let badgeX = isCircular ? 170 : 180;
-          let badgeY = 10;
-
-          if (member.isOriginator) {
-            g.append("circle")
-              .attr("cx", badgeX)
-              .attr("cy", badgeY)
-              .attr("r", 8)
-              .attr("fill", "#fbbf24")
-              .attr("stroke", "#000")
-              .attr("stroke-width", 1);
-            badgeY += 20;
-          }
-
-          if (member.isTwin) {
-            g.append("circle")
-              .attr("cx", badgeX)
-              .attr("cy", badgeY)
-              .attr("r", 8)
-              .attr("fill", "#60a5fa")
-              .attr("stroke", "#000")
-              .attr("stroke-width", 1);
-            badgeY += 20;
-          }
-
-          if (member.isPolygamous) {
-            g.append("circle")
-              .attr("cx", badgeX)
-              .attr("cy", badgeY)
-              .attr("r", 8)
-              .attr("fill", "#f87171")
-              .attr("stroke", "#000")
-              .attr("stroke-width", 1);
-          }
+            .attr("fill", textColor)
+            .attr("font-size", "14px")
+            .attr("font-weight", "bold")
+            .text(nameText)
+            .call(wrap as any, width - 20);
         };
       };
 
@@ -775,6 +805,7 @@ const FamilyTreeVisualization = () => {
 
   const refreshData = async () => {
     setIsLoadingData(true);
+    lineageColorCache.current.clear();
     try {
       const { data, error } = await supabase
         .from("family-tree")
@@ -798,6 +829,8 @@ const FamilyTreeVisualization = () => {
 
   useEffect(() => {
     const fetchExistingData = async () => {
+      setIsLoadingData(true);
+      lineageColorCache.current.clear();
       try {
         const { data, error } = await supabase.from("family-tree").select();
 
@@ -825,7 +858,7 @@ const FamilyTreeVisualization = () => {
       setFamilyChartData(chartData);
       initializeFamilyChart(chartData);
     }
-  }, [existingData, initializeFamilyChart]);
+  }, [existingData, initializeFamilyChart, convertToFamilyChartFormat]);
 
   return (
     <div className="space-y-6">
@@ -887,43 +920,47 @@ const FamilyTreeVisualization = () => {
                                 backgroundColor: LINEAGE_COLORS.EGUNDEBI,
                               }}
                             ></div>
-                            <span>EGUNDEBI (First Mosuro)</span>
+                            <span>EGUNDEBI (is Red)</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <div
                               className="w-4 h-4 rounded"
                               style={{
-                                backgroundColor: LINEAGE_COLORS.ADELAJA,
+                                backgroundColor:
+                                  LINEAGE_COLORS.EGUNDEBI_MALE_CHILD_1,
                               }}
                             ></div>
-                            <span>ADELAJA Lineage</span>
+                            <span>Egundebi Male Child 1 (Green)</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <div
                               className="w-4 h-4 rounded"
                               style={{
-                                backgroundColor: LINEAGE_COLORS.CHILD2,
+                                backgroundColor:
+                                  LINEAGE_COLORS.EGUNDEBI_MALE_CHILD_2,
                               }}
                             ></div>
-                            <span>2nd Child Lineage</span>
+                            <span>Egundebi Male Child 2 (Blue)</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <div
                               className="w-4 h-4 rounded"
                               style={{
-                                backgroundColor: LINEAGE_COLORS.CHILD3,
+                                backgroundColor:
+                                  LINEAGE_COLORS.EGUNDEBI_MALE_CHILD_3,
                               }}
                             ></div>
-                            <span>3rd Child Lineage</span>
+                            <span>Egundebi Male Child 3 (Purple)</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <div
                               className="w-4 h-4 rounded"
                               style={{
-                                backgroundColor: LINEAGE_COLORS.CHILD4,
+                                backgroundColor:
+                                  LINEAGE_COLORS.EGUNDEBI_FEMALE_CHILD,
                               }}
                             ></div>
-                            <span>4th Child Lineage</span>
+                            <span>Egundebi Female Child (Yellow)</span>
                           </div>
                         </div>
                       </div>
