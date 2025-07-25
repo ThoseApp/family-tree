@@ -18,7 +18,54 @@ import {
   findSpouses,
   findChildren,
   isDescendant,
+  isSpouse,
 } from "@/lib/utils/family-tree-d3-helpers";
+
+// Custom path function to handle spouse connections
+const customPathFunc = (
+  linkDatum: any,
+  orientation: "vertical" | "horizontal"
+): string => {
+  const { source, target } = linkDatum;
+  const sourceAttrs = source.data.attributes;
+  const targetAttrs = target.data.attributes;
+
+  // Standard step path drawing logic for a vertical tree
+  const drawStepPath = (s: { x: any; y: any }, t: { x: any; y: any }) => {
+    return `M ${s.x},${s.y} V ${(s.y + t.y) / 2} H ${t.x} V ${t.y}`;
+  };
+
+  // Hide the link from the ancestor to our invisible "family" group node
+  if (targetAttrs?.gender === "family") {
+    return "";
+  }
+
+  // Find links originating from our invisible "family" group node
+  if (sourceAttrs?.gender === "family") {
+    const ancestor = source.parent;
+    if (!ancestor) return ""; // Should not happen
+
+    // For the actual descendant, draw a path from the true ancestor
+    if (targetAttrs?.is_descendant) {
+      return drawStepPath({ x: ancestor.x, y: ancestor.y }, target);
+    }
+
+    // For the spouse, draw a horizontal line from their partner
+    if (targetAttrs?.is_spouse) {
+      const descendantNode = source.children?.find(
+        (c: { data: { attributes: { is_descendant: any } } }) =>
+          c.data.attributes.is_descendant
+      );
+      if (descendantNode) {
+        return `M${descendantNode.x},${descendantNode.y}L${target.x},${target.y}`;
+      }
+      return "";
+    }
+  }
+
+  // For all other standard links, use the step function
+  return drawStepPath(source, target);
+};
 
 // Custom node component for family members
 const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
@@ -47,6 +94,21 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
   const nodeHeight = 140;
   const imageSize = 60;
 
+  // Text wrapping logic
+  const name = nodeDatum.name;
+  const nameParts = name.split(" ");
+  const isLongName = name.length > 14;
+  let nameLines: string[] = [name];
+
+  if (isLongName && nameParts.length > 1) {
+    nameLines = [nameParts[0], nameParts.slice(1).join(" ")];
+  } else if (name.length > 18) {
+    nameLines = [`${name.substring(0, 18)}...`];
+  }
+
+  const nameY = -nodeHeight / 2 + (nameLines.length > 1 ? 78 : 85);
+  const uidY = -nodeHeight / 2 + (nameLines.length > 1 ? 105 : 100);
+
   return (
     <g onClick={onNodeClick}>
       {/* Main node rectangle */}
@@ -58,21 +120,32 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
         fill={backgroundColor}
         stroke="#374151"
         strokeWidth={2}
-        rx={12}
+        rx={8}
         className="cursor-pointer hover:opacity-80 transition-opacity"
       />
 
       {/* Profile image placeholder */}
-      <rect
-        width={imageSize}
-        height={imageSize}
-        x={-imageSize / 2}
-        y={-nodeHeight / 2 + 10}
-        fill="#E5E7EB"
-        stroke="#9CA3AF"
-        strokeWidth={1}
-        rx={8}
-      />
+      {gender?.toLowerCase() === "female" ? (
+        <circle
+          cx={0}
+          cy={-nodeHeight / 2 + 10 + imageSize / 2}
+          r={imageSize / 2}
+          fill="#E5E7EB"
+          stroke="#9CA3AF"
+          strokeWidth={1}
+        />
+      ) : (
+        <rect
+          width={imageSize}
+          height={imageSize}
+          x={-imageSize / 2}
+          y={-nodeHeight / 2 + 10}
+          fill="#E5E7EB"
+          stroke="#9CA3AF"
+          strokeWidth={1}
+          rx={8}
+        />
+      )}
 
       {/* If we have an image, we'd add it here */}
       {attributes?.picture_link ? (
@@ -82,38 +155,30 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
           height={imageSize}
           x={-imageSize / 2}
           y={-nodeHeight / 2 + 10}
-          clipPath="url(#imageClip)"
+          clipPath={`url(#imageClip-${attributes?.unique_id || "node"})`}
         />
-      ) : (
-        <text
-          x={0}
-          y={-nodeHeight / 2 + 45}
-          textAnchor="middle"
-          fill="#6B7280"
-          fontSize="24"
-        >
-          👤
-        </text>
-      )}
+      ) : null}
 
       {/* Name text */}
       <text
         x={0}
-        y={-nodeHeight / 2 + 85}
+        y={nameY}
         textAnchor="middle"
         fill="white"
         fontSize="12"
         fontWeight="600"
       >
-        {nodeDatum.name.length > 15
-          ? `${nodeDatum.name.substring(0, 15)}...`
-          : nodeDatum.name}
+        {nameLines.map((line, index) => (
+          <tspan x={0} key={index} dy={index === 0 ? 0 : "1.2em"}>
+            {line}
+          </tspan>
+        ))}
       </text>
 
       {/* UID text */}
       <text
         x={0}
-        y={-nodeHeight / 2 + 100}
+        y={uidY}
         textAnchor="middle"
         fill="white"
         fontSize="10"
@@ -148,19 +213,6 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
         </text>
       )}
 
-      {/* Spouse indicator */}
-      {isSpouseNode && (
-        <text
-          x={-nodeWidth / 2 + 10}
-          y={-nodeHeight / 2 + 15}
-          textAnchor="middle"
-          fill="white"
-          fontSize="12"
-        >
-          💕
-        </text>
-      )}
-
       {/* Polygamous marriage indicator */}
       {attributes?.spouse_count && attributes.spouse_count > 1 && (
         <text
@@ -171,20 +223,28 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
           fontSize="10"
           fontWeight="bold"
         >
-          {attributes.spouse_count}👥
+          {attributes.spouse_count}
         </text>
       )}
 
       {/* Define clip path for circular images */}
       <defs>
-        <clipPath id="imageClip">
-          <rect
-            width={imageSize}
-            height={imageSize}
-            x={-imageSize / 2}
-            y={-nodeHeight / 2 + 10}
-            rx={8}
-          />
+        <clipPath id={`imageClip-${attributes?.unique_id || "node"}`}>
+          {gender?.toLowerCase() === "female" ? (
+            <circle
+              r={imageSize / 2}
+              cx={0}
+              cy={-nodeHeight / 2 + 10 + imageSize / 2}
+            />
+          ) : (
+            <rect
+              width={imageSize}
+              height={imageSize}
+              x={-imageSize / 2}
+              y={-nodeHeight / 2 + 10}
+              rx={8}
+            />
+          )}
         </clipPath>
       </defs>
     </g>
@@ -245,6 +305,12 @@ const FamilyTreeComponent: React.FC = () => {
 
       if (!uid || !treeState || !allMembers.length) return;
 
+      // Special handling for the root node if needed
+      if (uid === "COUPLE_ROOT") {
+        // You might want to implement logic to expand the whole tree or something similar
+        return;
+      }
+
       const member = allMembers.find((m) => m.unique_id === uid);
       if (!member) return;
 
@@ -252,42 +318,64 @@ const FamilyTreeComponent: React.FC = () => {
       const spouses = findSpouses(member, allMembers);
       const children = findChildren(member, allMembers);
 
-      // If this is a descendant click, show spouses
-      if (isDescendant(uid) && spouses.length > 0) {
+      // Determine if the clicked node is a descendant or a spouse
+      const isDescendantNode = isDescendant(uid);
+
+      // Check if the click is on a Gen 2 family member (descendant or their spouse)
+      // This will determine if the children to be revealed are Gen 3.
+      const partner = isSpouse(member.unique_id)
+        ? allMembers.find((p) => p.unique_id === member.spouse_uid)
+        : member;
+      const isGen2FamilyClick =
+        partner &&
+        (partner.fathers_uid === "D00Z00001" ||
+          partner.mothers_uid === "S00Z00001");
+
+      // If a descendant is clicked, reveal their spouse(s)
+      if (isDescendantNode && spouses.length > 0) {
         if (!newState.expandedSpouses.has(uid)) {
-          // Show spouses
           spouses.forEach((spouse) => {
             newState.visibleNodes.add(spouse.unique_id);
           });
           newState.expandedSpouses.add(uid);
-          setTreeState({
-            visibleNodes: new Set(newState.visibleNodes),
-            expandedSpouses: new Set(newState.expandedSpouses),
-            currentGeneration: newState.currentGeneration,
+        }
+      }
+      // If a node (descendant or spouse) with children is clicked, reveal them
+      else if (children.length > 0) {
+        // This check prevents re-adding children if they are already visible
+        const areChildrenVisible = children.every((child) =>
+          newState.visibleNodes.has(child.unique_id)
+        );
+
+        if (!areChildrenVisible) {
+          children.forEach((child) => {
+            newState.visibleNodes.add(child.unique_id);
           });
+
+          // If we just revealed Gen 3, also reveal their spouses automatically.
+          if (isGen2FamilyClick) {
+            children.forEach((child) => {
+              const childSpouses = findSpouses(child, allMembers);
+              if (childSpouses.length > 0) {
+                newState.expandedSpouses.add(child.unique_id);
+                childSpouses.forEach((spouse) => {
+                  newState.visibleNodes.add(spouse.unique_id);
+                });
+              }
+            });
+          }
+
+          // We can advance the generation when children are revealed
+          newState.currentGeneration += 1;
         }
       }
 
-      // If this is a spouse click, show children
-      else if (attributes?.is_spouse && children.length > 0) {
-        if (!newState.expandedSpouses.has(uid)) {
-          // Show children and their spouses
-          children.forEach((child) => {
-            newState.visibleNodes.add(child.unique_id);
-            const childSpouses = findSpouses(child, allMembers);
-            childSpouses.forEach((spouse) => {
-              newState.visibleNodes.add(spouse.unique_id);
-            });
-          });
-          newState.expandedSpouses.add(uid);
-          newState.currentGeneration += 1;
-          setTreeState({
-            visibleNodes: new Set(newState.visibleNodes),
-            expandedSpouses: new Set(newState.expandedSpouses),
-            currentGeneration: newState.currentGeneration,
-          });
-        }
-      }
+      setTreeState({
+        visibleNodes: new Set(newState.visibleNodes),
+        expandedSpouses: new Set(newState.expandedSpouses),
+        currentGeneration: newState.currentGeneration,
+        lastClickedNodeId: uid,
+      });
     },
     [allMembers, treeState]
   );
@@ -385,7 +473,7 @@ const FamilyTreeComponent: React.FC = () => {
           <Tree
             data={treeData}
             orientation={treeConfig.orientation}
-            pathFunc={treeConfig.pathFunc}
+            pathFunc={customPathFunc}
             translate={treeConfig.translate}
             nodeSize={treeConfig.nodeSize}
             separation={treeConfig.separation}

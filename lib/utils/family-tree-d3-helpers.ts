@@ -37,6 +37,7 @@ export interface FamilyTreeState {
   visibleNodes: Set<string>; // UIDs of visible nodes
   expandedSpouses: Set<string>; // UIDs of members whose spouses are shown
   currentGeneration: number;
+  lastClickedNodeId?: string;
 }
 
 /**
@@ -46,46 +47,45 @@ export function determineLineageColor(
   member: ProcessedMember,
   allMembers: ProcessedMember[]
 ): LineageColor {
-  const uid = member.unique_id;
+  const { unique_id, gender, fathers_uid, order_of_birth } = member;
 
   // Origin couple
-  if (uid === "D00Z00001" || uid === "S00Z00001") {
+  if (unique_id === "D00Z00001" || unique_id === "S00Z00001") {
     return "origin";
   }
 
-  // First descendant (D01Z00002) - red lineage
-  if (uid === "D01Z00002") {
+  // Spouses are always neutral (except the origin princess)
+  if (isSpouse(unique_id)) {
+    return "neutral";
+  }
+
+  // Egundebi (D01Z00002) is the start of the red lineage
+  if (unique_id === "D01Z00002") {
     return "red";
   }
 
-  // Spouses always get neutral color
-  if (uid.startsWith("S") && uid !== "S00Z00001") {
-    return "neutral";
+  // Check if the member is a child of Egundebi (D01Z00002)
+  if (fathers_uid === "D01Z00002") {
+    if (gender?.toLowerCase() === "male") {
+      if (order_of_birth === 1) return "green";
+      if (order_of_birth === 2) return "blue";
+      if (order_of_birth === 3) return "purple";
+    }
+    if (gender?.toLowerCase() === "female") {
+      return "yellow";
+    }
   }
 
-  // Females get neutral color (except origin)
-  if (member.gender?.toLowerCase() === "female") {
-    return "neutral";
-  }
-
-  // For descendants, find their father and inherit lineage
-  if (member.fathers_uid) {
-    const father = allMembers.find((m) => m.unique_id === member.fathers_uid);
+  // For other descendants, they inherit their father's color.
+  if (fathers_uid) {
+    const father = allMembers.find((m) => m.unique_id === fathers_uid);
     if (father) {
-      // If father is D01Z00002's child, assign based on order of birth
-      if (father.fathers_uid === "D00Z00002") {
-        const orderOfBirth = father.order_of_birth || 0;
-        if (orderOfBirth === 1) return "green";
-        if (orderOfBirth === 2) return "blue";
-        if (orderOfBirth === 3) return "purple";
-        return "neutral"; // Default for other children
-      }
-
-      // Otherwise inherit father's color
+      // Recursive call to find the father's lineage color.
       return determineLineageColor(father, allMembers);
     }
   }
 
+  // Default color for any other case (e.g., females not in a special group)
   return "neutral";
 }
 
@@ -124,7 +124,11 @@ export function findSpouses(
   );
   spouses.push(...otherSpouses);
 
-  return spouses;
+  // Remove duplicates
+  return spouses.filter(
+    (spouse, index, arr) =>
+      arr.findIndex((s) => s.unique_id === spouse.unique_id) === index
+  );
 }
 
 /**
@@ -206,6 +210,68 @@ export function convertToTreeNode(
   return node;
 }
 
+function buildSubTree(
+  member: ProcessedMember,
+  allMembers: ProcessedMember[],
+  state: FamilyTreeState
+): TreeNode {
+  // If this member's spouses are expanded and visible, create a family group.
+  const spouses = findSpouses(member, allMembers).filter((s) =>
+    state.visibleNodes.has(s.unique_id)
+  );
+  const shouldCreateFamilyGroup =
+    state.expandedSpouses.has(member.unique_id) && spouses.length > 0;
+
+  // The base node for the direct descendant.
+  const memberNode = convertToTreeNode(member, allMembers, state);
+
+  // Find and build subtrees for visible children.
+  const visibleChildren = findChildren(member, allMembers)
+    .filter((child) => state.visibleNodes.has(child.unique_id))
+    .sort((a, b) => (a.order_of_birth || 0) - (b.order_of_birth || 0));
+
+  const childrenSubTrees = visibleChildren.map((child) =>
+    buildSubTree(child, allMembers, state)
+  );
+
+  // By default, children are attached to the descendant member.
+  memberNode.children = childrenSubTrees;
+
+  if (shouldCreateFamilyGroup) {
+    const familyGroupNode: TreeNode = {
+      name: `${member.first_name}'s Family`,
+      attributes: {
+        unique_id: `FAMILY_${member.unique_id}`,
+        gender: "family",
+        lineage_color: determineLineageColor(member, allMembers),
+      },
+      children: [memberNode],
+    };
+
+    const spouseNodes = spouses.map((spouse) => {
+      const spouseNode = convertToTreeNode(spouse, allMembers, state);
+      spouseNode.children = []; // Spouses do not carry their own descendant lines by default.
+      return spouseNode;
+    });
+
+    familyGroupNode.children!.push(...spouseNodes);
+
+    // If a spouse was clicked to reveal children, move the children to that spouse.
+    const clickedSpouseNode = spouseNodes.find(
+      (s) => s.attributes!.unique_id === state.lastClickedNodeId
+    );
+
+    if (clickedSpouseNode) {
+      clickedSpouseNode.children = memberNode.children;
+      memberNode.children = [];
+    }
+
+    return familyGroupNode;
+  }
+
+  return memberNode;
+}
+
 /**
  * Build the tree data structure for react-d3-tree with spouse support
  */
@@ -213,7 +279,6 @@ export function buildTreeData(
   allMembers: ProcessedMember[],
   state: FamilyTreeState
 ): TreeNode {
-  // Find the origin couple
   const laketu = allMembers.find((m) => m.unique_id === "D00Z00001");
   const princess = allMembers.find((m) => m.unique_id === "S00Z00001");
 
@@ -221,87 +286,47 @@ export function buildTreeData(
     throw new Error("Origin member D00Z00001 (Laketu) not found");
   }
 
-  // Create a special root node that represents the couple
-  const rootNode: TreeNode = {
-    name: "Origin Family",
+  const treeRoot: TreeNode = {
+    name: "FamilyTreeRoot",
     attributes: {
-      unique_id: "ROOT",
-      gender: "couple",
-      lineage_color: "origin",
-      is_descendant: false,
-      is_spouse: false,
-      has_children: true,
-      spouse_count: 0,
+      unique_id: "TREE_ROOT",
+      gender: "family",
+      lineage_color: "neutral",
     },
     children: [],
   };
 
-  // Add origin couple as horizontal siblings
-  const laketusNode = convertToTreeNode(laketu, allMembers, state);
+  const originCoupleNode: TreeNode = {
+    name: "Origin Couple",
+    attributes: {
+      unique_id: "COUPLE_ROOT",
+      gender: "couple",
+      lineage_color: "origin",
+    },
+    children: [],
+  };
+
+  treeRoot.children!.push(originCoupleNode);
+
+  const laketuNode = convertToTreeNode(laketu, allMembers, state);
+  laketuNode.children = [];
+  originCoupleNode.children!.push(laketuNode);
+
   if (princess && state.visibleNodes.has(princess.unique_id)) {
     const princessNode = convertToTreeNode(princess, allMembers, state);
-    rootNode.children = [laketusNode, princessNode];
-  } else {
-    rootNode.children = [laketusNode];
+    princessNode.children = [];
+    originCoupleNode.children!.push(princessNode);
   }
 
-  // Add visible descendants as children of the origin couple
-  const descendants = allMembers
-    .filter(
-      (m) =>
-        m.fathers_uid === "D00Z00001" && state.visibleNodes.has(m.unique_id)
-    )
+  const directChildren = findChildren(laketu, allMembers)
+    .filter((child) => state.visibleNodes.has(child.unique_id))
     .sort((a, b) => (a.order_of_birth || 0) - (b.order_of_birth || 0));
 
-  if (descendants.length > 0) {
-    // Create descendants with their spouses horizontally
-    const descendantNodes = descendants.map((desc) => {
-      const descendantNode = convertToTreeNode(desc, allMembers, state);
+  laketuNode.children = directChildren.map((child) =>
+    buildSubTree(child, allMembers, state)
+  );
 
-      // If spouses are expanded for this descendant, add them as siblings
-      if (state.expandedSpouses.has(desc.unique_id)) {
-        const spouses = findSpouses(desc, allMembers).filter((spouse) =>
-          state.visibleNodes.has(spouse.unique_id)
-        );
-
-        if (spouses.length > 0) {
-          // Create a family group node
-          const familyGroupNode: TreeNode = {
-            name: `${desc.first_name}'s Family`,
-            attributes: {
-              unique_id: `FAMILY_${desc.unique_id}`,
-              gender: "family",
-              lineage_color: determineLineageColor(desc, allMembers),
-              is_descendant: false,
-              is_spouse: false,
-              has_children: descendantNode.children
-                ? descendantNode.children.length > 0
-                : false,
-              spouse_count: spouses.length,
-            },
-            children: [],
-          };
-
-          // Add descendant and spouses as children (horizontal layout)
-          familyGroupNode.children = [
-            descendantNode,
-            ...spouses.map((spouse) =>
-              convertToTreeNode(spouse, allMembers, state)
-            ),
-          ];
-
-          return familyGroupNode;
-        }
-      }
-
-      return descendantNode;
-    });
-
-    // Add descendant nodes to the origin couple
-    rootNode.children.push(...descendantNodes);
-  }
-
-  return rootNode;
+  return treeRoot;
 }
 
 /**
@@ -337,5 +362,6 @@ export function createInitialTreeState(
     visibleNodes,
     expandedSpouses,
     currentGeneration: 1,
+    lastClickedNodeId: undefined,
   };
 }

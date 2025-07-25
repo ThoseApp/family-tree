@@ -15,7 +15,7 @@ const FamilyTreePage = () => {
 
       {/* FAMILY TREE VISUALIZATION */}
       <div className="container mx-auto p-6">
-        {/* <FamilyTreeComponent /> */}
+        <FamilyTreeComponent />
       </div>
     </div>
   );
