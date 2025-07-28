@@ -41,10 +41,49 @@ import {
   Users,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
+import FamilyTreeErrorBoundary from "@/components/family-tree-error-boundary";
 
 // Import family-chart library
 // @ts-ignore - family-chart doesn't have type definitions
-import f3 from "family-chart";
+let f3: any = null;
+
+// Dynamic import for family-chart to handle production issues
+const loadFamilyChart = async (retryCount = 0): Promise<any> => {
+  try {
+    if (typeof window !== "undefined") {
+      // Add a timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Library load timeout")), 10000);
+      });
+
+      const importPromise = import("family-chart");
+      const familyChartModule = (await Promise.race([
+        importPromise,
+        timeoutPromise,
+      ])) as any;
+
+      f3 = familyChartModule.default || familyChartModule;
+      console.log("Family-chart loaded successfully:", f3);
+      return f3;
+    }
+  } catch (error) {
+    console.error(
+      `Failed to load family-chart library (attempt ${retryCount + 1}):`,
+      error
+    );
+
+    // Retry up to 2 times with exponential backoff
+    if (retryCount < 2) {
+      const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s
+      console.log(`Retrying in ${delay}ms...`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      return loadFamilyChart(retryCount + 1);
+    }
+
+    return null;
+  }
+  return null;
+};
 
 // Types for Excel data
 interface FamilyMember {
@@ -160,6 +199,11 @@ const FamilyTreeUploadPage = () => {
   const [familyChartData, setFamilyChartData] = useState<FamilyChartMember[]>(
     []
   );
+  const [isInitializingChart, setIsInitializingChart] = useState(false);
+  const [chartLoadRetries, setChartLoadRetries] = useState(0);
+  const [familyChartAvailable, setFamilyChartAvailable] = useState<
+    boolean | null
+  >(null);
   const lineageColorCache = useRef(new Map<string, string>());
 
   // Search functionality state
@@ -629,6 +673,31 @@ const FamilyTreeUploadPage = () => {
     };
 
     fetchExistingData();
+  }, []);
+
+  // Check if family-chart library is available
+  useEffect(() => {
+    const checkFamilyChartAvailability = async () => {
+      try {
+        console.log("Checking family-chart availability...");
+        console.log("Environment:", process.env.NODE_ENV);
+        console.log("Window object available:", typeof window !== "undefined");
+
+        const familyChart = await loadFamilyChart();
+        setFamilyChartAvailable(!!familyChart);
+
+        if (familyChart) {
+          console.log("Family-chart library is available and ready");
+        } else {
+          console.warn("Family-chart library is not available");
+        }
+      } catch (error) {
+        console.error("Error checking family-chart availability:", error);
+        setFamilyChartAvailable(false);
+      }
+    };
+
+    checkFamilyChartAvailability();
   }, []);
 
   const getLineageColor = useCallback(
@@ -1172,255 +1241,276 @@ const FamilyTreeUploadPage = () => {
   };
 
   // Initialize Family Chart
-  const initializeFamilyChart = useCallback((data: FamilyChartMember[]) => {
-    if (!familyTreeRef.current || data.length === 0) return;
+  const initializeFamilyChart = useCallback(
+    async (data: FamilyChartMember[]) => {
+      if (!familyTreeRef.current || data.length === 0) return;
 
-    // Clear previous chart
-    if (familyChartInstance.current) {
-      familyTreeRef.current.innerHTML = "";
-    }
+      setIsInitializingChart(true);
 
-    // Find the originator (main person)
-    const originator = data.find(
-      (d) => d.id === "LAKETU" || d.data.first_name?.toUpperCase() === "LAKETU"
-    );
-
-    if (!originator) {
-      console.error("No originator found in data");
-      toast.error("No LAKETU originator found in family data");
-      return;
-    }
-
-    console.log("Found originator:", originator);
-    console.log("Total family data nodes:", data.length);
-
-    // Log some sample relationships for debugging
-    const membersWithChildren = data.filter(
-      (d) => d.rels.children && d.rels.children.length > 0
-    );
-    const membersWithSpouses = data.filter(
-      (d) => d.rels.spouses && d.rels.spouses.length > 0
-    );
-
-    console.log("Members with children:", membersWithChildren.length);
-    console.log("Members with spouses:", membersWithSpouses.length);
-    console.log(
-      "Sample members with children:",
-      membersWithChildren.slice(0, 5).map((m) => ({
-        id: m.id,
-        name: `${m.data.first_name} ${m.data.last_name}`,
-        children: m.rels.children,
-      }))
-    );
-
-    try {
-      // Test if family-chart library is available
-      console.log("Family-chart library check:", {
-        f3Available: !!f3,
-        createSvgAvailable: !!f3?.createSvg,
-        CalculateTreeAvailable: !!f3?.CalculateTree,
-        viewAvailable: !!f3?.view,
-      });
-
-      if (!f3 || !f3.createSvg || !f3.CalculateTree || !f3.view) {
-        throw new Error("Family-chart library methods are not available");
+      // Clear previous chart
+      if (familyChartInstance.current) {
+        familyTreeRef.current.innerHTML = "";
       }
 
-      // Create SVG using family-chart's createSvg method
-      const svg = f3.createSvg(familyTreeRef.current);
+      // Find the originator (main person)
+      const originator = data.find(
+        (d) =>
+          d.id === "LAKETU" || d.data.first_name?.toUpperCase() === "LAKETU"
+      );
 
-      if (!svg) {
-        throw new Error("Failed to create SVG element");
+      if (!originator) {
+        console.error("No originator found in data");
+        toast.error("No LAKETU originator found in family data");
+        return;
       }
 
-      console.log("SVG created successfully:", svg);
+      console.log("Found originator:", originator);
+      console.log("Total family data nodes:", data.length);
 
-      // Calculate tree layout using family-chart
-      const tree_data = f3.CalculateTree({
-        data: data,
-        node_separation: 500,
-        level_separation: 450,
-        main_id: originator.id,
-      });
+      // Log some sample relationships for debugging
+      const membersWithChildren = data.filter(
+        (d) => d.rels.children && d.rels.children.length > 0
+      );
+      const membersWithSpouses = data.filter(
+        (d) => d.rels.spouses && d.rels.spouses.length > 0
+      );
 
-      if (!tree_data || !tree_data.data) {
-        throw new Error("Failed to calculate tree data");
-      }
+      console.log("Members with children:", membersWithChildren.length);
+      console.log("Members with spouses:", membersWithSpouses.length);
+      console.log(
+        "Sample members with children:",
+        membersWithChildren.slice(0, 5).map((m) => ({
+          id: m.id,
+          name: `${m.data.first_name} ${m.data.last_name}`,
+          children: m.rels.children,
+        }))
+      );
 
-      console.log("Tree calculation result:", {
-        totalNodes: tree_data.data?.length || 0,
-        mainNode: tree_data.data?.[0]?.data || null,
-        hasData: !!tree_data.data,
-        dataStructure: tree_data.data?.[0] || null,
-      });
-
-      // Validate tree data structure
-      if (!Array.isArray(tree_data.data) || tree_data.data.length === 0) {
-        throw new Error("Tree data is empty or invalid");
-      }
-
-      // Custom card function for styling nodes
-      const Card = (onClick: (d: any) => void) => {
-        return function (this: any, d: any) {
-          const member = d.data.data || d.data;
-          const isFemale = member.gender === "female" || member.gender === "f";
-          const lineageColor = member.lineageColor || LINEAGE_COLORS.DEFAULT;
-          const placeholderBgColor = "#d1d5db"; // gray-300
-          const textColor = "white"; // white text for better contrast
-
-          this.innerHTML = "";
-
-          const width = 140;
-          const height = 180;
-          const borderRadius = 15;
-
-          const g = d3
-            .select(this)
-            .append("g")
-            .attr("transform", `translate(${-width / 2}, ${-height / 2})`)
-            .attr("class", "card")
-            .attr("data-id", member.unique_id)
-            .attr("cursor", "pointer")
-            .on("click", () => onClick.call(this, d));
-
-          // Main card rect for both genders
-          g.append("rect")
-            .attr("width", width)
-            .attr("height", height)
-            .attr("rx", borderRadius)
-            .attr("ry", borderRadius)
-            .attr("fill", lineageColor)
-            .attr("stroke", "#4b5563") // gray-600
-            .attr("stroke-width", 2);
-
-          // Image placeholder
-          if (isFemale) {
-            // Circular image placeholder for females
-            g.append("circle")
-              .attr("cx", width / 2)
-              .attr("cy", 60)
-              .attr("r", 45)
-              .attr("fill", placeholderBgColor);
-          } else {
-            // Rectangular image placeholder for males
-            g.append("rect")
-              .attr("x", 20)
-              .attr("y", 15)
-              .attr("width", width - 40)
-              .attr("height", 90)
-              .attr("rx", borderRadius - 5)
-              .attr("ry", borderRadius - 5)
-              .attr("fill", placeholderBgColor);
-          }
-
-          // Add name text
-          const nameText = `${member.first_name} ${member.last_name}`;
-
-          g.append("text")
-            .attr("x", width / 2)
-            .attr("y", 130)
-            .attr("dy", 0)
-            .attr("text-anchor", "middle")
-            .attr("fill", textColor)
-            .attr("font-size", "14px")
-            .attr("font-weight", "bold")
-            .text(nameText)
-            .call(wrap as any, width - 20);
-        };
-      };
-
-      // Click handler
-      const onCardClick = (d: any) => {
-        const member = d.data.data || d.data;
-        toast.info(`Clicked on ${member.first_name} ${member.last_name}`, {
-          description: `ID: ${member.unique_id}${
-            member.birthday
-              ? ` | Born: ${new Date(member.birthday).getFullYear()}`
-              : ""
-          }`,
-        });
-        console.log("Card clicked:", member);
-      };
-
-      // Render the tree using family-chart's view method
-      f3.view(tree_data, svg, Card(onCardClick));
-
-      // Add zoom functionality to the SVG
-      const zoom = d3
-        .zoom<SVGSVGElement, unknown>()
-        .scaleExtent([0.1, 4])
-        .on("zoom", (event) => {
-          const container = d3.select(svg).select(".view");
-          if (container.node()) {
-            container.attr("transform", event.transform);
-          }
-        });
-
-      d3.select(svg).call(zoom as any);
-
-      // Set initial zoom to fit the tree
-      setTimeout(() => {
-        try {
-          const container = d3.select(svg);
-          const viewBox = svg.getBBox();
-          const containerWidth = familyTreeRef.current!.offsetWidth;
-          const containerHeight = Math.max(600, window.innerHeight - 400);
-
-          if (viewBox.width > 0 && viewBox.height > 0) {
-            const scaleX = (containerWidth * 0.8) / viewBox.width;
-            const scaleY = (containerHeight * 0.8) / viewBox.height;
-            const scale = Math.min(scaleX, scaleY, 1);
-
-            const centerX = containerWidth / 2;
-            const centerY = containerHeight / 2;
-            const translateX =
-              centerX - (viewBox.x + viewBox.width / 2) * scale;
-            const translateY =
-              centerY - (viewBox.y + viewBox.height / 2) * scale;
-
-            const initialTransform = d3.zoomIdentity
-              .translate(translateX, translateY)
-              .scale(scale);
-
-            container.call(zoom.transform as any, initialTransform);
-          }
-        } catch (zoomError) {
-          console.warn("Could not set initial zoom:", zoomError);
-        }
-      }, 500);
-
-      familyChartInstance.current = { svg, tree_data, zoom };
-
-      // Make it responsive
-      const handleResize = () => {
-        if (familyTreeRef.current) {
-          const newWidth = familyTreeRef.current.offsetWidth;
-          const newHeight = Math.max(600, window.innerHeight - 400);
-
-          d3.select(svg).attr("width", newWidth).attr("height", newHeight);
-        }
-      };
-
-      window.addEventListener("resize", handleResize);
-      handleResize();
-
-      return () => {
-        window.removeEventListener("resize", handleResize);
-      };
-    } catch (error) {
-      console.error("Error initializing family chart:", error);
-      toast.error("Failed to initialize family tree visualization");
-
-      // Fallback: Create a simple tree visualization
       try {
-        console.log("Attempting fallback visualization...");
-        createFallbackVisualization(data);
-      } catch (fallbackError) {
-        console.error("Fallback visualization also failed:", fallbackError);
+        // Load family-chart library dynamically
+        const familyChart = await loadFamilyChart();
 
-        // Show a simple message
-        if (familyTreeRef.current) {
-          familyTreeRef.current.innerHTML = `
+        // Test if family-chart library is available
+        console.log("Family-chart library check:", {
+          f3Available: !!familyChart,
+          createSvgAvailable: !!familyChart?.createSvg,
+          CalculateTreeAvailable: !!familyChart?.CalculateTree,
+          viewAvailable: !!familyChart?.view,
+        });
+
+        if (
+          !familyChart ||
+          !familyChart.createSvg ||
+          !familyChart.CalculateTree ||
+          !familyChart.view
+        ) {
+          throw new Error(
+            "Family-chart library methods are not available. This may be due to network issues or browser compatibility."
+          );
+        }
+
+        // Create SVG using family-chart's createSvg method
+        const svg = familyChart.createSvg(familyTreeRef.current);
+
+        if (!svg) {
+          throw new Error("Failed to create SVG element");
+        }
+
+        console.log("SVG created successfully:", svg);
+
+        // Calculate tree layout using family-chart
+        const tree_data = familyChart.CalculateTree({
+          data: data,
+          node_separation: 500,
+          level_separation: 450,
+          main_id: originator.id,
+        });
+
+        if (!tree_data || !tree_data.data) {
+          throw new Error("Failed to calculate tree data");
+        }
+
+        console.log("Tree calculation result:", {
+          totalNodes: tree_data.data?.length || 0,
+          mainNode: tree_data.data?.[0]?.data || null,
+          hasData: !!tree_data.data,
+          dataStructure: tree_data.data?.[0] || null,
+        });
+
+        // Validate tree data structure
+        if (!Array.isArray(tree_data.data) || tree_data.data.length === 0) {
+          throw new Error("Tree data is empty or invalid");
+        }
+
+        // Custom card function for styling nodes
+        const Card = (onClick: (d: any) => void) => {
+          return function (this: any, d: any) {
+            const member = d.data.data || d.data;
+            const isFemale =
+              member.gender === "female" || member.gender === "f";
+            const lineageColor = member.lineageColor || LINEAGE_COLORS.DEFAULT;
+            const placeholderBgColor = "#d1d5db"; // gray-300
+            const textColor = "white"; // white text for better contrast
+
+            this.innerHTML = "";
+
+            const width = 140;
+            const height = 180;
+            const borderRadius = 15;
+
+            const g = d3
+              .select(this)
+              .append("g")
+              .attr("transform", `translate(${-width / 2}, ${-height / 2})`)
+              .attr("class", "card")
+              .attr("data-id", member.unique_id)
+              .attr("cursor", "pointer")
+              .on("click", () => onClick.call(this, d));
+
+            // Main card rect for both genders
+            g.append("rect")
+              .attr("width", width)
+              .attr("height", height)
+              .attr("rx", borderRadius)
+              .attr("ry", borderRadius)
+              .attr("fill", lineageColor)
+              .attr("stroke", "#4b5563") // gray-600
+              .attr("stroke-width", 2);
+
+            // Image placeholder
+            if (isFemale) {
+              // Circular image placeholder for females
+              g.append("circle")
+                .attr("cx", width / 2)
+                .attr("cy", 60)
+                .attr("r", 45)
+                .attr("fill", placeholderBgColor);
+            } else {
+              // Rectangular image placeholder for males
+              g.append("rect")
+                .attr("x", 20)
+                .attr("y", 15)
+                .attr("width", width - 40)
+                .attr("height", 90)
+                .attr("rx", borderRadius - 5)
+                .attr("ry", borderRadius - 5)
+                .attr("fill", placeholderBgColor);
+            }
+
+            // Add name text
+            const nameText = `${member.first_name} ${member.last_name}`;
+
+            g.append("text")
+              .attr("x", width / 2)
+              .attr("y", 130)
+              .attr("dy", 0)
+              .attr("text-anchor", "middle")
+              .attr("fill", textColor)
+              .attr("font-size", "14px")
+              .attr("font-weight", "bold")
+              .text(nameText)
+              .call(wrap as any, width - 20);
+          };
+        };
+
+        // Click handler
+        const onCardClick = (d: any) => {
+          const member = d.data.data || d.data;
+          toast.info(`Clicked on ${member.first_name} ${member.last_name}`, {
+            description: `ID: ${member.unique_id}${
+              member.birthday
+                ? ` | Born: ${new Date(member.birthday).getFullYear()}`
+                : ""
+            }`,
+          });
+          console.log("Card clicked:", member);
+        };
+
+        // Render the tree using family-chart's view method
+        familyChart.view(tree_data, svg, Card(onCardClick));
+
+        // Add zoom functionality to the SVG
+        const zoom = d3
+          .zoom<SVGSVGElement, unknown>()
+          .scaleExtent([0.1, 4])
+          .on("zoom", (event) => {
+            const container = d3.select(svg).select(".view");
+            if (container.node()) {
+              container.attr("transform", event.transform);
+            }
+          });
+
+        d3.select(svg).call(zoom as any);
+
+        // Set initial zoom to fit the tree
+        setTimeout(() => {
+          try {
+            const container = d3.select(svg);
+            const viewBox = svg.getBBox();
+            const containerWidth = familyTreeRef.current!.offsetWidth;
+            const containerHeight = Math.max(600, window.innerHeight - 400);
+
+            if (viewBox.width > 0 && viewBox.height > 0) {
+              const scaleX = (containerWidth * 0.8) / viewBox.width;
+              const scaleY = (containerHeight * 0.8) / viewBox.height;
+              const scale = Math.min(scaleX, scaleY, 1);
+
+              const centerX = containerWidth / 2;
+              const centerY = containerHeight / 2;
+              const translateX =
+                centerX - (viewBox.x + viewBox.width / 2) * scale;
+              const translateY =
+                centerY - (viewBox.y + viewBox.height / 2) * scale;
+
+              const initialTransform = d3.zoomIdentity
+                .translate(translateX, translateY)
+                .scale(scale);
+
+              container.call(zoom.transform as any, initialTransform);
+            }
+          } catch (zoomError) {
+            console.warn("Could not set initial zoom:", zoomError);
+          }
+        }, 500);
+
+        familyChartInstance.current = { svg, tree_data, zoom };
+
+        // Make it responsive
+        const handleResize = () => {
+          if (familyTreeRef.current) {
+            const newWidth = familyTreeRef.current.offsetWidth;
+            const newHeight = Math.max(600, window.innerHeight - 400);
+
+            d3.select(svg).attr("width", newWidth).attr("height", newHeight);
+          }
+        };
+
+        window.addEventListener("resize", handleResize);
+        handleResize();
+
+        return () => {
+          window.removeEventListener("resize", handleResize);
+        };
+      } catch (error) {
+        console.error("Error initializing family chart:", error);
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Failed to initialize family tree visualization";
+        toast.error("Failed to initialize family tree visualization", {
+          description: errorMessage,
+        });
+
+        // Fallback: Create a simple tree visualization
+        try {
+          console.log("Attempting fallback visualization...");
+          createFallbackVisualization(data);
+        } catch (fallbackError) {
+          console.error("Fallback visualization also failed:", fallbackError);
+
+          // Show a simple message with better guidance
+          if (familyTreeRef.current) {
+            familyTreeRef.current.innerHTML = `
             <div class="flex items-center justify-center h-96 border rounded-lg bg-gray-50">
               <div class="text-center">
                 <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1428,14 +1518,32 @@ const FamilyTreeUploadPage = () => {
                 </svg>
                 <h3 class="mt-2 text-sm font-medium text-gray-900">Family Tree Visualization Error</h3>
                 <p class="mt-1 text-sm text-gray-500">Unable to render the family tree. Found ${data.length} family members.</p>
-                <p class="mt-1 text-xs text-gray-400">Check the console for more details or try refreshing the page.</p>
+                <p class="mt-1 text-xs text-gray-400">This may be due to network issues or browser compatibility. Try switching to table view or refreshing the page.</p>
+                <div class="mt-3 space-x-2">
+                  <button 
+                    onclick="window.location.reload()" 
+                    class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                  >
+                    Retry
+                  </button>
+                  <button 
+                    onclick="document.querySelector('[data-view-mode=\\"table\\"]')?.click()" 
+                    class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm"
+                  >
+                    Switch to Table
+                  </button>
+                </div>
               </div>
             </div>
           `;
+          }
         }
+      } finally {
+        setIsInitializingChart(false);
       }
-    }
-  }, []);
+    },
+    []
+  );
 
   // Fallback visualization function
   const createFallbackVisualization = (data: FamilyChartMember[]) => {
@@ -1646,12 +1754,27 @@ const FamilyTreeUploadPage = () => {
       setFamilyChartData(chartData);
 
       if (viewMode === "tree") {
-        initializeFamilyChart(chartData);
+        // Only try to initialize if family-chart is available or we haven't checked yet
+        if (familyChartAvailable !== false) {
+          initializeFamilyChart(chartData).catch((error) => {
+            console.error("Failed to initialize family chart:", error);
+            toast.error("Failed to initialize family tree visualization");
+          });
+        } else {
+          // If family-chart is not available, show fallback immediately
+          try {
+            createFallbackVisualization(chartData);
+          } catch (error) {
+            console.error("Fallback visualization failed:", error);
+            toast.error("Unable to display family tree visualization");
+          }
+        }
       }
     }
   }, [
     existingData,
     viewMode,
+    familyChartAvailable,
     initializeFamilyChart,
     convertToFamilyChartFormat,
   ]);
@@ -2267,6 +2390,7 @@ const FamilyTreeUploadPage = () => {
                     size="sm"
                     onClick={() => setViewMode("table")}
                     className="flex items-center gap-1"
+                    data-view-mode="table"
                   >
                     <TableIcon className="h-4 w-4" />
                     Table
@@ -2526,32 +2650,56 @@ const FamilyTreeUploadPage = () => {
                     </div>
 
                     {/* Family Chart Container */}
-                    <div
-                      ref={familyTreeRef}
-                      className="w-full min-h-[600px] bg-white overflow-hidden"
-                      style={{ height: "calc(100vh - 400px)" }}
-                    >
-                      {/* CSS Styles for family-chart connections */}
-                      <style
-                        dangerouslySetInnerHTML={{
-                          __html: `
-                            .links_view path.link {
-                              stroke: #000000 !important;
-                              stroke-width: 3px !important;
-                            }
-                            .link {
-                              stroke: #000000 !important;
-                              stroke-width: 3px !important;
-                            }
-                            /* Ensure fallback visualization links are also black */
-                            .fallback-container .link {
-                              stroke: #000000 !important;
-                              stroke-width: 3px !important;
-                            }
-                          `,
-                        }}
-                      />
-                    </div>
+                    <FamilyTreeErrorBoundary>
+                      <div
+                        ref={familyTreeRef}
+                        className="w-full min-h-[600px] bg-white overflow-hidden relative"
+                        style={{ height: "calc(100vh - 400px)" }}
+                      >
+                        {familyChartAvailable === false && (
+                          <div className="absolute top-4 left-4 right-4 z-20">
+                            <Alert variant="destructive">
+                              <AlertTriangle className="h-4 w-4" />
+                              <AlertDescription>
+                                Family tree visualization library is not
+                                available. The tree view may not work properly.
+                                Consider using the table view instead.
+                              </AlertDescription>
+                            </Alert>
+                          </div>
+                        )}
+                        {isInitializingChart && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 z-10">
+                            <div className="text-center">
+                              <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-2 text-blue-600" />
+                              <p className="text-sm text-gray-600">
+                                Initializing family tree visualization...
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                        {/* CSS Styles for family-chart connections */}
+                        <style
+                          dangerouslySetInnerHTML={{
+                            __html: `
+                              .links_view path.link {
+                                stroke: #000000 !important;
+                                stroke-width: 3px !important;
+                              }
+                              .link {
+                                stroke: #000000 !important;
+                                stroke-width: 3px !important;
+                              }
+                              /* Ensure fallback visualization links are also black */
+                              .fallback-container .link {
+                                stroke: #000000 !important;
+                                stroke-width: 3px !important;
+                              }
+                            `,
+                          }}
+                        />
+                      </div>
+                    </FamilyTreeErrorBoundary>
                   </div>
                 ) : (
                   <div className="p-8 text-center">

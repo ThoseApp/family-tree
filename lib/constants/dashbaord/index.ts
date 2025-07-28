@@ -26,11 +26,11 @@ export const navLinksTopSection: NavLink[] = [
     href: "/dashboard",
     icon: Grid2x2,
   },
-  {
-    label: "Timeline",
-    href: "/dashboard/timeline",
-    icon: ClipboardList,
-  },
+  // {
+  //   label: "Timeline",
+  //   href: "/dashboard/timeline",
+  //   icon: ClipboardList,
+  // },
   // {
   //   label: "History",
   //   href: "/dashboard/history",
