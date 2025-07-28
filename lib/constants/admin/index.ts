@@ -64,11 +64,11 @@ export const navLinksTopSection: NavLink[] = [
     href: "/admin/notice-board",
     icon: UsersIcon,
   },
-  {
-    label: "Timeline",
-    href: "/admin/timeline",
-    icon: ClipboardList,
-  },
+  // {
+  //   label: "Timeline",
+  //   href: "/admin/timeline",
+  //   icon: ClipboardList,
+  // },
   // {
   //   label: "History",
   //   href: "/admin/history",
