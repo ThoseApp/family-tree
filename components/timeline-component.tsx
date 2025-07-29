@@ -7,7 +7,16 @@ import { useLifeEventsStore } from "@/stores/life-events-store";
 import { toast } from "sonner";
 import { LifeEvent } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
-import { Plus, Edit2, Trash2, Calendar, Search, X } from "lucide-react";
+import { format } from "date-fns";
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  Calendar,
+  Search,
+  X,
+  CalendarIcon,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +36,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LoadingIcon } from "@/components/loading-icon";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { EnhancedCalendar } from "./ui/enhanced-calendar";
+import { cn } from "@/lib/utils";
 
 const TimelineComponent = () => {
   const { user } = useUserStore();
@@ -48,7 +60,7 @@ const TimelineComponent = () => {
     year: "",
     title: "",
     description: "",
-    date: "",
+    date: undefined as Date | undefined,
   });
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
@@ -97,7 +109,7 @@ const TimelineComponent = () => {
       year: "",
       title: "",
       description: "",
-      date: "",
+      date: undefined,
     });
     setIsLifeEventDialogOpen(true);
   };
@@ -108,7 +120,7 @@ const TimelineComponent = () => {
       year: event.year,
       title: event.title,
       description: event.description || "",
-      date: event.date || "",
+      date: event.date ? new Date(event.date) : undefined,
     });
     setIsLifeEventDialogOpen(true);
   };
@@ -121,9 +133,15 @@ const TimelineComponent = () => {
 
     try {
       if (editingLifeEvent) {
-        await updateLifeEvent(editingLifeEvent.id, lifeEventFormData, user.id);
+        await updateLifeEvent(
+          editingLifeEvent.id,
+          {
+            ...lifeEventFormData,
+            date: lifeEventFormData.date?.toISOString(),
+          },
+          user.id
+        );
       } else {
-        await createLifeEvent(lifeEventFormData, user.id);
       }
       setIsLifeEventDialogOpen(false);
     } catch (error) {
@@ -355,18 +373,41 @@ const TimelineComponent = () => {
             </div>
 
             <div>
-              <Label htmlFor="date">Specific Date (Optional)</Label>
-              <Input
-                id="date"
-                type="date"
-                value={lifeEventFormData.date}
-                onChange={(e) =>
-                  setLifeEventFormData((prev) => ({
-                    ...prev,
-                    date: e.target.value,
-                  }))
-                }
-              />
+              <Label className="flex items-center gap-2">
+                <CalendarIcon className="h-4 w-4" />
+                Specific Date (Optional)
+              </Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !lifeEventFormData.date && "text-muted-foreground"
+                    )}
+                  >
+                    {lifeEventFormData.date ? (
+                      format(lifeEventFormData.date, "PPP")
+                    ) : (
+                      <span>Pick a date</span>
+                    )}
+                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <EnhancedCalendar
+                    mode="single"
+                    selected={lifeEventFormData.date}
+                    onSelect={(date) => {
+                      setLifeEventFormData((prev) => ({ ...prev, date }));
+                    }}
+                    disabled={(date) =>
+                      date > new Date() || date < new Date("1900-01-01")
+                    }
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
 

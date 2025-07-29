@@ -48,7 +48,7 @@ import { BUCKET_NAME } from "@/lib/constants";
 import { uploadImage } from "@/lib/file-upload";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
+import { EnhancedCalendar } from "@/components/ui/enhanced-calendar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -419,7 +419,7 @@ const SettingsPage = () => {
                           </FormControl>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
+                          <EnhancedCalendar
                             mode="single"
                             selected={
                               field.value ? new Date(field.value) : undefined

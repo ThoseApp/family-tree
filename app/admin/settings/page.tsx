@@ -33,7 +33,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
+import { EnhancedCalendar } from "@/components/ui/enhanced-calendar";
 import { format } from "date-fns";
 
 // Profile image size limit (smaller than general images for better UX)
@@ -402,7 +402,7 @@ const SettingsPage = () => {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
+                  <EnhancedCalendar
                     mode="single"
                     selected={
                       formData.dateOfBirth

@@ -16,8 +16,22 @@ import { LoadingIcon } from "@/components/loading-icon";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase/client";
 import { FamilyMember } from "@/lib/types";
-import { Mail, User, Phone, Calendar, AlertCircle } from "lucide-react";
+import {
+  Mail,
+  User,
+  Phone,
+  Calendar as CalendarIcon,
+  AlertCircle,
+} from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { EnhancedCalendar } from "@/components/ui/enhanced-calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface CreateAccountModalProps {
   isOpen: boolean;
@@ -29,7 +43,13 @@ interface CreateAccountModalProps {
 interface FormData {
   email: string;
   phoneNumber: string;
-  dateOfBirth: string;
+  dateOfBirth: Date | undefined;
+}
+
+interface FormErrors {
+  email?: string;
+  phoneNumber?: string;
+  dateOfBirth?: string;
 }
 
 export const CreateAccountModal: React.FC<CreateAccountModalProps> = ({
@@ -41,10 +61,10 @@ export const CreateAccountModal: React.FC<CreateAccountModalProps> = ({
   const [formData, setFormData] = useState<FormData>({
     email: "",
     phoneNumber: "",
-    dateOfBirth: "",
+    dateOfBirth: undefined,
   });
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<Partial<FormData>>({});
+  const [errors, setErrors] = useState<FormErrors>({});
 
   // Reset form when modal opens/closes or family member changes
   useEffect(() => {
@@ -52,14 +72,16 @@ export const CreateAccountModal: React.FC<CreateAccountModalProps> = ({
       setFormData({
         email: "",
         phoneNumber: "",
-        dateOfBirth: familyMember.birthDate || "",
+        dateOfBirth: familyMember.birthDate
+          ? new Date(familyMember.birthDate)
+          : undefined,
       });
       setErrors({});
     }
   }, [isOpen, familyMember]);
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<FormData> = {};
+    const newErrors: FormErrors = {};
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -69,16 +91,16 @@ export const CreateAccountModal: React.FC<CreateAccountModalProps> = ({
       newErrors.email = "Please enter a valid email address";
     }
 
-    // Date validation
-    if (formData.dateOfBirth && isNaN(Date.parse(formData.dateOfBirth))) {
-      newErrors.dateOfBirth = "Please enter a valid date";
-    }
+    // Date validation is handled by the calendar component automatically
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleInputChange = (field: keyof FormData, value: string) => {
+  const handleInputChange = (
+    field: Exclude<keyof FormData, "dateOfBirth">,
+    value: string
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
 
     // Clear error for this field when user starts typing
@@ -130,7 +152,9 @@ export const CreateAccountModal: React.FC<CreateAccountModalProps> = ({
           lastName: lastName,
           email: formData.email,
           phoneNumber: formData.phoneNumber || undefined,
-          dateOfBirth: formData.dateOfBirth || undefined,
+          dateOfBirth: formData.dateOfBirth
+            ? formData.dateOfBirth.toISOString().split("T")[0]
+            : undefined,
         }),
       });
 
@@ -254,20 +278,50 @@ export const CreateAccountModal: React.FC<CreateAccountModalProps> = ({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="dateOfBirth" className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
+              <Label className="flex items-center gap-2">
+                <CalendarIcon className="h-4 w-4" />
                 Date of Birth (Optional)
               </Label>
-              <Input
-                id="dateOfBirth"
-                type="date"
-                value={formData.dateOfBirth}
-                onChange={(e) =>
-                  handleInputChange("dateOfBirth", e.target.value)
-                }
-                disabled={loading}
-                className={errors.dateOfBirth ? "border-red-500" : ""}
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !formData.dateOfBirth && "text-muted-foreground",
+                      errors.dateOfBirth ? "border-red-500" : ""
+                    )}
+                    disabled={loading}
+                  >
+                    {formData.dateOfBirth ? (
+                      format(formData.dateOfBirth, "PPP")
+                    ) : (
+                      <span>Pick a date</span>
+                    )}
+                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <EnhancedCalendar
+                    mode="single"
+                    selected={formData.dateOfBirth}
+                    onSelect={(date) => {
+                      setFormData((prev) => ({ ...prev, dateOfBirth: date }));
+                      // Clear error for this field when user selects a date
+                      if (errors.dateOfBirth) {
+                        setErrors((prev) => ({
+                          ...prev,
+                          dateOfBirth: undefined,
+                        }));
+                      }
+                    }}
+                    disabled={(date) =>
+                      date > new Date() || date < new Date("1900-01-01")
+                    }
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
               {errors.dateOfBirth && (
                 <p className="text-sm text-red-500">{errors.dateOfBirth}</p>
               )}

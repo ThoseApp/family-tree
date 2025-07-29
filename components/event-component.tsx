@@ -49,7 +49,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
+import { EnhancedCalendar } from "@/components/ui/enhanced-calendar";
 import { format } from "date-fns";
 import { uploadImage } from "@/lib/file-upload";
 import { BucketFolderEnum } from "@/lib/constants/enums";
@@ -517,7 +517,7 @@ const EventComponent = () => {
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
+                          <EnhancedCalendar
                             mode="single"
                             selected={selectedDate}
                             onSelect={setSelectedDate}
@@ -672,7 +672,7 @@ const EventComponent = () => {
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
+                          <EnhancedCalendar
                             mode="single"
                             selected={selectedEditDate}
                             onSelect={setSelectedEditDate}
