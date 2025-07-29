@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import { dummyProfileImage } from "@/lib/constants";
 import { CreateAccountModal } from "@/components/modals/create-account-modal";
+import { BulkCreateAccountsModal } from "@/components/modals/bulk-create-accounts-modal";
 import { processedMemberToFamilyMember } from "@/lib/utils/family-tree-helpers";
 
 interface UserAccountWithFamily extends UserProfile {
@@ -57,6 +58,9 @@ const UserAccountsPage = () => {
     useState(false);
   const [creatingAccountFor, setCreatingAccountFor] =
     useState<FamilyMember | null>(null);
+
+  // Bulk Create Accounts Modal state
+  const [isBulkCreateModalOpen, setIsBulkCreateModalOpen] = useState(false);
 
   // Fetch family members and their account status
   const fetchFamilyMembersWithAccounts = async () => {
@@ -214,7 +218,7 @@ const UserAccountsPage = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
+          {/* <Button
             variant="outline"
             onClick={() => setShowPasswordColumn(!showPasswordColumn)}
             className="flex items-center gap-2"
@@ -225,6 +229,15 @@ const UserAccountsPage = () => {
               <Eye className="h-4 w-4" />
             )}
             {showPasswordColumn ? "Hide Passwords" : "Show Passwords"}
+          </Button> */}
+          <Button
+            variant="outline"
+            onClick={() => setIsBulkCreateModalOpen(true)}
+            disabled={membersWithoutAccounts === 0}
+            className="flex items-center gap-2"
+          >
+            <Users className="h-4 w-4" />
+            Bulk Create ({membersWithoutAccounts})
           </Button>
           <Button
             variant="outline"
@@ -436,6 +449,16 @@ const UserAccountsPage = () => {
           setCreatingAccountFor(null);
         }}
         familyMember={creatingAccountFor}
+        onSuccess={handleCreateAccountSuccess}
+      />
+
+      {/* BULK CREATE ACCOUNTS MODAL */}
+      <BulkCreateAccountsModal
+        isOpen={isBulkCreateModalOpen}
+        onClose={() => setIsBulkCreateModalOpen(false)}
+        familyMembersWithoutAccounts={familyMembers.filter(
+          (member) => !member.hasAccount
+        )}
         onSuccess={handleCreateAccountSuccess}
       />
     </div>

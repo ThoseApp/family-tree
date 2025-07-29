@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { UserProfile, LifeEvent } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import Link from "next/link";
-import { Plus, Edit2, Trash2, Calendar } from "lucide-react";
+import { Plus, Edit2, Trash2, Calendar as CalendarIcon } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +25,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { LoadingIcon } from "@/components/loading-icon";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { EnhancedCalendar } from "@/components/ui/enhanced-calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 // Simple component for linked family members
 const FamilyMember = ({
@@ -72,7 +80,7 @@ const ProfileComponent = () => {
     year: "",
     title: "",
     description: "",
-    date: "",
+    date: undefined as Date | undefined,
   });
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
@@ -97,7 +105,7 @@ const ProfileComponent = () => {
       year: "",
       title: "",
       description: "",
-      date: "",
+      date: undefined,
     });
     setIsLifeEventDialogOpen(true);
   };
@@ -108,7 +116,7 @@ const ProfileComponent = () => {
       year: event.year,
       title: event.title,
       description: event.description || "",
-      date: event.date || "",
+      date: event.date ? new Date(event.date) : undefined,
     });
     setIsLifeEventDialogOpen(true);
   };
@@ -121,9 +129,22 @@ const ProfileComponent = () => {
 
     try {
       if (editingLifeEvent) {
-        await updateLifeEvent(editingLifeEvent.id, lifeEventFormData, user.id);
+        await updateLifeEvent(
+          editingLifeEvent.id,
+          {
+            ...lifeEventFormData,
+            date: lifeEventFormData.date?.toISOString(),
+          },
+          user.id
+        );
       } else {
-        await createLifeEvent(lifeEventFormData, user.id);
+        await createLifeEvent(
+          {
+            ...lifeEventFormData,
+            date: lifeEventFormData.date?.toISOString(),
+          },
+          user.id
+        );
       }
       setIsLifeEventDialogOpen(false);
     } catch (error) {
@@ -259,7 +280,7 @@ const ProfileComponent = () => {
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <Calendar className="size-4 text-gray-500" />
+                        <CalendarIcon className="size-4 text-gray-500" />
                         <span className="font-medium text-gray-900">
                           {event.year}
                         </span>
@@ -300,7 +321,7 @@ const ProfileComponent = () => {
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500">
-                <Calendar className="size-12 mx-auto mb-2 text-gray-300" />
+                <CalendarIcon className="size-12 mx-auto mb-2 text-gray-300" />
                 <p>No life events added yet.</p>
                 <p className="text-sm">
                   Click &quot;Add Event&quot; to get started!
@@ -396,18 +417,41 @@ const ProfileComponent = () => {
             </div>
 
             <div>
-              <Label htmlFor="date">Specific Date (Optional)</Label>
-              <Input
-                id="date"
-                type="date"
-                value={lifeEventFormData.date}
-                onChange={(e) =>
-                  setLifeEventFormData((prev) => ({
-                    ...prev,
-                    date: e.target.value,
-                  }))
-                }
-              />
+              <Label className="flex items-center gap-2">
+                <CalendarIcon className="h-4 w-4" />
+                Specific Date (Optional)
+              </Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !lifeEventFormData.date && "text-muted-foreground"
+                    )}
+                  >
+                    {lifeEventFormData.date ? (
+                      format(lifeEventFormData.date, "PPP")
+                    ) : (
+                      <span>Pick a date</span>
+                    )}
+                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <EnhancedCalendar
+                    mode="single"
+                    selected={lifeEventFormData.date}
+                    onSelect={(date) => {
+                      setLifeEventFormData((prev) => ({ ...prev, date }));
+                    }}
+                    disabled={(date) =>
+                      date > new Date() || date < new Date("1900-01-01")
+                    }
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
 
