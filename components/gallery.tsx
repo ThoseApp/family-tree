@@ -125,10 +125,22 @@ const GalleryGrid = ({ gallery, onImageClick }: GalleryProps) => {
             title={gallery.caption || gallery.file_name || "Untitled"}
             id={gallery.id}
             status={gallery.status as "pending" | "approved" | "rejected"}
-            onClick={onImageClick}
+            onClick={handleImagePreviewOpen}
           />
         ))}
       </div>
+
+      {/* Image Preview Modal */}
+      {selectedImage && (
+        <ImagePreviewModal
+          isOpen={isModalOpen}
+          onClose={handleModalClose}
+          imageUrl={selectedImage.url}
+          imageName={selectedImage.title}
+          onConfirm={handleModalConfirm}
+          confirmButtonText="Close"
+        />
+      )}
     </>
   );
 };

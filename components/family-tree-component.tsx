@@ -193,7 +193,7 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
       </text>
 
       {/* Polygamous marriage indicator */}
-      {attributes?.spouse_count && attributes.spouse_count > 1 && (
+      {/* {attributes?.spouse_count && attributes.spouse_count > 1 && (
         <text
           x={nodeWidth / 2 - 10}
           y={nodeHeight / 2 - 10}
@@ -204,7 +204,7 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
         >
           {attributes.spouse_count}
         </text>
-      )}
+      )} */}
 
       {/* Define clip path for images */}
       <defs>

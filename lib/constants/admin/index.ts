@@ -85,6 +85,11 @@ export const navLinksTopSection: NavLink[] = [
     icon: UsersIcon,
   },
   {
+    label: "Gallery",
+    href: "/admin/gallery",
+    icon: ImageIcon,
+  },
+  {
     label: "Events",
     href: "/admin/events",
     icon: CalendarIcon,
