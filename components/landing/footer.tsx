@@ -21,25 +21,25 @@ const Footer = () => {
                 Email:{" "}
                 <Link
                   href="mailto:
-                  yourfamily@example.com
+                  mosurofamily@gmail.com
                   "
                   className="text-background hover:text-primary"
                 >
-                  yourfamily@example.com
+                  mosurofamily@gmail.com
                 </Link>
               </p>
               <p className="text-sm md:text-base ">
                 Phone:{" "}
                 <Link
-                  href="tel:+234123456789"
+                  href="tel:+2349085693183"
                   className="text-background hover:text-primary"
                 >
-                  +234 123 456 789
+                  +234 908 569 3183
                 </Link>
               </p>
 
               <p className="text-sm md:text-base ">
-                Family house, City, Country
+                22 N'tebo Street, Ijebu Ode
               </p>
             </div>
           </div>
@@ -131,7 +131,7 @@ const Footer = () => {
       </FrameWrapper>
 
       <div className="items-center flex justify-center bg-foreground py-4">
-        <p className="text-sm md:text-base text-background font-normal text-center">
+        <p className="text-xs md:text-sm text-background font-normal text-center">
           &copy; {new Date().getFullYear()} Kith & Kin - All Rights Reserved.
         </p>
       </div>

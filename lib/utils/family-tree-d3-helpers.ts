@@ -49,7 +49,14 @@ export function determineLineageColor(
   member: ProcessedMember,
   allMembers: ProcessedMember[]
 ): LineageColor {
-  const { unique_id, gender, fathers_uid, order_of_birth } = member;
+  const {
+    unique_id,
+    gender,
+    fathers_uid,
+    fathers_first_name,
+    fathers_last_name,
+    order_of_birth,
+  } = member;
 
   // Origin couple
   if (unique_id === "D00Z00001" || unique_id === "S00Z00001") {
@@ -79,11 +86,29 @@ export function determineLineageColor(
   }
 
   // For other descendants, they inherit their father's color.
+  // First try to find father by UID
   if (fathers_uid) {
     const father = allMembers.find((m) => m.unique_id === fathers_uid);
     if (father) {
       // Recursive call to find the father's lineage color.
-      return determineLineageColor(father, allMembers);
+      const inheritedColor = determineLineageColor(father, allMembers);
+      return inheritedColor;
+    }
+  }
+
+  // Fallback: Try to find father by name if UID is not available
+  if (fathers_first_name && fathers_last_name) {
+    const father = allMembers.find(
+      (m) =>
+        m.first_name?.toLowerCase().trim() ===
+          fathers_first_name.toLowerCase().trim() &&
+        m.last_name?.toLowerCase().trim() ===
+          fathers_last_name.toLowerCase().trim()
+    );
+    if (father) {
+      // Recursive call to find the father's lineage color.
+      const inheritedColor = determineLineageColor(father, allMembers);
+      return inheritedColor;
     }
   }
 
@@ -103,6 +128,98 @@ export function isDescendant(uid: string): boolean {
  */
 export function isSpouse(uid: string): boolean {
   return uid.startsWith("S");
+}
+
+/**
+ * Validate color inheritance consistency for debugging
+ */
+export function validateColorInheritance(allMembers: ProcessedMember[]): {
+  [key: string]: string;
+} {
+  const colorMap: { [key: string]: string } = {};
+  const inheritanceIssues: string[] = [];
+  const neutralDescendants: string[] = [];
+
+  allMembers.forEach((member) => {
+    const color = determineLineageColor(member, allMembers);
+    colorMap[member.unique_id] = color;
+
+    // Track descendants that are neutral (potential issues)
+    if (
+      isDescendant(member.unique_id) &&
+      color === "neutral" &&
+      !isSpouse(member.unique_id)
+    ) {
+      neutralDescendants.push(
+        `${member.unique_id} (${member.first_name} ${member.last_name})`
+      );
+    }
+
+    // Check for inheritance consistency
+    if (!isSpouse(member.unique_id)) {
+      let father: ProcessedMember | undefined;
+
+      // Try to find father by UID first
+      if (member.fathers_uid) {
+        father = allMembers.find((m) => m.unique_id === member.fathers_uid);
+      }
+
+      // Fallback to name-based lookup
+      if (!father && member.fathers_first_name && member.fathers_last_name) {
+        father = allMembers.find(
+          (m) =>
+            m.first_name?.toLowerCase().trim() ===
+              member.fathers_first_name.toLowerCase().trim() &&
+            m.last_name?.toLowerCase().trim() ===
+              member.fathers_last_name.toLowerCase().trim()
+        );
+      }
+
+      if (father) {
+        const fatherColor = determineLineageColor(father, allMembers);
+
+        // Skip special cases (origin, Egundebi, and his direct children)
+        const isSpecialCase =
+          member.unique_id === "D00Z00001" ||
+          member.unique_id === "S00Z00001" ||
+          member.unique_id === "D01Z00002" ||
+          member.fathers_uid === "D01Z00002";
+
+        if (!isSpecialCase && color !== fatherColor) {
+          inheritanceIssues.push(
+            `${member.unique_id} (${member.first_name} ${member.last_name}) has color ${color} but father ${father.unique_id} (${father.first_name} ${father.last_name}) has color ${fatherColor}`
+          );
+        }
+      } else if (isDescendant(member.unique_id)) {
+        // Skip special cases for missing father reports too
+        const isSpecialCase =
+          member.unique_id === "D00Z00001" ||
+          member.unique_id === "S00Z00001" ||
+          member.unique_id === "D01Z00002" ||
+          member.fathers_uid === "D01Z00002";
+
+        if (!isSpecialCase) {
+          // Report missing father relationships
+          inheritanceIssues.push(
+            `${member.unique_id} (${member.first_name} ${member.last_name}) - No father found (UID: ${member.fathers_uid}, Name: ${member.fathers_first_name} ${member.fathers_last_name})`
+          );
+        }
+      }
+    }
+  });
+
+  if (inheritanceIssues.length > 0) {
+    console.warn("Color inheritance issues found:", inheritanceIssues);
+  }
+
+  if (neutralDescendants.length > 0) {
+    console.warn(
+      "Descendants with neutral color (potential inheritance issues):",
+      neutralDescendants
+    );
+  }
+
+  return colorMap;
 }
 
 /**
@@ -180,6 +297,42 @@ export function convertToTreeNode(
   const lineageColor = determineLineageColor(member, allMembers);
   const spouses = findSpouses(member, allMembers);
   const children = findChildren(member, allMembers);
+
+  // Validate color inheritance for debugging (only in development)
+  if (process.env.NODE_ENV === "development" && !isSpouse(member.unique_id)) {
+    let father: ProcessedMember | undefined;
+
+    // Try to find father by UID first
+    if (member.fathers_uid) {
+      father = allMembers.find((m) => m.unique_id === member.fathers_uid);
+    }
+
+    // Fallback to name-based lookup
+    if (!father && member.fathers_first_name && member.fathers_last_name) {
+      father = allMembers.find(
+        (m) =>
+          m.first_name?.toLowerCase().trim() ===
+            member.fathers_first_name.toLowerCase().trim() &&
+          m.last_name?.toLowerCase().trim() ===
+            member.fathers_last_name.toLowerCase().trim()
+      );
+    }
+
+    if (father) {
+      const fatherColor = determineLineageColor(father, allMembers);
+      const isSpecialCase =
+        member.unique_id === "D00Z00001" ||
+        member.unique_id === "S00Z00001" ||
+        member.unique_id === "D01Z00002" ||
+        member.fathers_uid === "D01Z00002";
+
+      if (!isSpecialCase && lineageColor !== fatherColor) {
+        console.warn(
+          `Color inheritance issue: ${member.unique_id} (${member.first_name} ${member.last_name}) has color ${lineageColor} but should inherit ${fatherColor} from father ${father.unique_id} (${father.first_name} ${father.last_name})`
+        );
+      }
+    }
+  }
 
   const node: TreeNode = {
     name: `${member.first_name} ${member.last_name}`.trim(),

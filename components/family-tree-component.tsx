@@ -19,6 +19,7 @@ import {
   findChildren,
   isDescendant,
   isSpouse,
+  validateColorInheritance,
 } from "@/lib/utils/family-tree-d3-helpers";
 
 // Custom path function to handle spouse connections
@@ -244,6 +245,12 @@ const FamilyTreeComponent: React.FC = () => {
 
       const members = await fetchFamilyMembers();
       setAllMembers(members);
+
+      // Validate color inheritance consistency in development
+      if (process.env.NODE_ENV === "development") {
+        const colorMap = validateColorInheritance(members);
+        console.log("Color inheritance validation completed:", colorMap);
+      }
 
       // Create initial tree state
       const initialState = createInitialTreeState(members);
