@@ -729,9 +729,9 @@ const FamilyTreeComponent: React.FC = () => {
             <span>Family Tree</span>
           </CardTitle>
           <div className="flex items-center space-x-2">
-            <Badge variant="secondary">
+            {/* <Badge variant="secondary">
               Generation {treeState?.currentGeneration || 1}
-            </Badge>
+            </Badge> */}
             <Button onClick={resetTree} variant="outline" size="sm">
               <RefreshCw className="w-4 h-4 mr-2" />
               Reset View
