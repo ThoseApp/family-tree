@@ -39,7 +39,7 @@ const Footer = () => {
               </p>
 
               <p className="text-sm md:text-base ">
-                22 N'tebo Street, Ijebu Ode
+                22 N&apos;tebo Street, Ijebu Ode
               </p>
             </div>
           </div>
