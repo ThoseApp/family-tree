@@ -100,9 +100,6 @@ export const useUserStore = create(
           set({ user: data.user, success: true, loading: false });
           toast.success("Login successful");
 
-          set({ user: data.user, success: true, loading: false });
-          toast.success("Login successful");
-
           // Determine redirect path based on user role
           let redirectPath = "/dashboard";
           if (data.user.user_metadata?.is_admin) {

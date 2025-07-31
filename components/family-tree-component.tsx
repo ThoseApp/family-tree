@@ -94,6 +94,11 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
   const nodeHeight = 140;
   const imageSize = 60;
 
+  // Determine image shape based on unique ID prefix
+  const uniqueId = attributes?.unique_id || "";
+  const isCircularImage = uniqueId.startsWith("S"); // Spouses get circular images
+  const isSquareImage = uniqueId.startsWith("D"); // Descendants get square images
+
   // Text wrapping logic
   const name = nodeDatum.name;
   const nameParts = name.split(" ");
@@ -106,8 +111,8 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
     nameLines = [`${name.substring(0, 18)}...`];
   }
 
-  const nameY = -nodeHeight / 2 + (nameLines.length > 1 ? 78 : 85);
-  const uidY = -nodeHeight / 2 + (nameLines.length > 1 ? 105 : 100);
+  const nameY = -nodeHeight / 2 + (nameLines.length > 1 ? 88 : 95); // Added 10px more space
+  const uidY = -nodeHeight / 2 + (nameLines.length > 1 ? 115 : 110); // Added 10px more space
 
   return (
     <g onClick={onNodeClick}>
@@ -125,7 +130,7 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
       />
 
       {/* Profile image placeholder */}
-      {gender?.toLowerCase() === "female" ? (
+      {isCircularImage ? (
         <circle
           cx={0}
           cy={-nodeHeight / 2 + 10 + imageSize / 2}
@@ -164,7 +169,7 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
         x={0}
         y={nameY}
         textAnchor="middle"
-        fill="white"
+        // fill="white"
         fontSize="12"
         fontWeight="600"
       >
@@ -187,32 +192,6 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
         {attributes?.unique_id}
       </text>
 
-      {/* Click indicator for nodes with children */}
-      {hasChildren && (
-        <circle
-          cx={nodeWidth / 2 - 10}
-          cy={-nodeHeight / 2 + 10}
-          r={8}
-          fill="#10B981"
-          stroke="white"
-          strokeWidth={2}
-        />
-      )}
-
-      {/* Plus icon for clickable nodes */}
-      {hasChildren && (
-        <text
-          x={nodeWidth / 2 - 10}
-          y={-nodeHeight / 2 + 15}
-          textAnchor="middle"
-          fill="white"
-          fontSize="12"
-          fontWeight="bold"
-        >
-          +
-        </text>
-      )}
-
       {/* Polygamous marriage indicator */}
       {attributes?.spouse_count && attributes.spouse_count > 1 && (
         <text
@@ -227,10 +206,10 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
         </text>
       )}
 
-      {/* Define clip path for circular images */}
+      {/* Define clip path for images */}
       <defs>
         <clipPath id={`imageClip-${attributes?.unique_id || "node"}`}>
-          {gender?.toLowerCase() === "female" ? (
+          {isCircularImage ? (
             <circle
               r={imageSize / 2}
               cx={0}
@@ -297,7 +276,39 @@ const FamilyTreeComponent: React.FC = () => {
     }
   }, [allMembers, treeState]);
 
-  // Handle node clicks for progressive disclosure
+  // Helper function to recursively collapse all descendants of a node
+  const collapseDescendantsRecursively = useCallback(
+    (nodeId: string, state: FamilyTreeState) => {
+      const member = allMembers.find((m) => m.unique_id === nodeId);
+      if (!member) return;
+
+      const children = findChildren(member, allMembers);
+
+      children.forEach((child) => {
+        // Remove child from visible nodes
+        state.visibleNodes.delete(child.unique_id);
+
+        // Find and remove child's spouses
+        const childSpouses = findSpouses(child, allMembers);
+        childSpouses.forEach((spouse) => {
+          state.visibleNodes.delete(spouse.unique_id);
+        });
+
+        // Remove from expanded sets
+        state.expandedSpouses.delete(child.unique_id);
+        state.expandedChildren.delete(child.unique_id);
+
+        // Remove spouse assignments for this child
+        state.spouseAssignments.delete(child.unique_id);
+
+        // Recursively collapse this child's descendants
+        collapseDescendantsRecursively(child.unique_id, state);
+      });
+    },
+    [allMembers]
+  );
+
+  // Handle node clicks for progressive disclosure with toggle functionality
   const handleNodeClick = useCallback(
     (nodeDatum: TreeNodeDatum) => {
       const attributes = nodeDatum.attributes as TreeNode["attributes"];
@@ -307,14 +318,144 @@ const FamilyTreeComponent: React.FC = () => {
 
       // Special handling for the root node if needed
       if (uid === "COUPLE_ROOT") {
-        // You might want to implement logic to expand the whole tree or something similar
         return;
       }
 
       const member = allMembers.find((m) => m.unique_id === uid);
       if (!member) return;
 
-      const newState = { ...treeState };
+      const newState = {
+        ...treeState,
+        visibleNodes: new Set(treeState.visibleNodes),
+        expandedSpouses: new Set(treeState.expandedSpouses),
+        expandedChildren: new Set(treeState.expandedChildren),
+        spouseAssignments: new Map(treeState.spouseAssignments),
+      };
+
+      // Special handling for origin couple with toggle functionality
+      if (uid === "D00Z00001") {
+        // Click on Laketu (origin male)
+        if (!newState.visibleNodes.has("S00Z00001")) {
+          // EXPAND: Princess not visible → reveal Princess
+          newState.visibleNodes.add("S00Z00001");
+          newState.expandedSpouses.add("D00Z00001");
+        } else {
+          // COLLAPSE: Princess is visible → hide Princess and ALL descendants
+          newState.visibleNodes.delete("S00Z00001");
+
+          // Find and remove all descendants recursively
+          const princess = allMembers.find((m) => m.unique_id === "S00Z00001");
+          if (princess) {
+            collapseDescendantsRecursively("S00Z00001", newState);
+          }
+
+          // Remove first child (Egundebi) and all his descendants if visible
+          const egundebi = allMembers.find((m) => m.unique_id === "D01Z00002");
+          if (egundebi && newState.visibleNodes.has("D01Z00002")) {
+            newState.visibleNodes.delete("D01Z00002");
+            collapseDescendantsRecursively("D01Z00002", newState);
+
+            // Remove Egundebi's spouses
+            const egundebiSpouses = findSpouses(egundebi, allMembers);
+            egundebiSpouses.forEach((spouse) => {
+              newState.visibleNodes.delete(spouse.unique_id);
+              collapseDescendantsRecursively(spouse.unique_id, newState);
+            });
+
+            // Clean up tracking
+            newState.expandedSpouses.delete("D01Z00002");
+            newState.expandedChildren.delete("D01Z00002");
+          }
+
+          // Clean up origin tracking
+          newState.expandedSpouses.delete("D00Z00001");
+          newState.expandedChildren.delete("S00Z00001");
+
+          // Reset to generation 1
+          newState.currentGeneration = 1;
+        }
+
+        setTreeState({
+          visibleNodes: newState.visibleNodes,
+          expandedSpouses: newState.expandedSpouses,
+          expandedChildren: newState.expandedChildren,
+          spouseAssignments: newState.spouseAssignments,
+          currentGeneration: newState.currentGeneration,
+          lastClickedNodeId: uid,
+        });
+        return;
+      }
+
+      if (uid === "S00Z00001") {
+        // Click on Princess (origin female)
+        const egundebi = allMembers.find((m) => m.unique_id === "D01Z00002");
+        if (egundebi && !newState.visibleNodes.has("D01Z00002")) {
+          // EXPAND: First child not visible → reveal first child + spouses
+          newState.visibleNodes.add("D01Z00002");
+
+          // Track spouse assignment: Princess (S00Z00001) is responsible for Laketu's children
+          newState.spouseAssignments.set("D00Z00001", "S00Z00001");
+
+          // Also reveal Egundebi's spouses
+          const egundebiSpouses = findSpouses(egundebi, allMembers);
+          egundebiSpouses.forEach((spouse) => {
+            newState.visibleNodes.add(spouse.unique_id);
+          });
+
+          if (egundebiSpouses.length > 0) {
+            newState.expandedSpouses.add("D01Z00002");
+          }
+
+          newState.currentGeneration = 2;
+        } else if (egundebi && newState.visibleNodes.has("D01Z00002")) {
+          // COLLAPSE: First child is visible → hide first child and ALL descendants
+          newState.visibleNodes.delete("D01Z00002");
+          collapseDescendantsRecursively("D01Z00002", newState);
+
+          // Remove Egundebi's spouses and their descendants
+          const egundebiSpouses = findSpouses(egundebi, allMembers);
+          egundebiSpouses.forEach((spouse) => {
+            newState.visibleNodes.delete(spouse.unique_id);
+            collapseDescendantsRecursively(spouse.unique_id, newState);
+          });
+
+          // Clean up tracking
+          newState.expandedSpouses.delete("D01Z00002");
+          newState.expandedChildren.delete("D01Z00002");
+          egundebiSpouses.forEach((spouse) => {
+            newState.expandedSpouses.delete(spouse.unique_id);
+            newState.expandedChildren.delete(spouse.unique_id);
+          });
+
+          // Recalculate generation counter
+          let maxGeneration = 1;
+          newState.visibleNodes.forEach((visibleUid) => {
+            const visibleMember = allMembers.find(
+              (m) => m.unique_id === visibleUid
+            );
+            if (visibleMember) {
+              if (
+                visibleMember.fathers_uid === "D00Z00001" ||
+                visibleMember.mothers_uid === "S00Z00001"
+              ) {
+                maxGeneration = Math.max(maxGeneration, 2);
+              }
+            }
+          });
+          newState.currentGeneration = maxGeneration;
+        }
+
+        setTreeState({
+          visibleNodes: newState.visibleNodes,
+          expandedSpouses: newState.expandedSpouses,
+          expandedChildren: newState.expandedChildren,
+          spouseAssignments: newState.spouseAssignments,
+          currentGeneration: newState.currentGeneration,
+          lastClickedNodeId: uid,
+        });
+        return;
+      }
+
       const spouses = findSpouses(member, allMembers);
       const children = findChildren(member, allMembers);
 
@@ -322,7 +463,6 @@ const FamilyTreeComponent: React.FC = () => {
       const isDescendantNode = isDescendant(uid);
 
       // Check if the click is on a Gen 2 family member (descendant or their spouse)
-      // This will determine if the children to be revealed are Gen 3.
       const partner = isSpouse(member.unique_id)
         ? allMembers.find((p) => p.unique_id === member.spouse_uid)
         : member;
@@ -331,28 +471,148 @@ const FamilyTreeComponent: React.FC = () => {
         (partner.fathers_uid === "D00Z00001" ||
           partner.mothers_uid === "S00Z00001");
 
-      // If a descendant is clicked, reveal their spouse(s)
+      let generationChanged = false;
+
+      // Rule: Male descendants (D IDs) can ONLY reveal/collapse spouses, never children directly
       if (isDescendantNode && spouses.length > 0) {
         if (!newState.expandedSpouses.has(uid)) {
+          // EXPAND: Reveal spouses if not already visible
           spouses.forEach((spouse) => {
             newState.visibleNodes.add(spouse.unique_id);
           });
           newState.expandedSpouses.add(uid);
+        } else {
+          // COLLAPSE: Spouses are visible, so collapse them and ALL their descendants
+          spouses.forEach((spouse) => {
+            // Remove spouse from visible nodes
+            newState.visibleNodes.delete(spouse.unique_id);
+
+            // Collapse all descendants of this spouse recursively
+            collapseDescendantsRecursively(spouse.unique_id, newState);
+
+            // Remove from expanded tracking
+            newState.expandedSpouses.delete(spouse.unique_id);
+            newState.expandedChildren.delete(spouse.unique_id);
+          });
+
+          // Remove the male descendant from expanded spouses tracking
+          newState.expandedSpouses.delete(uid);
+
+          // Recalculate generation counter by finding the maximum visible generation
+          let maxGeneration = 1;
+          newState.visibleNodes.forEach((visibleUid) => {
+            const visibleMember = allMembers.find(
+              (m) => m.unique_id === visibleUid
+            );
+            if (visibleMember) {
+              // Count the generation based on ancestry depth
+              let generation = 1;
+              if (
+                visibleMember.fathers_uid === "D00Z00001" ||
+                visibleMember.mothers_uid === "S00Z00001"
+              ) {
+                generation = 2;
+              } else if (
+                visibleMember.fathers_uid &&
+                visibleMember.fathers_uid !== "D00Z00001"
+              ) {
+                const parent = allMembers.find(
+                  (m) => m.unique_id === visibleMember.fathers_uid
+                );
+                if (
+                  parent &&
+                  (parent.fathers_uid === "D00Z00001" ||
+                    parent.mothers_uid === "S00Z00001")
+                ) {
+                  generation = 3;
+                } else if (
+                  parent &&
+                  parent.fathers_uid &&
+                  parent.fathers_uid !== "D00Z00001"
+                ) {
+                  generation = 4; // Could extend this logic further if needed
+                }
+              }
+              maxGeneration = Math.max(maxGeneration, generation);
+            }
+          });
+          newState.currentGeneration = maxGeneration;
+          generationChanged = true;
         }
+        // Male descendants stop here - they cannot expand children directly
       }
-      // If a node (descendant or spouse) with children is clicked, reveal them
-      else if (children.length > 0) {
-        // This check prevents re-adding children if they are already visible
+      // Rule: Only spouses (S IDs) can expand/collapse children
+      else if (!isDescendantNode && children.length > 0) {
         const areChildrenVisible = children.every((child) =>
           newState.visibleNodes.has(child.unique_id)
         );
 
-        if (!areChildrenVisible) {
+        if (areChildrenVisible && newState.expandedChildren.has(uid)) {
+          // COLLAPSE: Children are visible and this node is marked as expanded, so collapse them
+          collapseDescendantsRecursively(uid, newState);
+          newState.expandedChildren.delete(uid);
+
+          // Decrease generation counter by calculating the maximum visible generation
+          let maxGeneration = 1;
+          newState.visibleNodes.forEach((visibleUid) => {
+            const visibleMember = allMembers.find(
+              (m) => m.unique_id === visibleUid
+            );
+            if (visibleMember) {
+              // Count the generation based on ancestry depth
+              let generation = 1;
+              if (
+                visibleMember.fathers_uid === "D00Z00001" ||
+                visibleMember.mothers_uid === "S00Z00001"
+              ) {
+                generation = 2;
+              } else if (
+                visibleMember.fathers_uid &&
+                visibleMember.fathers_uid !== "D00Z00001"
+              ) {
+                const parent = allMembers.find(
+                  (m) => m.unique_id === visibleMember.fathers_uid
+                );
+                if (
+                  parent &&
+                  (parent.fathers_uid === "D00Z00001" ||
+                    parent.mothers_uid === "S00Z00001")
+                ) {
+                  generation = 3;
+                } else if (
+                  parent &&
+                  parent.fathers_uid &&
+                  parent.fathers_uid !== "D00Z00001"
+                ) {
+                  generation = 4; // Could extend this logic further if needed
+                }
+              }
+              maxGeneration = Math.max(maxGeneration, generation);
+            }
+          });
+          newState.currentGeneration = maxGeneration;
+          generationChanged = true;
+        } else if (!areChildrenVisible) {
+          // EXPAND: Children are not visible, so show them
           children.forEach((child) => {
             newState.visibleNodes.add(child.unique_id);
           });
+          newState.expandedChildren.add(uid);
 
-          // If we just revealed Gen 3, also reveal their spouses automatically.
+          // Track spouse assignment: Record that this spouse (uid) is responsible for these children
+          if (!isDescendantNode && children.length > 0) {
+            // Find the descendant partner whose children these are
+            const descendantPartner = allMembers.find((m) => {
+              const memberSpouses = findSpouses(m, allMembers);
+              return memberSpouses.some((spouse) => spouse.unique_id === uid);
+            });
+
+            if (descendantPartner) {
+              newState.spouseAssignments.set(descendantPartner.unique_id, uid);
+            }
+          }
+
+          // If we just revealed Gen 3, also reveal their spouses automatically
           if (isGen2FamilyClick) {
             children.forEach((child) => {
               const childSpouses = findSpouses(child, allMembers);
@@ -365,19 +625,34 @@ const FamilyTreeComponent: React.FC = () => {
             });
           }
 
-          // We can advance the generation when children are revealed
+          // Advance the generation when children are revealed
           newState.currentGeneration += 1;
+          generationChanged = true;
         }
       }
 
+      // Only update state if there were actual changes
+      const hasChanges =
+        newState.visibleNodes.size !== treeState.visibleNodes.size ||
+        newState.expandedSpouses.size !== treeState.expandedSpouses.size ||
+        newState.expandedChildren.size !== treeState.expandedChildren.size ||
+        generationChanged;
+
+      if (!hasChanges) {
+        // No changes needed, don't update state
+        return;
+      }
+
       setTreeState({
-        visibleNodes: new Set(newState.visibleNodes),
-        expandedSpouses: new Set(newState.expandedSpouses),
+        visibleNodes: newState.visibleNodes,
+        expandedSpouses: newState.expandedSpouses,
+        expandedChildren: newState.expandedChildren,
+        spouseAssignments: newState.spouseAssignments,
         currentGeneration: newState.currentGeneration,
         lastClickedNodeId: uid,
       });
     },
-    [allMembers, treeState]
+    [allMembers, treeState, collapseDescendantsRecursively]
   );
 
   // Reset to initial view
@@ -464,8 +739,8 @@ const FamilyTreeComponent: React.FC = () => {
           </div>
         </div>
         <p className="text-sm text-muted-foreground">
-          Click on descendants to reveal spouses, click on spouses to reveal
-          children
+          Click males (squares) to toggle spouses, click spouses (circles) to
+          expand/collapse children
         </p>
       </CardHeader>
       <CardContent>
