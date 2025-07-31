@@ -90,7 +90,7 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
   }
 
   // Node dimensions
-  const nodeWidth = 120;
+  const nodeWidth = 125;
   const nodeHeight = 140;
   const imageSize = 60;
 
@@ -181,7 +181,7 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
       </text>
 
       {/* UID text */}
-      <text
+      {/* <text
         x={0}
         y={uidY}
         textAnchor="middle"
@@ -190,7 +190,7 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
         opacity={0.8}
       >
         {attributes?.unique_id}
-      </text>
+      </text> */}
 
       {/* Polygamous marriage indicator */}
       {/* {attributes?.spouse_count && attributes.spouse_count > 1 && (
@@ -657,10 +657,11 @@ const FamilyTreeComponent: React.FC = () => {
 
   // Reset to initial view
   const resetTree = useCallback(() => {
-    if (allMembers.length > 0) {
-      const initialState = createInitialTreeState(allMembers);
-      setTreeState(initialState);
-    }
+    // if (allMembers.length > 0) {
+    //   const initialState = createInitialTreeState(allMembers);
+    //   setTreeState(initialState);
+    // }
+    window.location.reload();
   }, [allMembers]);
 
   // Tree configuration
