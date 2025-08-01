@@ -72,9 +72,8 @@ const SignInDetails = () => {
       const loggedIn = await login(values.email, values.password, next || "");
 
       if (loggedIn && loggedIn.data) {
-        // Successfully logged in, redirect user to the appropriate page
-        // The user store login function already determines the correct path for admins vs users
-        router.push(loggedIn.path || "/dashboard");
+        // Successfully logged in, redirect user to home page
+        router.push(loggedIn.path || "/");
       }
     } catch (error: any) {
       toast.error("Something went wrong");

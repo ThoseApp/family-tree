@@ -4,7 +4,7 @@ import { ProcessedMember } from "@/lib/types";
 export const LINEAGE_COLORS = {
   neutral: "#94A3B8", // slate-400 for spouses and females
   origin: "#78716C", // stone-500 for origin couple
-  red: "#EF4444", // red-500 for D01Z00002 lineage
+  red: "#ea9c36", // red-500 for D01Z00002 lineage
   green: "#10B981", // emerald-500 for first male child
   blue: "#3B82F6", // blue-500 for second male child
   purple: "#8B5CF6", // violet-500 for third male child
@@ -36,6 +36,8 @@ export interface TreeNode {
 export interface FamilyTreeState {
   visibleNodes: Set<string>; // UIDs of visible nodes
   expandedSpouses: Set<string>; // UIDs of members whose spouses are shown
+  expandedChildren: Set<string>; // UIDs of members whose children are shown
+  spouseAssignments: Map<string, string>; // Maps descendant UID to spouse UID that currently has their children
   currentGeneration: number;
   lastClickedNodeId?: string;
 }
@@ -47,7 +49,14 @@ export function determineLineageColor(
   member: ProcessedMember,
   allMembers: ProcessedMember[]
 ): LineageColor {
-  const { unique_id, gender, fathers_uid, order_of_birth } = member;
+  const {
+    unique_id,
+    gender,
+    fathers_uid,
+    fathers_first_name,
+    fathers_last_name,
+    order_of_birth,
+  } = member;
 
   // Origin couple
   if (unique_id === "D00Z00001" || unique_id === "S00Z00001") {
@@ -77,11 +86,29 @@ export function determineLineageColor(
   }
 
   // For other descendants, they inherit their father's color.
+  // First try to find father by UID
   if (fathers_uid) {
     const father = allMembers.find((m) => m.unique_id === fathers_uid);
     if (father) {
       // Recursive call to find the father's lineage color.
-      return determineLineageColor(father, allMembers);
+      const inheritedColor = determineLineageColor(father, allMembers);
+      return inheritedColor;
+    }
+  }
+
+  // Fallback: Try to find father by name if UID is not available
+  if (fathers_first_name && fathers_last_name) {
+    const father = allMembers.find(
+      (m) =>
+        m.first_name?.toLowerCase().trim() ===
+          fathers_first_name.toLowerCase().trim() &&
+        m.last_name?.toLowerCase().trim() ===
+          fathers_last_name.toLowerCase().trim()
+    );
+    if (father) {
+      // Recursive call to find the father's lineage color.
+      const inheritedColor = determineLineageColor(father, allMembers);
+      return inheritedColor;
     }
   }
 
@@ -101,6 +128,98 @@ export function isDescendant(uid: string): boolean {
  */
 export function isSpouse(uid: string): boolean {
   return uid.startsWith("S");
+}
+
+/**
+ * Validate color inheritance consistency for debugging
+ */
+export function validateColorInheritance(allMembers: ProcessedMember[]): {
+  [key: string]: string;
+} {
+  const colorMap: { [key: string]: string } = {};
+  const inheritanceIssues: string[] = [];
+  const neutralDescendants: string[] = [];
+
+  allMembers.forEach((member) => {
+    const color = determineLineageColor(member, allMembers);
+    colorMap[member.unique_id] = color;
+
+    // Track descendants that are neutral (potential issues)
+    if (
+      isDescendant(member.unique_id) &&
+      color === "neutral" &&
+      !isSpouse(member.unique_id)
+    ) {
+      neutralDescendants.push(
+        `${member.unique_id} (${member.first_name} ${member.last_name})`
+      );
+    }
+
+    // Check for inheritance consistency
+    if (!isSpouse(member.unique_id)) {
+      let father: ProcessedMember | undefined;
+
+      // Try to find father by UID first
+      if (member.fathers_uid) {
+        father = allMembers.find((m) => m.unique_id === member.fathers_uid);
+      }
+
+      // Fallback to name-based lookup
+      if (!father && member.fathers_first_name && member.fathers_last_name) {
+        father = allMembers.find(
+          (m) =>
+            m.first_name?.toLowerCase().trim() ===
+              member.fathers_first_name.toLowerCase().trim() &&
+            m.last_name?.toLowerCase().trim() ===
+              member.fathers_last_name.toLowerCase().trim()
+        );
+      }
+
+      if (father) {
+        const fatherColor = determineLineageColor(father, allMembers);
+
+        // Skip special cases (origin, Egundebi, and his direct children)
+        const isSpecialCase =
+          member.unique_id === "D00Z00001" ||
+          member.unique_id === "S00Z00001" ||
+          member.unique_id === "D01Z00002" ||
+          member.fathers_uid === "D01Z00002";
+
+        if (!isSpecialCase && color !== fatherColor) {
+          inheritanceIssues.push(
+            `${member.unique_id} (${member.first_name} ${member.last_name}) has color ${color} but father ${father.unique_id} (${father.first_name} ${father.last_name}) has color ${fatherColor}`
+          );
+        }
+      } else if (isDescendant(member.unique_id)) {
+        // Skip special cases for missing father reports too
+        const isSpecialCase =
+          member.unique_id === "D00Z00001" ||
+          member.unique_id === "S00Z00001" ||
+          member.unique_id === "D01Z00002" ||
+          member.fathers_uid === "D01Z00002";
+
+        if (!isSpecialCase) {
+          // Report missing father relationships
+          inheritanceIssues.push(
+            `${member.unique_id} (${member.first_name} ${member.last_name}) - No father found (UID: ${member.fathers_uid}, Name: ${member.fathers_first_name} ${member.fathers_last_name})`
+          );
+        }
+      }
+    }
+  });
+
+  if (inheritanceIssues.length > 0) {
+    console.warn("Color inheritance issues found:", inheritanceIssues);
+  }
+
+  if (neutralDescendants.length > 0) {
+    console.warn(
+      "Descendants with neutral color (potential inheritance issues):",
+      neutralDescendants
+    );
+  }
+
+  return colorMap;
 }
 
 /**
@@ -179,6 +298,42 @@ export function convertToTreeNode(
   const spouses = findSpouses(member, allMembers);
   const children = findChildren(member, allMembers);
 
+  // Validate color inheritance for debugging (only in development)
+  if (process.env.NODE_ENV === "development" && !isSpouse(member.unique_id)) {
+    let father: ProcessedMember | undefined;
+
+    // Try to find father by UID first
+    if (member.fathers_uid) {
+      father = allMembers.find((m) => m.unique_id === member.fathers_uid);
+    }
+
+    // Fallback to name-based lookup
+    if (!father && member.fathers_first_name && member.fathers_last_name) {
+      father = allMembers.find(
+        (m) =>
+          m.first_name?.toLowerCase().trim() ===
+            member.fathers_first_name.toLowerCase().trim() &&
+          m.last_name?.toLowerCase().trim() ===
+            member.fathers_last_name.toLowerCase().trim()
+      );
+    }
+
+    if (father) {
+      const fatherColor = determineLineageColor(father, allMembers);
+      const isSpecialCase =
+        member.unique_id === "D00Z00001" ||
+        member.unique_id === "S00Z00001" ||
+        member.unique_id === "D01Z00002" ||
+        member.fathers_uid === "D01Z00002";
+
+      if (!isSpecialCase && lineageColor !== fatherColor) {
+        console.warn(
+          `Color inheritance issue: ${member.unique_id} (${member.first_name} ${member.last_name}) has color ${lineageColor} but should inherit ${fatherColor} from father ${father.unique_id} (${father.first_name} ${father.last_name})`
+        );
+      }
+    }
+  }
+
   const node: TreeNode = {
     name: `${member.first_name} ${member.last_name}`.trim(),
     attributes: {
@@ -196,16 +351,8 @@ export function convertToTreeNode(
     },
   };
 
-  // Add children if they should be visible
-  const visibleChildren = children.filter((child) =>
-    state.visibleNodes.has(child.unique_id)
-  );
-
-  if (visibleChildren.length > 0) {
-    node.children = visibleChildren.map((child) =>
-      convertToTreeNode(child, allMembers, state)
-    );
-  }
+  // Don't automatically assign children here - let buildSubTree handle child assignment
+  // This ensures children are properly routed through spouses according to family tree rules
 
   return node;
 }
@@ -213,7 +360,8 @@ export function convertToTreeNode(
 function buildSubTree(
   member: ProcessedMember,
   allMembers: ProcessedMember[],
-  state: FamilyTreeState
+  state: FamilyTreeState,
+  parentSpouseContext?: string // Track which spouse pattern to follow down this branch
 ): TreeNode {
   // If this member's spouses are expanded and visible, create a family group.
   const spouses = findSpouses(member, allMembers).filter((s) =>
@@ -231,11 +379,8 @@ function buildSubTree(
     .sort((a, b) => (a.order_of_birth || 0) - (b.order_of_birth || 0));
 
   const childrenSubTrees = visibleChildren.map((child) =>
-    buildSubTree(child, allMembers, state)
+    buildSubTree(child, allMembers, state, parentSpouseContext)
   );
-
-  // By default, children are attached to the descendant member.
-  memberNode.children = childrenSubTrees;
 
   if (shouldCreateFamilyGroup) {
     const familyGroupNode: TreeNode = {
@@ -250,24 +395,69 @@ function buildSubTree(
 
     const spouseNodes = spouses.map((spouse) => {
       const spouseNode = convertToTreeNode(spouse, allMembers, state);
-      spouseNode.children = []; // Spouses do not carry their own descendant lines by default.
+      spouseNode.children = []; // Initialize with no children
       return spouseNode;
     });
 
     familyGroupNode.children!.push(...spouseNodes);
 
-    // If a spouse was clicked to reveal children, move the children to that spouse.
-    const clickedSpouseNode = spouseNodes.find(
-      (s) => s.attributes!.unique_id === state.lastClickedNodeId
-    );
+    // Determine which spouse should have the children with consistent branching
+    let targetSpouseNode = null;
+    let selectedSpouseId = null;
 
-    if (clickedSpouseNode) {
-      clickedSpouseNode.children = memberNode.children;
+    // Priority 1: Check existing spouse assignment for this descendant (maintains consistency)
+    const existingAssignment = state.spouseAssignments.get(member.unique_id);
+    if (existingAssignment) {
+      targetSpouseNode = spouseNodes.find(
+        (s) => s.attributes!.unique_id === existingAssignment
+      );
+      selectedSpouseId = existingAssignment;
+    }
+
+    // Priority 2: Use parentSpouseContext for consistency down the tree (new assignments)
+    if (!targetSpouseNode && parentSpouseContext) {
+      targetSpouseNode = spouseNodes.find(
+        (s) => s.attributes!.unique_id === parentSpouseContext
+      );
+      selectedSpouseId = parentSpouseContext;
+    }
+
+    // Priority 3: Check if the last clicked node was one of the spouses (for new branches)
+    if (!targetSpouseNode && state.lastClickedNodeId) {
+      targetSpouseNode = spouseNodes.find(
+        (s) => s.attributes!.unique_id === state.lastClickedNodeId
+      );
+      selectedSpouseId = state.lastClickedNodeId;
+    }
+
+    // Priority 4: If no specific spouse context, use first spouse and establish pattern
+    if (!targetSpouseNode && spouseNodes.length > 0) {
+      targetSpouseNode = spouseNodes[0];
+      selectedSpouseId = spouseNodes[0].attributes!.unique_id;
+    }
+
+    // Attach children to the target spouse, not the descendant
+    if (targetSpouseNode) {
+      // Pass down the selected spouse ID as context for consistent branching down the tree
+      const childrenWithContext = visibleChildren.map((child) =>
+        buildSubTree(child, allMembers, state, selectedSpouseId || undefined)
+      );
+      targetSpouseNode.children = childrenWithContext;
+      memberNode.children = []; // Remove children from descendant
+    } else {
+      // Should not happen due to our consistency rules, but keep for safety
       memberNode.children = [];
     }
 
     return familyGroupNode;
   }
+
+  // CONSISTENCY RULE: Children should NEVER come directly from descendants
+  // They must ALWAYS come from spouses to maintain tree branching consistency
+
+  // If no family group (spouses not visible or don't exist), children are hidden
+  // This enforces the spouse-first branching rule throughout the entire tree
+  memberNode.children = [];
 
   return memberNode;
 }
@@ -322,45 +512,41 @@ export function buildTreeData(
     .filter((child) => state.visibleNodes.has(child.unique_id))
     .sort((a, b) => (a.order_of_birth || 0) - (b.order_of_birth || 0));
 
-  laketuNode.children = directChildren.map((child) =>
-    buildSubTree(child, allMembers, state)
-  );
+  // CONSISTENCY RULE: Children ALWAYS come from spouse (Princess), NEVER from descendant (Laketu)
+  if (princess && state.visibleNodes.has(princess.unique_id)) {
+    const princessNode = originCoupleNode.children!.find(
+      (node) => node.attributes!.unique_id === "S00Z00001"
+    );
+    if (princessNode) {
+      princessNode.children = directChildren.map(
+        (child) => buildSubTree(child, allMembers, state, "S00Z00001") // Princess is the source spouse for origin children
+      );
+    }
+  }
+  // If Princess is not visible, children are NOT shown - maintains spouse-first branching consistency
+  // This forces the proper flow: reveal Princess first, then children come from her
 
   return treeRoot;
 }
 
 /**
- * Enhanced initial tree state to show origin couple, first descendant, and spouses
+ * Initial tree state to show only the origin male (progressive disclosure)
  */
 export function createInitialTreeState(
   allMembers: ProcessedMember[]
 ): FamilyTreeState {
   const visibleNodes = new Set<string>();
   const expandedSpouses = new Set<string>();
+  const expandedChildren = new Set<string>();
 
-  // Always show origin couple
-  visibleNodes.add("D00Z00001"); // Laketu
-  visibleNodes.add("S00Z00001"); // Princess Olutoyese
-
-  // Show first descendant
-  const egundebi = allMembers.find((m) => m.unique_id === "D01Z00002");
-  if (egundebi) {
-    visibleNodes.add("D01Z00002"); // Egundebi
-
-    // Show his spouse(s) - this matches the initial view in the images
-    const spouses = findSpouses(egundebi, allMembers);
-    spouses.forEach((spouse) => {
-      visibleNodes.add(spouse.unique_id);
-    });
-
-    if (spouses.length > 0) {
-      expandedSpouses.add("D01Z00002");
-    }
-  }
+  // Show only origin male initially - progressive disclosure starts here
+  visibleNodes.add("D00Z00001"); // Laketu only
 
   return {
     visibleNodes,
     expandedSpouses,
+    expandedChildren,
+    spouseAssignments: new Map<string, string>(),
     currentGeneration: 1,
     lastClickedNodeId: undefined,
   };

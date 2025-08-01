@@ -145,7 +145,7 @@ const HistoryPage = () => {
                 <div className="flex flex-col mt-4 font-semibold">
                   <p>
                     DR. L. MOSURO (Patron) <br />
-                    OTUNBA MASE OF JJEBULAND
+                    OTUNBA MASE OF IJEBULAND
                   </p>
 
                   <br />

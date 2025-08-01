@@ -299,20 +299,6 @@ const ManageLandingPagePage = () => {
                   disabled={loading}
                 />
               </div>
-              <div className="flex space-x-2">
-                <div className="bg-gray-200 h-20 w-1/3 rounded flex items-center justify-center text-gray-500 text-xs">
-                  [Image]
-                </div>
-                <div className="bg-gray-200 h-20 w-1/3 rounded flex items-center justify-center text-gray-500 text-xs">
-                  [Image]
-                </div>
-                <div className="bg-gray-200 h-20 w-1/3 rounded flex items-center justify-center text-gray-500 text-xs">
-                  [Image]
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Gallery images are managed from the Gallery section
-              </p>
             </div>
           </CardContent>
         </Card>
@@ -517,20 +503,6 @@ const ManageLandingPagePage = () => {
                 disabled={loading}
               />
             </div>
-            <div className="flex space-x-2">
-              <div className="bg-gray-200 h-20 w-1/3 rounded flex items-center justify-center text-gray-500 text-xs">
-                [Image]
-              </div>
-              <div className="bg-gray-200 h-20 w-1/3 rounded flex items-center justify-center text-gray-500 text-xs">
-                [Image]
-              </div>
-              <div className="bg-gray-200 h-20 w-1/3 rounded flex items-center justify-center text-gray-500 text-xs">
-                [Image]
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Family member profiles are managed from the Family Members section
-            </p>
           </div>
         </CardContent>
       </Card>

@@ -217,9 +217,6 @@ export default function ProfilePage({ params }: { params: { slug: string } }) {
           <div className="flex justify-between items-center border-b pb-2 mb-4">
             <div>
               <h2 className="text-xl font-semibold ">Gallery</h2>
-              <p className="text-sm text-gray-500">
-                Personal photos uploaded by this user
-              </p>
             </div>
             <a href="#" className="text-sm text-blue-600 hover:underline">
               View All →

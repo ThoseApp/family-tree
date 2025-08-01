@@ -22,6 +22,7 @@ const FamilyMemberCard = ({
   const routeUser = () => {
     router.push(`/profile/${name}`);
   };
+
   return (
     <Card
       className="w-full rounded-xl border relative shadow-md overflow-hidden group cursor-pointer transition-all duration-200 ease-in-out"
@@ -30,7 +31,7 @@ const FamilyMemberCard = ({
       {/* TOP IMAGE */}
       <div className="relative h-[30vh] bg-border w-full">
         <Image
-          src={dummyProfileImage}
+          src={imageSrc}
           fill
           alt={name}
           className=" w-full h-full object-cover rounded-t-xl  transition-all duration-200 ease-in-out"
