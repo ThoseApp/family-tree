@@ -179,13 +179,8 @@ export async function updateSession(request: NextRequest) {
     if (user && isAuthRoute) {
       // Only allow approved users to access dashboard/admin
       if (userProfile?.status === "approved") {
-        // Redirect authenticated and approved users away from auth routes
-        let redirectPath = "/dashboard";
-        if (user.user_metadata?.is_admin === true) {
-          redirectPath = "/admin";
-        } else if (user.user_metadata?.is_publisher === true) {
-          redirectPath = "/publisher";
-        }
+        // Redirect authenticated and approved users to home page
+        let redirectPath = "/";
 
         const redirectUrl = new URL(redirectPath, request.url);
         return NextResponse.redirect(redirectUrl);

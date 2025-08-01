@@ -36,11 +36,11 @@ export const navLinksTopSection: NavLink[] = [
   //   href: "/dashboard/history",
   //   icon: Hourglass,
   // },
-  {
-    label: "Family Tree",
-    href: "/dashboard/family-tree",
-    icon: TreesIcon,
-  },
+  // {
+  //   label: "Family Tree",
+  //   href: "/dashboard/family-tree",
+  //   icon: TreesIcon,
+  // },
   {
     label: "Notice Board",
     href: "/dashboard/notice-board",

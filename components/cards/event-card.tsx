@@ -53,6 +53,18 @@ const EventCard: React.FC<EventCardProps> = ({
 
           {/* Hover overlay */}
           <div className="absolute inset-0 bg-black/20 transition-opacity hover:opacity-0" />
+
+          {/* Event title overlay */}
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+            <h3 className="text-white font-semibold text-lg leading-tight">
+              {name}
+            </h3>
+            {description && (
+              <p className="text-white/90 text-sm mt-1 line-clamp-2">
+                {description}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 

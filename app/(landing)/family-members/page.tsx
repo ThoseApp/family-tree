@@ -53,16 +53,19 @@ const calculateAge = (birthDate?: string): number | null => {
 const debounce = <T extends (...args: any[]) => void>(
   func: T,
   delay: number
-): ((...args: Parameters<T>) => void) => {
+): ((...args: Parameters<T>) => void) & { cancel: () => void } => {
   let timeoutId: NodeJS.Timeout;
-  return (...args: Parameters<T>) => {
+
+  const debouncedFunction = (...args: Parameters<T>) => {
     clearTimeout(timeoutId);
     timeoutId = setTimeout(() => func(...args), delay);
   };
-};
 
-const safeString = (value?: string | null): string => {
-  return value && typeof value === "string" ? value : "";
+  debouncedFunction.cancel = () => {
+    clearTimeout(timeoutId);
+  };
+
+  return debouncedFunction;
 };
 
 const FamilyMembersPage = () => {
@@ -72,6 +75,7 @@ const FamilyMembersPage = () => {
   // Search and filter states
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
   const [genderFilter, setGenderFilter] = useState<string>("all");
   const [ageFilter, setAgeFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("name");
@@ -81,13 +85,28 @@ const FamilyMembersPage = () => {
   const debouncedSetSearch = useCallback(
     debounce((value: string) => {
       setSearchQuery(value);
-    }, 300),
+      setIsSearching(false);
+    }, 150),
     []
   );
 
   // Update search query when input changes
   useEffect(() => {
-    debouncedSetSearch(searchInput);
+    setIsSearching(true);
+
+    // If search input is empty, update immediately
+    if (searchInput.trim() === "") {
+      setSearchQuery("");
+      setIsSearching(false);
+      debouncedSetSearch.cancel();
+    } else {
+      debouncedSetSearch(searchInput);
+    }
+
+    // Cleanup function to cancel pending debounced calls
+    return () => {
+      debouncedSetSearch.cancel();
+    };
   }, [searchInput, debouncedSetSearch]);
 
   // Fetch family members on component mount
@@ -105,25 +124,27 @@ const FamilyMembersPage = () => {
 
   // Filter and sort family members
   const filteredFamilyMembers = useMemo(() => {
+    // Ensure we have valid family members data
+    if (!Array.isArray(familyMembers) || familyMembers.length === 0) {
+      return [];
+    }
+
+    // Start with a fresh copy of the array
     let filtered = [...familyMembers];
 
-    // Search filter
-    if (searchQuery.trim()) {
-      const searchLower = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter((member) => {
-        const name = safeString(member.name).toLowerCase();
-        const description = safeString(member.description).toLowerCase();
-        const fatherName = safeString(member.fatherName).toLowerCase();
-        const motherName = safeString(member.motherName).toLowerCase();
-        const spouseName = safeString(member.spouseName).toLowerCase();
+    // Search filter - use searchInput for immediate feedback, searchQuery for debounced results
+    const currentSearch = isSearching ? searchInput : searchQuery;
 
-        return (
-          name.includes(searchLower) ||
-          description.includes(searchLower) ||
-          fatherName.includes(searchLower) ||
-          motherName.includes(searchLower) ||
-          spouseName.includes(searchLower)
-        );
+    if (currentSearch.trim()) {
+      const searchLower = currentSearch.toLowerCase().trim();
+
+      filtered = filtered.filter((member) => {
+        // Ensure member exists and has required properties
+        if (!member || !member.id) return false;
+
+        // Only search by name
+        const name = String(member.name || "").toLowerCase();
+        return name.includes(searchLower);
       });
     }
 
@@ -157,15 +178,15 @@ const FamilyMembersPage = () => {
     filtered.sort((a, b) => {
       switch (sortBy) {
         case "name":
-          return safeString(a.name).localeCompare(safeString(b.name));
+          return String(a.name || "").localeCompare(String(b.name || ""));
         case "age":
           const ageA = calculateAge(a.birthDate) ?? 0;
           const ageB = calculateAge(b.birthDate) ?? 0;
           return ageA - ageB;
         case "gender":
-          return safeString(a.gender).localeCompare(safeString(b.gender));
+          return String(a.gender || "").localeCompare(String(b.gender || ""));
         default:
-          return safeString(a.name).localeCompare(safeString(b.name));
+          return String(a.name || "").localeCompare(String(b.name || ""));
       }
     });
 

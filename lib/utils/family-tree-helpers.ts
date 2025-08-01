@@ -1,5 +1,6 @@
 import { ProcessedMember, FamilyMember } from "@/lib/types";
 import { supabase } from "@/lib/supabase/client";
+import { dummyProfileImage } from "../constants";
 
 /**
  * Utility function to safely truncate strings to database field limits
@@ -19,7 +20,7 @@ export function processedMemberToFamilyMember(
     name: `${processed.first_name} ${processed.last_name}`.trim(),
     gender: processed.gender,
     description: processed.marital_status || "Family member",
-    imageSrc: processed.picture_link || "/images/default-profile.png", // fallback image
+    imageSrc: processed.picture_link || dummyProfileImage, // fallback image
     birthDate: processed.date_of_birth || "",
     fatherName:
       processed.fathers_first_name && processed.fathers_last_name
