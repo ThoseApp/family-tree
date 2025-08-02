@@ -6,9 +6,15 @@ import {
   Calendar,
   CheckCircle,
   Settings,
+  HomeIcon,
 } from "lucide-react";
 
 export const navLinksTopSection: NavLink[] = [
+  {
+    label: "Home",
+    href: "/",
+    icon: HomeIcon,
+  },
   {
     label: "Overview",
     href: "/publisher",

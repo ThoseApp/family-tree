@@ -11,17 +11,16 @@ interface LogoProps {
 const Logo = ({ component }: LogoProps) => {
   return (
     <Link href="/" className="flex items-center">
-      {/* //TODO: ADD THE IMAGE */}
-      {/* <div className="relative size-20 md:size-24 mr-2 md:mr-4">
+      <div className="relative size-10 md:size-12 mr-2 md:mr-4">
         <Image
           fill
           alt="logo"
-          src={component === "footer" ? "/logo_white.png" : "/logo.png"}
-          className="object-contain object-center"
+          src="/images/kith_logo.webp"
+          className="object-cover object-center rounded-full"
         />
-      </div> */}
+      </div>
 
-      {/* <div className="text-2xl font-bold italic">Logo</div> */}
+      <h1 className="text-base font-bold">Kith & Kin</h1>
     </Link>
   );
 };

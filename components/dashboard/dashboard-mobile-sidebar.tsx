@@ -24,7 +24,7 @@ const DashboardMobileSidebar = () => {
         </Button>
       </SheetTrigger>
 
-      <SheetContent side="left" className="p-0">
+      <SheetContent side="left" className="w-72 p-0">
         <DashboardSideBar forceMobileExpanded={true} />
       </SheetContent>
     </Sheet>

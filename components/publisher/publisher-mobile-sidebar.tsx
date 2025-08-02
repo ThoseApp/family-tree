@@ -24,7 +24,7 @@ const PublisherMobileSidebar = () => {
         </Button>
       </SheetTrigger>
 
-      <SheetContent side="left" className="p-0">
+      <SheetContent side="left" className="w-72 p-0">
         <PublisherSideBar forceMobileExpanded={true} />
       </SheetContent>
     </Sheet>

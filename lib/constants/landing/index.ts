@@ -57,12 +57,12 @@ export const historyCards = [
     description: "",
   },
   {
-    imageSrc: dummyProfileImage,
+    imageSrc: "/images/AbdulKareem.webp",
     name: "Abdul-Kareem Gbokoyi Mosuro",
     description: "",
   },
   {
-    imageSrc: dummyProfileImage,
+    imageSrc: "/images/Giwakila.webp",
     name: "Rufai Banjoko Mosuro",
     description: "",
   },
