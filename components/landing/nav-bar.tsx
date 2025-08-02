@@ -62,6 +62,8 @@ const LandingNav = () => {
                 size="sm"
                 className={cn(
                   "relative px-4 py-2 text-sm font-medium transition-colors duration-200",
+                  shouldUseTransparentBg &&
+                    "hover:bg-primary/40 hover:text-foreground",
                   // Active state
                   isActive
                     ? "text-primary"
@@ -102,7 +104,13 @@ const LandingNav = () => {
               )}
             >
               <Link
-                href={user.user_metadata?.is_admin ? "/admin" : "/dashboard"}
+                href={
+                  user.user_metadata?.is_admin
+                    ? "/admin"
+                    : user.user_metadata?.is_publisher
+                    ? "/publisher"
+                    : "/dashboard"
+                }
               >
                 Dashboard
               </Link>

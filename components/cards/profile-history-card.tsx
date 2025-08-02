@@ -29,7 +29,7 @@ const ProfileHistoryCard = ({
             src={imageSrc}
             alt={name}
             fill
-            className="object-cover rounded-lg"
+            className="object-cover rounded-lg object-top"
           />
         </div>
         <CardTitle className="text-xl mb-2">{name}</CardTitle>

@@ -8,7 +8,7 @@ export const LINEAGE_COLORS = {
   green: "#10B981", // emerald-500 for first male child
   blue: "#3B82F6", // blue-500 for second male child
   purple: "#8B5CF6", // violet-500 for third male child
-  yellow: "#F59E0B", // amber-500 for female children
+  yellow: "#F52E0B", // amber-500 for female children
 } as const;
 
 export type LineageColor = keyof typeof LINEAGE_COLORS;
@@ -66,6 +66,23 @@ export function determineLineageColor(
   // Spouses are always neutral (except the origin princess)
   if (isSpouse(unique_id)) {
     return "neutral";
+  }
+
+  // New color logic based on the 4th character of the unique_id
+  if (unique_id.length >= 4) {
+    const fourthChar = unique_id.charAt(3).toUpperCase();
+    switch (fourthChar) {
+      case "B":
+        return "green";
+      case "C":
+        return "blue";
+      case "D":
+        return "yellow";
+      case "A":
+        return "purple";
+      default:
+        break; // Fall through to existing logic if no match
+    }
   }
 
   // Egundebi (D01Z00002) is the start of the red lineage

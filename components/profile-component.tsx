@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Image from "next/image"; // Assuming Next.js for Image component
-import { dummyProfileImage } from "@/lib/constants";
+import { dummyProfileImage, dummyFemaleProfileImage } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useUserStore } from "@/stores/user-store";
@@ -99,6 +99,11 @@ const ProfileComponent = () => {
     })();
   }, [user, fetchUserGallery, getUserProfile, fetchUserLifeEvents]);
 
+  const placeholderImage =
+    userProfile?.gender?.toLowerCase() === "female"
+      ? dummyFemaleProfileImage
+      : dummyProfileImage;
+
   const handleAddLifeEvent = () => {
     setEditingLifeEvent(null);
     setLifeEventFormData({
@@ -184,7 +189,7 @@ const ProfileComponent = () => {
             <div className="flex items-center space-x-4">
               <div className="relative w-16 h-16">
                 <Image
-                  src={userProfile?.image || dummyProfileImage}
+                  src={userProfile?.image || placeholderImage}
                   alt={userProfile?.first_name || ""}
                   fill
                   className="rounded-full object-cover"
