@@ -12,7 +12,7 @@ import { useUserStore } from "@/stores/user-store";
 import { LoadingIcon } from "@/components/loading-icon";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { EventInvitation } from "@/lib/types";
+import { EventInvitation, UserProfile } from "@/lib/types";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,7 +24,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { dummyProfileImage } from "@/lib/constants";
+import { dummyProfileImage, dummyFemaleProfileImage } from "@/lib/constants";
 
 const InvitationsComponent = () => {
   const {
@@ -50,7 +50,6 @@ const InvitationsComponent = () => {
   const handleAcceptInvitation = async (invitationId: string) => {
     const success = await respondToInvitation(invitationId, "accepted");
     if (success && user) {
-      // Refresh the data
       fetchReceivedInvitations(user.id);
     }
   };
@@ -58,7 +57,6 @@ const InvitationsComponent = () => {
   const handleDeclineInvitation = async (invitationId: string) => {
     const success = await respondToInvitation(invitationId, "declined");
     if (success && user) {
-      // Refresh the data
       fetchReceivedInvitations(user.id);
     }
   };
@@ -66,7 +64,6 @@ const InvitationsComponent = () => {
   const handleCancelInvitation = async (invitationId: string) => {
     const success = await cancelInvitation(invitationId);
     if (success && user) {
-      // Refresh the data
       fetchSentInvitations(user.id);
     }
   };
@@ -243,6 +240,11 @@ const InvitationCard: React.FC<InvitationCardProps> = ({
     ? `${otherUser.first_name} ${otherUser.last_name}`
     : "Unknown User";
 
+  const placeholderImage =
+    otherUser?.gender?.toLowerCase() === "female"
+      ? dummyFemaleProfileImage
+      : dummyProfileImage;
+
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardContent className="p-6">
@@ -250,7 +252,7 @@ const InvitationCard: React.FC<InvitationCardProps> = ({
           <div className="flex items-start gap-4 flex-1">
             <Avatar className="h-12 w-12">
               <AvatarImage
-                src={otherUser?.image || dummyProfileImage}
+                src={otherUser?.image || placeholderImage}
                 alt={userName}
               />
               <AvatarFallback>

@@ -1,4 +1,6 @@
 export const dummyProfileImage = "/images/placeholder_profile.webp";
+export const dummyFemaleProfileImage =
+  "/images/placeholder_demale_profile.webp";
 
 export const MAX_IMAGE_SIZE_MB = 10; // 10MB
 export const MAX_VIDEO_SIZE_MB = 50; // 50MB

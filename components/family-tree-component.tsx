@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, RefreshCw, Users, Heart } from "lucide-react";
 import { ProcessedMember } from "@/lib/types";
+import { dummyProfileImage, dummyFemaleProfileImage } from "@/lib/constants";
 import { fetchFamilyMembers } from "@/lib/utils/family-tree-helpers";
 import {
   TreeNode,
@@ -91,14 +92,18 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
   }
 
   // Node dimensions
-  const nodeWidth = 125;
-  const nodeHeight = 140;
-  const imageSize = 60;
+  const nodeWidth = 180;
+  const nodeHeight = 200;
+  const imageSize = 90;
 
-  // Determine image shape based on unique ID prefix
-  const uniqueId = attributes?.unique_id || "";
-  const isCircularImage = uniqueId.startsWith("S"); // Spouses get circular images
-  const isSquareImage = uniqueId.startsWith("D"); // Descendants get square images
+  // Determine which placeholder image to use
+  const placeholderImage =
+    gender?.toLowerCase() === "female"
+      ? dummyFemaleProfileImage
+      : dummyProfileImage;
+
+  // Determine image shape based on gender
+  const isCircularImage = gender?.toLowerCase() === "female";
 
   // Text wrapping logic
   const name = nodeDatum.name;
@@ -112,8 +117,8 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
     nameLines = [`${name.substring(0, 18)}...`];
   }
 
-  const nameY = -nodeHeight / 2 + (nameLines.length > 1 ? 88 : 95); // Added 10px more space
-  const uidY = -nodeHeight / 2 + (nameLines.length > 1 ? 115 : 110); // Added 10px more space
+  const nameY = -nodeHeight / 2 + (nameLines.length > 1 ? 128 : 135);
+  const uidY = -nodeHeight / 2 + (nameLines.length > 1 ? 155 : 150);
 
   return (
     <g onClick={onNodeClick}>
@@ -130,15 +135,14 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
         className="cursor-pointer hover:opacity-80 transition-opacity"
       />
 
-      {/* Profile image placeholder */}
+      {/* Profile image area */}
+      {/* This provides a background color for the image area */}
       {isCircularImage ? (
         <circle
           cx={0}
           cy={-nodeHeight / 2 + 10 + imageSize / 2}
           r={imageSize / 2}
           fill="#E5E7EB"
-          stroke="#9CA3AF"
-          strokeWidth={1}
         />
       ) : (
         <rect
@@ -147,23 +151,18 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
           x={-imageSize / 2}
           y={-nodeHeight / 2 + 10}
           fill="#E5E7EB"
-          stroke="#9CA3AF"
-          strokeWidth={1}
           rx={8}
         />
       )}
-
-      {/* If we have an image, we'd add it here */}
-      {attributes?.picture_link ? (
-        <image
-          href={attributes.picture_link}
-          width={imageSize}
-          height={imageSize}
-          x={-imageSize / 2}
-          y={-nodeHeight / 2 + 10}
-          clipPath={`url(#imageClip-${attributes?.unique_id || "node"})`}
-        />
-      ) : null}
+      {/* Display member's picture or a gender-specific placeholder */}
+      <image
+        href={attributes?.picture_link || placeholderImage}
+        width={imageSize}
+        height={imageSize}
+        x={-imageSize / 2}
+        y={-nodeHeight / 2 + 10}
+        clipPath={`url(#imageClip-${attributes?.unique_id || "node"})`}
+      />
 
       {/* Name text */}
       <text
@@ -171,7 +170,7 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
         y={nameY}
         textAnchor="middle"
         // fill="white"
-        fontSize="12"
+        fontSize="16"
         fontWeight="600"
       >
         {nameLines.map((line, index) => (
@@ -675,10 +674,10 @@ const FamilyTreeComponent: React.FC = () => {
   const treeConfig = {
     orientation: "vertical" as const,
     pathFunc: "step" as const,
-    translate: { x: 400, y: 100 },
-    nodeSize: { x: 200, y: 200 },
-    separation: { siblings: 1.5, nonSiblings: 2 },
-    zoom: 0.8,
+    translate: { x: 400, y: 150 }, // Adjusted for larger nodes
+    nodeSize: { x: 250, y: 280 },
+    separation: { siblings: 1.2, nonSiblings: 1.5 },
+    zoom: 0.7,
   };
 
   if (isLoading) {

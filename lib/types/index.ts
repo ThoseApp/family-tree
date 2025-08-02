@@ -37,11 +37,13 @@ export interface EventInvitation {
     first_name: string;
     last_name: string;
     image?: string;
+    gender?: string;
   };
   invitee?: {
     first_name: string;
     last_name: string;
     image?: string;
+    gender?: string;
   };
 }
 

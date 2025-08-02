@@ -23,7 +23,8 @@ const UpcomingEventsSection = () => {
   const defaultContent = {
     title: "UPCOMING EVENTS",
     description: "Stay updated with family celebrations and gatherings",
-    // image_url: "/images/landing/upcoming_events_section.webp",
+    image_url:
+      "https://fhntxnttrlttuknrpgad.supabase.co/storage/v1/object/public/family-tree-bucket/landing_page/1751890680881-r1d473ud39.png",
   };
 
   const content = eventsSection || defaultContent;
@@ -98,6 +99,16 @@ const UpcomingEventsSection = () => {
 
   return (
     <FrameWrapper className="home-events-section py-8 lg:py-12 text-background relative">
+      <div
+        className="absolute inset-0 -z-10"
+        style={{
+          backgroundImage: `url(${content.image_url})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+        aria-hidden="true"
+      />
       {/* OVERLAY */}
       <div className="absolute inset-0 bg-[#191410BD]/70 z-0" />
 

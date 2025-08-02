@@ -17,10 +17,16 @@ import {
   CalendarIcon,
   LogOutIcon,
   Mail,
+  HomeIcon,
 } from "lucide-react";
 import { dummyProfileImage } from "..";
 
 export const navLinksTopSection: NavLink[] = [
+  {
+    label: "Home",
+    href: "/",
+    icon: HomeIcon,
+  },
   {
     label: "Overview",
     href: "/dashboard",

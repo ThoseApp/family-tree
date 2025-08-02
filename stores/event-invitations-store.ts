@@ -75,7 +75,7 @@ export const useEventInvitationsStore = create<EventInvitationsState>(
         if (inviterIds.length > 0) {
           const { data: profilesData } = await supabase
             .from("profiles")
-            .select("user_id, first_name, last_name, image")
+            .select("user_id, first_name, last_name, image, gender")
             .in("user_id", inviterIds);
 
           inviterProfiles = profilesData || [];
@@ -125,7 +125,7 @@ export const useEventInvitationsStore = create<EventInvitationsState>(
         if (inviteeIds.length > 0) {
           const { data: profilesData } = await supabase
             .from("profiles")
-            .select("user_id, first_name, last_name, image")
+            .select("user_id, first_name, last_name, image, gender")
             .in("user_id", inviteeIds);
 
           inviteeProfiles = profilesData || [];

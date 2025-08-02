@@ -50,64 +50,16 @@ const calculateAge = (birthDate?: string): number | null => {
   return age >= 0 ? age : null;
 };
 
-const debounce = <T extends (...args: any[]) => void>(
-  func: T,
-  delay: number
-): ((...args: Parameters<T>) => void) & { cancel: () => void } => {
-  let timeoutId: NodeJS.Timeout;
-
-  const debouncedFunction = (...args: Parameters<T>) => {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => func(...args), delay);
-  };
-
-  debouncedFunction.cancel = () => {
-    clearTimeout(timeoutId);
-  };
-
-  return debouncedFunction;
-};
-
 const FamilyMembersPage = () => {
   const { familyMembers, isLoading, error, fetchFamilyMembers, clearError } =
     useFamilyMembersStore();
 
   // Search and filter states
   const [searchInput, setSearchInput] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
   const [genderFilter, setGenderFilter] = useState<string>("all");
   const [ageFilter, setAgeFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("name");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-
-  // Debounced search function
-  const debouncedSetSearch = useCallback(
-    debounce((value: string) => {
-      setSearchQuery(value);
-      setIsSearching(false);
-    }, 150),
-    []
-  );
-
-  // Update search query when input changes
-  useEffect(() => {
-    setIsSearching(true);
-
-    // If search input is empty, update immediately
-    if (searchInput.trim() === "") {
-      setSearchQuery("");
-      setIsSearching(false);
-      debouncedSetSearch.cancel();
-    } else {
-      debouncedSetSearch(searchInput);
-    }
-
-    // Cleanup function to cancel pending debounced calls
-    return () => {
-      debouncedSetSearch.cancel();
-    };
-  }, [searchInput, debouncedSetSearch]);
 
   // Fetch family members on component mount
   useEffect(() => {
@@ -132,18 +84,16 @@ const FamilyMembersPage = () => {
     // Start with a fresh copy of the array
     let filtered = [...familyMembers];
 
-    // Search filter - use searchInput for immediate feedback, searchQuery for debounced results
-    const currentSearch = isSearching ? searchInput : searchQuery;
-
-    if (currentSearch.trim()) {
-      const searchLower = currentSearch.toLowerCase().trim();
+    if (searchInput.trim()) {
+      const searchLower = searchInput.toLowerCase().trim();
 
       filtered = filtered.filter((member) => {
         // Ensure member exists and has required properties
         if (!member || !member.id) return false;
 
-        // Only search by name
+        // Search across multiple fields for a more comprehensive search
         const name = String(member.name || "").toLowerCase();
+
         return name.includes(searchLower);
       });
     }
@@ -191,12 +141,11 @@ const FamilyMembersPage = () => {
     });
 
     return filtered;
-  }, [familyMembers, searchQuery, genderFilter, ageFilter, sortBy]);
+  }, [familyMembers, searchInput, genderFilter, ageFilter, sortBy]);
 
   // Clear all filters
   const clearAllFilters = () => {
     setSearchInput("");
-    setSearchQuery("");
     setGenderFilter("all");
     setAgeFilter("all");
     setSortBy("name");
@@ -204,14 +153,14 @@ const FamilyMembersPage = () => {
 
   // Check if any filters are active
   const hasActiveFilters =
-    searchQuery.trim() ||
+    searchInput.trim() ||
     genderFilter !== "all" ||
     ageFilter !== "all" ||
     sortBy !== "name";
 
   // Count active filters
   const activeFiltersCount = [
-    searchQuery.trim(),
+    searchInput.trim(),
     genderFilter !== "all" ? genderFilter : null,
     ageFilter !== "all" ? ageFilter : null,
     sortBy !== "name" ? sortBy : null,
@@ -234,6 +183,12 @@ const FamilyMembersPage = () => {
       totalAll: familyMembers.length,
     };
   }, [filteredFamilyMembers, familyMembers]);
+
+  const finalMembers = useMemo(() => {
+    return [...familyMembers].filter((member) => {
+      return member.name.toLowerCase().includes(searchInput.toLowerCase());
+    });
+  }, [familyMembers, searchInput]);
 
   return (
     <div className="pb-20">
@@ -350,14 +305,13 @@ const FamilyMembersPage = () => {
             {/* Active Filters Display */}
             {hasActiveFilters && (
               <div className="flex flex-wrap gap-1">
-                {searchQuery && (
+                {searchInput && (
                   <Badge variant="secondary" className="gap-1">
-                    Search: &quot;{searchQuery}&quot;
+                    Search: &quot;{searchInput}&quot;
                     <X
                       className="h-3 w-3 cursor-pointer"
                       onClick={() => {
                         setSearchInput("");
-                        setSearchQuery("");
                       }}
                     />
                   </Badge>
@@ -393,8 +347,8 @@ const FamilyMembersPage = () => {
                 members
               </span>
             </div>
-            {stats.male > 0 && <span>♂ {stats.male}</span>}
-            {stats.female > 0 && <span>♀ {stats.female}</span>}
+            <span>♂ {stats.male}</span>
+            <span>♀ {stats.female}</span>
           </div>
         </div>
       </div>
@@ -427,7 +381,7 @@ const FamilyMembersPage = () => {
       {/* Empty State */}
       {!isLoading &&
         !error &&
-        filteredFamilyMembers.length === 0 &&
+        finalMembers.length === 0 &&
         familyMembers.length === 0 && (
           <Card>
             <CardContent className="pt-6">
@@ -447,8 +401,8 @@ const FamilyMembersPage = () => {
       {/* No Results State */}
       {!isLoading &&
         !error &&
-        filteredFamilyMembers.length === 0 &&
-        familyMembers.length > 0 && (
+        finalMembers.length === 0 &&
+        finalMembers.length > 0 && (
           <Card>
             <CardContent className="pt-6">
               <div className="text-center py-12">
@@ -466,9 +420,9 @@ const FamilyMembersPage = () => {
         )}
 
       {/* Family Members Grid */}
-      {!isLoading && !error && filteredFamilyMembers.length > 0 && (
+      {!isLoading && !error && finalMembers.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-8">
-          {filteredFamilyMembers.map((member) => (
+          {finalMembers.map((member) => (
             <FamilyMemberCard
               key={member.id}
               imageSrc={member.imageSrc}

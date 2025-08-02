@@ -20,10 +20,16 @@ import {
   Clipboard,
   Shield,
   UserCheck,
+  HomeIcon,
 } from "lucide-react";
 import { dummyProfileImage } from "..";
 
 export const navLinksTopSection: NavLink[] = [
+  {
+    label: "Home",
+    href: "/",
+    icon: HomeIcon,
+  },
   {
     label: "Overview",
     href: "/admin",

@@ -1,6 +1,6 @@
 import { ProcessedMember, FamilyMember } from "@/lib/types";
 import { supabase } from "@/lib/supabase/client";
-import { dummyProfileImage } from "../constants";
+import { dummyProfileImage, dummyFemaleProfileImage } from "../constants";
 
 /**
  * Utility function to safely truncate strings to database field limits
@@ -15,12 +15,17 @@ function truncateField(value: string, maxLength: number = 50): string {
 export function processedMemberToFamilyMember(
   processed: ProcessedMember
 ): FamilyMember {
+  const placeholderImage =
+    processed.gender?.toLowerCase() === "female"
+      ? dummyFemaleProfileImage
+      : dummyProfileImage;
+
   return {
     id: processed.unique_id,
     name: `${processed.first_name} ${processed.last_name}`.trim(),
     gender: processed.gender,
     description: processed.marital_status || "Family member",
-    imageSrc: processed.picture_link || dummyProfileImage, // fallback image
+    imageSrc: processed.picture_link || placeholderImage, // fallback image
     birthDate: processed.date_of_birth || "",
     fatherName:
       processed.fathers_first_name && processed.fathers_last_name

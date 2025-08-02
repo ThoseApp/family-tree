@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { supabase } from "./supabase/client";
 
 /**
  * Merges multiple class names using clsx and tailwind-merge
@@ -78,4 +79,29 @@ export const formatFileSize = (bytes: number) => {
   if (bytes < 1024) return bytes + " B";
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
   return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+};
+
+/**
+ * Fetches a user profile by user ID
+ * @param userId - The ID of the user to fetch
+ * @returns A user profile object or null
+ * */
+export const getUserProfileById = async (userId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
+
+    if (error) {
+      console.error("Error fetching user profile:", error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    return null;
+  }
 };
