@@ -13,6 +13,8 @@ const MemberRequestsPage = () => {
     fetchRequests();
   }, [fetchRequests]);
 
+  console.log(requests);
+
   return (
     <div className="flex flex-col gap-y-8">
       <h1 className="text-2xl font-semibold">Family Member Requests</h1>
