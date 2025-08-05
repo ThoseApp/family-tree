@@ -10,26 +10,28 @@ interface FamilyMemberCardProps {
   imageSrc: string;
   name: string;
   description: string;
+  unique_id?: string;
 }
 
 const FamilyMemberCard = ({
   imageSrc,
   name,
   description,
+  unique_id,
 }: FamilyMemberCardProps) => {
   const router = useRouter();
 
   const routeUser = () => {
-    router.push(`/profile/${name}`);
+    router.push(`/profile/${unique_id}`);
   };
 
   return (
     <Card
-      className="w-full rounded-xl border relative shadow-md overflow-hidden group cursor-pointer transition-all duration-200 ease-in-out"
-      // onClick={routeUser}
+      className="w-full rounded-xl hover:scale-105 hover:shadow-lg border relative shadow-md group cursor-pointer transition-all duration-200 ease-in-out group-hover:cursor-pointer"
+      onClick={routeUser}
     >
       {/* TOP IMAGE */}
-      <div className="relative h-[30vh] bg-border w-full">
+      <div className="relative group-hover:cursor-pointer h-[30vh] bg-border w-full">
         <Image
           src={imageSrc}
           fill
