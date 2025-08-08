@@ -157,7 +157,7 @@ const DashboardNavbar = () => {
           description: member.description || "Family member",
           type: "family-member",
           icon: Users,
-          href: `/dashboard/family-members`,
+          href: `/family-members`,
           metadata: undefined,
         });
       }
@@ -176,7 +176,7 @@ const DashboardNavbar = () => {
           description: event.description || "No description",
           type: "event",
           icon: Calendar,
-          href: `/dashboard/events`,
+          href: `/events`,
           metadata: event.date.toString(),
         });
       }
@@ -194,7 +194,7 @@ const DashboardNavbar = () => {
           description: notice.description,
           type: "notice",
           icon: Megaphone,
-          href: `/dashboard/notice-board`,
+          href: `/notice-board`,
           metadata: notice.posteddate,
         });
       }
@@ -212,7 +212,7 @@ const DashboardNavbar = () => {
           description: "Gallery item",
           type: "gallery",
           icon: Image,
-          href: `/dashboard/gallery`,
+          href: `/gallery`,
           metadata: item.created_at,
         });
       }

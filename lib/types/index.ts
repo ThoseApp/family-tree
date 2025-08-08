@@ -76,6 +76,7 @@ export interface FamilyMember {
   id: string;
   name: string;
   gender?: string;
+  unique_id?: string;
   description: string;
   imageSrc: string;
   birthDate: string;
@@ -339,4 +340,26 @@ export interface EmailCredentials {
   firstName: string;
   lastName: string;
   familyMemberId: string;
+}
+
+export interface FamilyMemberRequest {
+  id: string;
+  first_name: string;
+  last_name: string;
+  gender?: string;
+  picture_link?: string;
+  date_of_birth?: string;
+  marital_status?: string;
+  fathers_first_name?: string;
+  fathers_last_name?: string;
+  mothers_first_name?: string;
+  mothers_last_name?: string;
+  spouses_first_name?: string;
+  spouses_last_name?: string;
+  order_of_birth?: number;
+  order_of_marriage?: number;
+  requested_by_user_id: string;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+  updated_at?: string;
 }

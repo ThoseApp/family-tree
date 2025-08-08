@@ -50,16 +50,28 @@ const calculateAge = (birthDate?: string): number | null => {
   return age >= 0 ? age : null;
 };
 
+import { FamilyMemberRequestModal } from "@/components/modals/family-member-request-modal";
+
+import { useUserStore } from "@/stores/user-store";
+
 const FamilyMembersPage = () => {
   const { familyMembers, isLoading, error, fetchFamilyMembers, clearError } =
     useFamilyMembersStore();
+  const { user } = useUserStore();
 
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   // Search and filter states
   const [searchInput, setSearchInput] = useState("");
   const [genderFilter, setGenderFilter] = useState<string>("all");
   const [ageFilter, setAgeFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("name");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  const handleRequestSuccess = () => {
+    // Optionally, you might want to show a persistent success message
+    // or update a list of user's pending requests.
+    // For now, we just close the modal.
+  };
 
   // Fetch family members on component mount
   useEffect(() => {
@@ -214,6 +226,16 @@ const FamilyMembersPage = () => {
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           {/* Filter Controls */}
           <div className="flex flex-wrap gap-2 items-center">
+            {user && (
+              <Button
+                variant="default"
+                size="sm"
+                className="gap-2"
+                onClick={() => setIsRequestModalOpen(true)}
+              >
+                Add New Member
+              </Button>
+            )}
             <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
               <PopoverTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">
@@ -427,11 +449,18 @@ const FamilyMembersPage = () => {
               key={member.id}
               imageSrc={member.imageSrc}
               name={member.name}
-              description={member.description}
+              unique_id={member.unique_id}
+              description={member.description || ""}
             />
           ))}
         </div>
       )}
+
+      <FamilyMemberRequestModal
+        isOpen={isRequestModalOpen}
+        onClose={() => setIsRequestModalOpen(false)}
+        onSuccess={handleRequestSuccess}
+      />
     </div>
   );
 };

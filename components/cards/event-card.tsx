@@ -11,6 +11,7 @@ interface EventCardProps {
     month: string;
     day: string;
   };
+  onClick?: () => void;
 }
 
 const EventCard: React.FC<EventCardProps> = ({
@@ -19,9 +20,10 @@ const EventCard: React.FC<EventCardProps> = ({
   description = "Event description",
   className = "",
   date,
+  onClick,
 }) => {
   return (
-    <div className="relative w-full h-72">
+    <div className="relative w-full h-72 cursor-pointer" onClick={onClick}>
       {/* Main card container */}
       <div
         className={`relative w-[90%] h-[90%] rounded-2xl overflow-hidden shadow-lg transition-transform ease-in duration-300 hover:scale-105 z-20 ${className}`}

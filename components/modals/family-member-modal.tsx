@@ -35,6 +35,7 @@ import Image from "next/image";
 import { toast } from "sonner";
 import { uploadImage } from "@/lib/file-upload";
 import { BucketFolderEnum } from "@/lib/constants/enums";
+import { EnhancedCalendar } from "../ui/enhanced-calendar";
 
 interface FamilyMemberModalProps {
   isOpen: boolean;
@@ -440,7 +441,7 @@ export const FamilyMemberModal = ({
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">
-                <Calendar
+                <EnhancedCalendar
                   mode="single"
                   selected={selectedDate}
                   onSelect={handleDateChange}
