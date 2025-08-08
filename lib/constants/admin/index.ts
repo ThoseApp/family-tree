@@ -56,6 +56,11 @@ export const navLinksTopSection: NavLink[] = [
     icon: UserCheck,
   },
   {
+    label: "Family Member Requests",
+    href: "/admin/family-member-requests",
+    icon: UsersIcon,
+  },
+  {
     label: "Gallery Requests",
     href: "/admin/gallery-requests",
     icon: ClipboardList,

@@ -28,6 +28,7 @@ import {
   Pin,
 } from "lucide-react";
 import { NoticeBoard } from "@/lib/types";
+import { EnhancedCalendar } from "../ui/enhanced-calendar";
 
 export interface SearchFilters {
   searchTerm: string;
@@ -175,7 +176,7 @@ const NoticeBoardSearchFilters: React.FC<NoticeBoardSearchFiltersProps> = ({
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
+            <EnhancedCalendar
               mode="single"
               selected={filters.dateFrom}
               onSelect={handleDateFromChange}
@@ -197,7 +198,7 @@ const NoticeBoardSearchFilters: React.FC<NoticeBoardSearchFiltersProps> = ({
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
+            <EnhancedCalendar
               mode="single"
               selected={filters.dateTo}
               onSelect={handleDateToChange}

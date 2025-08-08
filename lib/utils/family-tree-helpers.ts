@@ -24,6 +24,7 @@ export function processedMemberToFamilyMember(
     id: processed.unique_id,
     name: `${processed.first_name} ${processed.last_name}`.trim(),
     gender: processed.gender,
+    unique_id: processed.unique_id,
     description: processed.marital_status || "Family member",
     imageSrc: processed.picture_link || placeholderImage, // fallback image
     birthDate: processed.date_of_birth || "",
@@ -105,6 +106,7 @@ export async function fetchFamilyMembers(): Promise<ProcessedMember[]> {
     throw new Error(`Failed to fetch family members: ${error.message}`);
   }
 
+  console.log("processed members", data);
   return data as ProcessedMember[];
 }
 
@@ -223,4 +225,74 @@ export async function deleteFamilyMember(uniqueId: string): Promise<void> {
   if (error) {
     throw new Error(`Failed to delete family member: ${error.message}`);
   }
+}
+
+/**
+ * Fetch a family member's profile by their unique ID (slug).
+ *
+ * This function first checks for a detailed profile in the 'profiles' table.
+ * If not found, it falls back to the basic information in the 'family-tree' table.
+ *
+ * @param {string} uniqueId - The unique ID of the family member, from the URL slug.
+ * @returns {Promise<ProcessedMember | null>} - A promise that resolves to the member's data or null if not found.
+ */
+export async function fetchMemberProfile(
+  uniqueId: string
+): Promise<ProcessedMember | null> {
+  // First, try to find a matching profile in the 'profiles' table
+  const { data: profileData, error: profileError } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("family_tree_uid", uniqueId)
+    .single();
+
+  if (profileError && profileError.code !== "PGRST116") {
+    // 'PGRST116' means no rows found, which is not an actual error in this case.
+    console.error("Error fetching from profiles:", profileError);
+    // We can choose to throw or just fallback, for now, we fallback.
+  }
+
+  if (profileData) {
+    // If a profile exists, we can augment it with any other necessary fields
+    // For now, let's assume 'profiles' has a superset of the data we need.
+    // We might need to map it to a 'ProcessedMember' like structure if they differ.
+    // For this implementation, we assume the structure is compatible or preferred.
+    // This part may need adjustment based on the actual 'profiles' table schema.
+    return {
+      unique_id: profileData.family_tree_uid,
+      first_name: profileData.first_name,
+      last_name: profileData.last_name,
+      picture_link: profileData.image,
+      gender: profileData.gender || "Not specified",
+      date_of_birth: profileData.date_of_birth,
+      marital_status: profileData.marital_status || "Not specified",
+      // These fields might not be in 'profiles' and would be from the 'family-tree' if needed.
+      fathers_first_name: "", // Placeholder
+      fathers_last_name: "", // Placeholder
+      mothers_first_name: "", // Placeholder
+      mothers_last_name: "", // Placeholder
+      spouses_first_name: "", // Placeholder
+      spouses_last_name: "", // Placeholder
+      order_of_birth: null,
+      order_of_marriage: null,
+      ...profileData, // include all other profile fields
+    };
+  }
+
+  // If no profile was found, fall back to the 'family-tree' table
+  const { data: familyTreeData, error: familyTreeError } = await supabase
+    .from("family-tree")
+    .select("*")
+    .eq("unique_id", uniqueId)
+    .single();
+
+  if (familyTreeError) {
+    if (familyTreeError.code !== "PGRST116") {
+      console.error("Error fetching from family-tree:", familyTreeError);
+    }
+    // If no record is found in either table, return null.
+    return null;
+  }
+
+  return familyTreeData as ProcessedMember;
 }

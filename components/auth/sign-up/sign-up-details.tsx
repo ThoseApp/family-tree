@@ -126,7 +126,7 @@ const SignUpDetails = () => {
   return (
     <>
       <AuthWrapper imageSrc="/images/auth/auth.webp" imageStyle="object-cover">
-        <div className="flex  flex-col h-full items-center justify-center w-full">
+        <div className="flex  flex-col h-full items-center justify-center w-full space-y-10">
           <Logo />
           <div className="space-y-5 md:space-y-8 flex-col items-center  w-full">
             <div className="space-y-2 items-center text-center">

@@ -19,15 +19,26 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 
+import EventDetailsModal from "@/components/modals/event-details-modal";
+import { Event } from "@/lib/types";
+
 const EventsPage = () => {
   const { fetchEvents, events } = useEventsStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
   useEffect(() => {
     fetchEvents();
   }, [fetchEvents]);
 
+  const handleEventClick = (event: Event) => {
+    setSelectedEvent(event);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedEvent(null);
+  };
   // Filter events based on search query and category
   const filteredEvents = useMemo(() => {
     let filtered = [...events];
@@ -183,6 +194,7 @@ const EventsPage = () => {
                   name={event.name}
                   description={event.description || "No description available."}
                   date={ensureDateAsObject(event.date)}
+                  onClick={() => handleEventClick(event)}
                 />
               ))}
             </div>
@@ -202,6 +214,7 @@ const EventsPage = () => {
                   name={event.name}
                   description={event.description || "No description available."}
                   date={ensureDateAsObject(event.date)}
+                  onClick={() => handleEventClick(event)}
                 />
               ))}
             </div>
@@ -221,6 +234,7 @@ const EventsPage = () => {
                   name={event.name}
                   description={event.description || "No description available."}
                   date={ensureDateAsObject(event.date)}
+                  onClick={() => handleEventClick(event)}
                 />
               ))}
             </div>
@@ -240,6 +254,7 @@ const EventsPage = () => {
                   name={event.name}
                   description={event.description || "No description available."}
                   date={ensureDateAsObject(event.date)}
+                  onClick={() => handleEventClick(event)}
                 />
               ))}
             </div>
@@ -259,6 +274,7 @@ const EventsPage = () => {
                   name={event.name}
                   description={event.description || "No description available."}
                   date={ensureDateAsObject(event.date)}
+                  onClick={() => handleEventClick(event)}
                 />
               ))}
             </div>
@@ -299,6 +315,8 @@ const EventsPage = () => {
           </div>
         )}
       </div>
+
+      <EventDetailsModal event={selectedEvent} onClose={handleCloseModal} />
     </div>
   );
 };

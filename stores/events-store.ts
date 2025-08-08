@@ -43,6 +43,7 @@ export const useEventsStore = create<EventsState>((set, get) => ({
       const { data, error } = await supabase
         .from("events")
         .select("*")
+        .eq("status", EventStatusEnum.approved)
         .order("date", { ascending: true });
 
       if (error) throw error;

@@ -112,7 +112,7 @@ const LandingNav = () => {
                     : "/dashboard"
                 }
               >
-                Dashboard
+                Personal Space
               </Link>
             </Button>
           ) : (
