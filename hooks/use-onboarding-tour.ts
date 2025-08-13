@@ -8,6 +8,11 @@ import { getUserRoleFromMetadata, UserRole } from "@/lib/types";
 
 type DriverInstance = ReturnType<typeof import("driver.js").driver> | null;
 
+// Prevent multiple concurrent tours due to retries/race conditions
+let tourIsRunning = false;
+let tourAttemptInProgress = false;
+let activeDriver: any = null;
+
 function getStorageKey(userId: string | undefined) {
   const id = userId || "anonymous";
   const version = "v1"; // bump to re-show tour after changes
@@ -136,11 +141,19 @@ export function useOnboardingTour() {
   const { user } = useUserStore();
 
   const start = useCallback(async () => {
+    if (tourIsRunning) return false;
     const role = getUserRoleFromMetadata(user);
     const steps = buildStepsForRole(role, pathname);
-    if (steps.length === 0) return;
+    if (steps.length === 0) return false;
+    // Claim the run immediately to avoid races from concurrent timers
+    tourIsRunning = true;
 
     const { driver } = await import("driver.js");
+    // Ensure any previous driver is destroyed before starting a new one
+    try {
+      activeDriver?.destroy?.();
+    } catch {}
+
     const driverObj: DriverInstance = driver({
       showProgress: true,
       overlayOpacity: 0.6,
@@ -148,7 +161,18 @@ export function useOnboardingTour() {
       stagePadding: 6,
     });
 
-    driverObj?.drive({ steps });
+    // Some driver.js typings expect drive(stepIndex?: number). Use setSteps then drive.
+    (driverObj as any)?.setSteps(steps);
+    activeDriver = driverObj;
+    (driverObj as any)?.drive(0);
+    // Best-effort reset when overlay closes
+    try {
+      (driverObj as any)?.on("destroyed", () => {
+        tourIsRunning = false;
+        activeDriver = null;
+      });
+    } catch {}
+    return true;
   }, [pathname, user]);
 
   const maybeStart = useCallback(async () => {
@@ -156,12 +180,26 @@ export function useOnboardingTour() {
     if (typeof window === "undefined") return;
     const seen = window.localStorage.getItem(storageKey);
     if (seen === "1") return;
+    if (tourIsRunning || tourAttemptInProgress) return;
 
-    // Delay slightly to ensure layout is mounted and DOM targets exist
-    setTimeout(async () => {
-      await start();
-      window.localStorage.setItem(storageKey, "1");
-    }, 600);
+    // Delay and retry a few times to ensure DOM targets exist before starting
+    tourAttemptInProgress = true;
+    const attemptStart = async (attempt: number) => {
+      if (tourIsRunning) return;
+      const started = await start();
+      if (started) {
+        window.localStorage.setItem(storageKey, "1");
+        tourAttemptInProgress = false;
+        return;
+      }
+      if (attempt < 5) {
+        setTimeout(() => attemptStart(attempt + 1), 500);
+      } else {
+        tourAttemptInProgress = false;
+      }
+    };
+
+    setTimeout(() => attemptStart(1), 800);
   }, [start, user?.id]);
 
   return { start, maybeStart };
