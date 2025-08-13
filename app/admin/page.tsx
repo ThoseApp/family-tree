@@ -480,6 +480,7 @@ const DashboardPage = () => {
           className="rounded-full"
           size="lg"
           onClick={handleAddEvent}
+          id="add-event-button"
         >
           Add Event
         </Button>
@@ -488,6 +489,7 @@ const DashboardPage = () => {
           className="rounded-full"
           size="lg"
           onClick={handleAddMember}
+          id="add-family-member-button"
         >
           Add Member
         </Button>

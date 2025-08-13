@@ -342,6 +342,15 @@ export interface EmailCredentials {
   familyMemberId: string;
 }
 
+// Onboarding
+export interface OnboardingStep {
+  id: string;
+  title: string;
+  description: string;
+  href?: string;
+  ctaLabel?: string;
+}
+
 export interface FamilyMemberRequest {
   id: string;
   first_name: string;

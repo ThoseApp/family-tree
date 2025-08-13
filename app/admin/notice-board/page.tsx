@@ -200,6 +200,7 @@ const AdminNoticeBoardPage = () => {
           <Button
             className="bg-foreground text-background rounded-full hover:bg-foreground/80"
             onClick={toggleNewNotice}
+            id="add-notice-button"
           >
             <Plus className="size-5" />
             New Notice
@@ -238,7 +239,7 @@ const AdminNoticeBoardPage = () => {
               <p className="text-sm text-muted-foreground mb-4">
                 Create your first family notice to get started
               </p>
-              <Button onClick={() => setNewNotice(true)}>
+              <Button onClick={() => setNewNotice(true)} id="add-notice-button">
                 <Plus className="h-4 w-4 mr-2" />
                 Create Notice
               </Button>
