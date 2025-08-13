@@ -42,7 +42,7 @@ export const navLinksTopSection: NavLink[] = [
   },
   {
     label: "Member Requests",
-    href: "/admin/family-member-requests",
+    href: "/admin/member-requests",
     icon: UsersIcon,
   },
   {
@@ -55,11 +55,7 @@ export const navLinksTopSection: NavLink[] = [
     href: "/admin/user-accounts",
     icon: UserCheck,
   },
-  {
-    label: "Family Member Requests",
-    href: "/admin/family-member-requests",
-    icon: UsersIcon,
-  },
+
   {
     label: "Gallery Requests",
     href: "/admin/gallery-requests",
@@ -93,6 +89,11 @@ export const navLinksTopSection: NavLink[] = [
   {
     label: "Family Members",
     href: "/admin/family-members",
+    icon: UsersIcon,
+  },
+  {
+    label: "Family Member Requests",
+    href: "/admin/family-member-requests",
     icon: UsersIcon,
   },
   {

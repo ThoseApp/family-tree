@@ -4,10 +4,17 @@ import DashboardNavbar from "@/components/dashboard/dashboard-navbar";
 import DashboardSideBar from "@/components/dashboard/dashboard-side-bar";
 import { useSidebarStore } from "@/stores/sidebar-store";
 import { cn } from "@/lib/utils";
-import React from "react";
+import React, { useEffect } from "react";
+import { useOnboardingTour } from "@/hooks/use-onboarding-tour";
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const { isCollapsed } = useSidebarStore();
+  const { maybeStart } = useOnboardingTour();
+
+  useEffect(() => {
+    // Auto-start tour once per user
+    maybeStart();
+  }, [maybeStart]);
 
   return (
     <div className="h-full flex flex-col relative">

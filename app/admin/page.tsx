@@ -250,7 +250,7 @@ const DashboardPage = () => {
                 variant="outline"
                 className="w-full rounded-full"
                 size="lg"
-                onClick={() => router.push("/admin/family-member-requests")}
+                onClick={() => router.push("/admin/member-requests")}
               >
                 View All
               </Button>
@@ -480,6 +480,7 @@ const DashboardPage = () => {
           className="rounded-full"
           size="lg"
           onClick={handleAddEvent}
+          id="add-event-button"
         >
           Add Event
         </Button>
@@ -488,6 +489,7 @@ const DashboardPage = () => {
           className="rounded-full"
           size="lg"
           onClick={handleAddMember}
+          id="add-family-member-button"
         >
           Add Member
         </Button>

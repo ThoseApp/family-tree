@@ -336,6 +336,7 @@ const PublisherEventsPage = () => {
           <Button
             className="bg-foreground text-background rounded-full hover:bg-foreground/80"
             onClick={toggleForm}
+            id="add-event-button"
           >
             {showForm ? (
               <>

@@ -4,10 +4,16 @@ import PublisherSideBar from "@/components/publisher/publisher-side-bar";
 import DashboardNavbar from "@/components/dashboard/dashboard-navbar";
 import { useSidebarStore } from "@/stores/sidebar-store";
 import { cn } from "@/lib/utils";
-import React from "react";
+import React, { useEffect } from "react";
+import { useOnboardingTour } from "@/hooks/use-onboarding-tour";
 
 const PublisherLayout = ({ children }: { children: React.ReactNode }) => {
   const { isCollapsed } = useSidebarStore();
+  const { maybeStart } = useOnboardingTour();
+
+  useEffect(() => {
+    maybeStart();
+  }, [maybeStart]);
 
   return (
     <div className="h-full flex flex-col relative">

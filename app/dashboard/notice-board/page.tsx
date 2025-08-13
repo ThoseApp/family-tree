@@ -175,7 +175,7 @@ const NoticeBoardPage = () => {
           </div>
 
           {/* Add Notice Button */}
-          <Button onClick={() => setShowForm(!showForm)}>
+          <Button onClick={() => setShowForm(!showForm)} id="add-notice-button">
             {showForm ? (
               <>
                 <ChevronUp className="mr-2 h-4 w-4" /> Hide Form
@@ -222,7 +222,7 @@ const NoticeBoardPage = () => {
           <p className="text-sm text-muted-foreground mb-4">
             Create your first family notice to get started
           </p>
-          <Button onClick={() => setShowForm(true)}>
+          <Button onClick={() => setShowForm(true)} id="add-notice-button">
             <Plus className="h-4 w-4 mr-2" />
             Create Notice
           </Button>

@@ -16,7 +16,7 @@ export function getNotificationRoute(
 
   switch (notification.type) {
     case NotificationTypeEnum.member_request:
-      return isAdmin ? "/admin/family-member-requests" : "/dashboard";
+      return isAdmin ? "/admin/member-requests" : "/dashboard";
 
     case NotificationTypeEnum.gallery_request:
       return isAdmin ? "/admin/gallery-requests" : "/dashboard";
