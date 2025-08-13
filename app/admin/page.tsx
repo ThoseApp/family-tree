@@ -250,7 +250,7 @@ const DashboardPage = () => {
                 variant="outline"
                 className="w-full rounded-full"
                 size="lg"
-                onClick={() => router.push("/admin/member-requests")}
+                onClick={() => router.push("/admin/family-member-requests")}
               >
                 View All
               </Button>
