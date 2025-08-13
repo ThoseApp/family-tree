@@ -528,6 +528,7 @@ const Page = () => {
           <Button
             className="bg-foreground text-background rounded-full hover:bg-foreground/80"
             onClick={() => fileInputRef.current?.click()}
+            id="upload-gallery-button"
           >
             <Plus className="size-5 mr-2" />
             Upload File (Image/Video)

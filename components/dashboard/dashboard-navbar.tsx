@@ -258,7 +258,10 @@ const DashboardNavbar = () => {
         {/* SEARCH BAR */}
         <div className=" flex-1 2xl:max-w-xl flex items-center gap-2">
           <div className="flex-1 w-full  flex items-center justify-center">
-            <div className="relative max-w-full w-full">
+            <div
+              className="relative max-w-full w-full"
+              id="global-search-input"
+            >
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-muted-foreground pointer-events-none" />
               <Input
                 type="text"
@@ -435,7 +438,12 @@ const DashboardNavbar = () => {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="rounded-full">
+              <Button
+                variant="outline"
+                size="icon"
+                className="rounded-full"
+                id="navbar-avatar-button"
+              >
                 <Avatar className="size-10">
                   <AvatarImage
                     src={user?.user_metadata?.avatar_url}

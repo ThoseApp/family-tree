@@ -196,7 +196,7 @@ const PublisherNoticeBoardPage = () => {
           </div>
 
           {/* Add Notice Button */}
-          <Button onClick={toggleNewNotice}>
+          <Button onClick={toggleNewNotice} id="add-notice-button">
             <Plus className="mr-2 h-4 w-4" />
             {newNotice ? "Hide Form" : "Add Notice"}
           </Button>

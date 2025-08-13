@@ -402,7 +402,11 @@ const EventComponent = () => {
             <CalendarIcon className="h-4 w-4" />
             Events
           </TabsTrigger>
-          <TabsTrigger value="invitations" className="flex items-center gap-2">
+          <TabsTrigger
+            value="invitations"
+            className="flex items-center gap-2"
+            id="invitations-tab-trigger"
+          >
             <Mail className="h-4 w-4" />
             Invitations
           </TabsTrigger>
@@ -415,6 +419,7 @@ const EventComponent = () => {
               <Button
                 className="bg-foreground text-background rounded-full hover:bg-foreground/80"
                 onClick={toggleForm}
+                id="add-event-button"
               >
                 {showForm ? (
                   <>

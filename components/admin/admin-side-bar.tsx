@@ -92,6 +92,9 @@ const AdminSideBar = ({ forceMobileExpanded = false }: AdminSideBarProps) => {
                   <TooltipTrigger asChild>
                     <Link
                       href={route.href}
+                      data-tour={`nav-${route.label
+                        .toLowerCase()
+                        .replace(/\s+/g, "-")}`}
                       className={cn(
                         "relative text-sm group p-3 flex w-full rounded-lg justify-start items-center cursor-pointer hover:bg-foreground hover:text-background transition",
                         pathname === route.href
