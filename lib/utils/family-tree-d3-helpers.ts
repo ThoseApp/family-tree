@@ -1,14 +1,15 @@
 import { ProcessedMember } from "@/lib/types";
 
 // Color system for different lineages
+// Softer palette for better readability in the tree UI
 export const LINEAGE_COLORS = {
-  neutral: "#94A3B8", // slate-400 for spouses and females
-  origin: "#78716C", // stone-500 for origin couple
-  red: "#ea9c36", // red-500 for D01Z00002 lineage
-  green: "#10B981", // emerald-500 for first male child
-  blue: "#3B82F6", // blue-500 for second male child
-  purple: "#8B5CF6", // violet-500 for third male child
-  yellow: "#F52E0B", // amber-500 for female children
+  neutral: "#CBD5E1", // slate-300 for spouses and females
+  origin: "#A8A29E", // stone-400 for origin couple
+  red: "#FDA4AF", // rose-300 for D01Z00002 lineage
+  green: "#A7F3D0", // emerald-200 for first male child
+  blue: "#93C5FD", // blue-300 for second male child
+  purple: "#C4B5FD", // violet-300 for third male child
+  yellow: "#FDE68A", // amber-300 for female children
 } as const;
 
 export type LineageColor = keyof typeof LINEAGE_COLORS;

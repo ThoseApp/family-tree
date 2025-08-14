@@ -79,63 +79,6 @@
   }
 }
 
-/* Driver.js onboarding tour theming to match app UI/UX */
-.driver-overlay {
-  background: hsl(var(--background) / 0.6) !important;
-  backdrop-filter: blur(4px);
-}
-
-.driver-popover {
-  border-radius: var(--radius) !important;
-  border: 1px solid hsl(var(--border)) !important;
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
-  background: hsl(var(--card)) !important;
-  color: hsl(var(--card-foreground)) !important;
-}
-
-.driver-popover-title {
-  font-size: 1rem !important;
-  font-weight: 600 !important;
-  color: hsl(var(--foreground)) !important;
-}
-
-.driver-popover-description {
-  font-size: 0.875rem !important;
-  color: hsl(var(--muted-foreground)) !important;
-}
-
-.driver-popover-progress-text {
-  font-size: 0.75rem !important;
-  color: hsl(var(--muted-foreground)) !important;
-}
-
-.driver-popover-close-btn {
-  color: hsl(var(--muted-foreground)) !important;
-}
-
-.driver-popover-footer button {
-  border-radius: 9999px !important;
-  height: 2rem !important;
-  padding: 0 0.75rem !important;
-  font-size: 0.75rem !important;
-}
-
-.driver-popover-footer .driver-popover-prev-btn {
-  background: transparent !important;
-  color: hsl(var(--foreground)) !important;
-  border: 1px solid hsl(var(--border)) !important;
-}
-
-.driver-popover-footer .driver-popover-next-btn,
-.driver-popover-footer .driver-popover-done-btn {
-  background: hsl(var(--foreground)) !important;
-  color: hsl(var(--background)) !important;
-  border: 1px solid hsl(var(--foreground)) !important;
-}
-
-.driver-popover-arrow-side {
-  color: hsl(var(--card)) !important;
-}
 .landing-hero-container {
   background-image: url("/images/landing/hero_section.webp");
   background-size: cover;
@@ -167,4 +110,84 @@
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
+}
+
+/* Driver.js tour styling - align with app design system */
+.driver-overlay {
+  z-index: 9999 !important;
+}
+
+.driver-popover {
+  z-index: 10000 !important;
+  background: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: calc(var(--radius) + 6px) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12), 0 6px 14px rgba(0, 0, 0, 0.08) !important;
+  padding: 14px 16px !important;
+  max-width: 380px !important;
+}
+
+.driver-popover-arrow {
+  background: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.driver-popover-title {
+  font-weight: 700 !important;
+  font-size: 16px !important;
+  margin-bottom: 6px !important;
+}
+
+.driver-popover-description {
+  color: hsl(var(--muted-foreground)) !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+
+.driver-popover-progress-text {
+  color: hsl(var(--muted-foreground)) !important;
+  font-size: 12px !important;
+}
+
+.driver-popover-footer {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.driver-popover-prev-btn,
+.driver-popover-next-btn,
+.driver-popover-btn {
+  border-radius: 9999px !important;
+  height: 34px !important;
+  padding: 0 14px !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  line-height: 1 !important;
+  letter-spacing: 0.01em !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  text-rendering: geometricPrecision !important;
+}
+
+.driver-popover-prev-btn {
+  background: transparent !important;
+  color: hsl(var(--foreground)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+}
+
+.driver-popover-next-btn {
+  background: hsl(var(--foreground)) !important;
+  color: hsl(var(--background)) !important;
+  border: 1px solid hsl(var(--foreground)) !important;
+  backface-visibility: hidden !important;
+  transform: translateZ(0) !important; /* avoid subpixel blur on some GPUs */
+}
+
+.driver-popover-close-btn {
+  color: hsl(var(--muted-foreground)) !important;
+}
+.driver-popover-close-btn:hover {
+  color: hsl(var(--foreground)) !important;
 }

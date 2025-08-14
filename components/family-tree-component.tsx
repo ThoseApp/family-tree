@@ -92,9 +92,9 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
   }
 
   // Node dimensions
-  const nodeWidth = 180;
-  const nodeHeight = 200;
-  const imageSize = 90;
+  const nodeWidth = 200;
+  const nodeHeight = 220;
+  const imageSize = 96;
 
   // Determine which placeholder image to use
   const placeholderImage =
@@ -129,10 +129,10 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
         x={-nodeWidth / 2}
         y={-nodeHeight / 2}
         fill={backgroundColor}
-        stroke="#374151"
-        strokeWidth={2}
-        rx={8}
-        className="cursor-pointer hover:opacity-80 transition-opacity"
+        stroke="#E5E7EB"
+        strokeWidth={1.5}
+        rx={14}
+        className="cursor-pointer hover:shadow-lg transition-all duration-200"
       />
 
       {/* Profile image area */}
@@ -162,6 +162,9 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
         x={-imageSize / 2}
         y={-nodeHeight / 2 + 10}
         clipPath={`url(#imageClip-${attributes?.unique_id || "node"})`}
+        style={{
+          filter: "contrast(1.05) saturate(1.05)",
+        }}
       />
 
       {/* Name text */}
@@ -169,9 +172,13 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
         x={0}
         y={nameY}
         textAnchor="middle"
-        // fill="white"
-        fontSize="16"
-        fontWeight="600"
+        fontSize="15"
+        fontWeight="700"
+        style={{
+          fontFamily:
+            "Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial",
+          fill: "#111827",
+        }}
       >
         {nameLines.map((line, index) => (
           <tspan x={0} key={index} dy={index === 0 ? 0 : "1.2em"}>
@@ -772,7 +779,7 @@ const FamilyTreeComponent: React.FC = () => {
         </div>
 
         {/* Legend */}
-        <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+        <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
           <h4 className="text-sm font-medium mb-2">Color Legend</h4>
           <div className="flex flex-wrap gap-3 text-xs">
             <div className="flex items-center space-x-1">
