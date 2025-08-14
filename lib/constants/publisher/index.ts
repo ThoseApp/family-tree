@@ -7,6 +7,7 @@ import {
   CheckCircle,
   Settings,
   HomeIcon,
+  ImageIcon,
 } from "lucide-react";
 
 export const navLinksTopSection: NavLink[] = [
@@ -39,6 +40,11 @@ export const navLinksTopSection: NavLink[] = [
     label: "Event Requests",
     href: "/publisher/event-requests",
     icon: CheckCircle,
+  },
+  {
+    label: "Gallery",
+    href: "/publisher/gallery",
+    icon: ImageIcon,
   },
   {
     label: "Settings",
