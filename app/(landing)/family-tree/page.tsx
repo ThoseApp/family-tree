@@ -10,7 +10,7 @@ const FamilyTreePage = () => {
       <PageHeader
         title="Our Family Legacy"
         description="Explore the roots of our family, trace our lineage, and celebrate the connections that bind us together."
-        searchBar
+        // searchBar
       />
 
       {/* FAMILY TREE VISUALIZATION */}
