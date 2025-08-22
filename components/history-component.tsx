@@ -179,7 +179,7 @@ const HistoryComponent = () => {
                 placeholder="Search timeline by title, description, or year..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-10 rounded-full"
               />
             </div>
             <div className="flex items-center gap-2">

@@ -118,13 +118,13 @@ const EventsPage = () => {
       {/* SEARCH AND FILTER SECTION */}
       <div className="mb-8 space-y-4">
         {/* Search Bar */}
-        <div className="relative">
+        <div className="relative ">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder="Search events by name, description, or category..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-4"
+            className="pl-10 pr-4 rounded-full"
           />
           {searchQuery && (
             <Button
