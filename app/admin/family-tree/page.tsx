@@ -2184,7 +2184,7 @@ const FamilyTreeUploadPage = () => {
                   placeholder="Search family members..."
                   value={searchQuery}
                   onChange={(e) => handleSearch(e.target.value)}
-                  className="pl-10 pr-10 rounded-full"
+                  className="pl-10 pr-10"
                 />
                 {searchQuery && (
                   <Button

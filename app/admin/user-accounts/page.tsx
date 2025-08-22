@@ -300,7 +300,7 @@ const UserAccountsPage = () => {
               placeholder="Search by name, email, or family ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 rounded-full"
+              className="pl-10"
             />
           </div>
         </CardContent>
