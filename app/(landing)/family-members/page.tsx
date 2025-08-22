@@ -218,7 +218,7 @@ const FamilyMembersPage = () => {
             placeholder="Search family members..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="pl-10 pr-4 rounded-full"
+            className="pl-10 pr-4"
           />
         </div>
 
@@ -226,7 +226,7 @@ const FamilyMembersPage = () => {
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           {/* Filter Controls */}
           <div className="flex flex-wrap gap-2 items-center">
-            {user && !user.user_metadata?.is_admin && (
+            {user && (
               <Button
                 variant="default"
                 size="sm"
