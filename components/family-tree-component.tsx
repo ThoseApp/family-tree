@@ -80,6 +80,8 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
   const isSpouseNode = attributes?.is_spouse;
   const hasChildren = attributes?.has_children;
   const gender = attributes?.gender || "unknown";
+  const isMultipleBirth = attributes?.is_multiple_birth;
+  const multipleBirthLabel = attributes?.multiple_birth_label;
 
   // Handle special node types
   if (gender === "couple" || gender === "family") {
@@ -186,6 +188,31 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
           </tspan>
         ))}
       </text>
+
+      {/* Multiple birth badge */}
+      {isMultipleBirth && multipleBirthLabel && (
+        <g>
+          <rect
+            x={-nodeWidth / 2 + 10}
+            y={-nodeHeight / 2 + 10}
+            rx={6}
+            width={68}
+            height={22}
+            fill="#1F2937"
+            opacity={0.9}
+          />
+          <text
+            x={-nodeWidth / 2 + 10 + 34}
+            y={-nodeHeight / 2 + 26}
+            textAnchor="middle"
+            fontSize="11"
+            fontWeight="600"
+            style={{ fill: "#FFFFFF" }}
+          >
+            {multipleBirthLabel}
+          </text>
+        </g>
+      )}
 
       {/* UID text */}
       {/* <text
@@ -622,6 +649,19 @@ const FamilyTreeComponent: React.FC = () => {
 
             if (descendantPartner) {
               newState.spouseAssignments.set(descendantPartner.unique_id, uid);
+
+              // Accordion behavior: collapse any other spouses' children for this same partner
+              const otherSpouses = findSpouses(
+                descendantPartner,
+                allMembers
+              ).filter((s) => s.unique_id !== uid);
+              otherSpouses.forEach((other) => {
+                if (newState.expandedChildren.has(other.unique_id)) {
+                  // Collapse other spouse's children and descendants
+                  collapseDescendantsRecursively(other.unique_id, newState);
+                  newState.expandedChildren.delete(other.unique_id);
+                }
+              });
             }
           }
 

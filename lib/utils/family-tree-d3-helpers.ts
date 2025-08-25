@@ -33,6 +33,9 @@ export interface TreeNode {
     fathers_uid?: string;
     mothers_uid?: string;
     is_out_of_wedlock?: boolean;
+    // Multiple birth indicators
+    is_multiple_birth?: boolean;
+    multiple_birth_label?: string;
   };
   children?: TreeNode[];
 }
@@ -392,8 +395,32 @@ export function convertToTreeNode(
       fathers_uid: member.fathers_uid,
       mothers_uid: member.mothers_uid,
       is_out_of_wedlock: isOutOfWedlock,
+      // Defaults for multiple birth badge
+      is_multiple_birth: false,
+      multiple_birth_label: undefined,
     },
   };
+
+  // Detect twins/triplets: siblings with same mothers_uid and same order_of_birth
+  if (!isMissingUid(member.mothers_uid) && member.order_of_birth != null) {
+    const siblingsSameOrder = allMembers.filter(
+      (m) =>
+        m.unique_id !== member.unique_id &&
+        m.mothers_uid === member.mothers_uid &&
+        m.order_of_birth === member.order_of_birth
+    );
+
+    const multipleCount = siblingsSameOrder.length + 1; // include self
+    if (multipleCount >= 2) {
+      node.attributes!.is_multiple_birth = true;
+      node.attributes!.multiple_birth_label =
+        multipleCount === 2
+          ? "Twins"
+          : multipleCount === 3
+          ? "Triplets"
+          : "Multiples";
+    }
+  }
 
   // Don't automatically assign children here - let buildSubTree handle child assignment
   // This ensures children are properly routed through spouses according to family tree rules

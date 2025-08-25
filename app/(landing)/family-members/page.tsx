@@ -445,13 +445,7 @@ const FamilyMembersPage = () => {
       {!isLoading && !error && finalMembers.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-8">
           {finalMembers.map((member) => (
-            <FamilyMemberCard
-              key={member.id}
-              imageSrc={member.imageSrc}
-              name={member.name}
-              unique_id={member.unique_id}
-              description={member.description || ""}
-            />
+            <FamilyMemberCard key={member.id} member={member} />
           ))}
         </div>
       )}
