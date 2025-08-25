@@ -1,3 +1,7 @@
+/* Dotted links for out-of-wedlock children */
+.ow-link {
+  stroke-dasharray: 4 4;
+}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
