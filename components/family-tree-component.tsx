@@ -687,6 +687,15 @@ const FamilyTreeComponent: React.FC = () => {
     zoom: 0.7,
   };
 
+  // Apply dotted style for out-of-wedlock links
+  const pathClassFunc = useCallback((linkDatum: any) => {
+    const targetAttrs = linkDatum?.target?.data?.attributes;
+    if (targetAttrs?.is_out_of_wedlock) {
+      return "ow-link";
+    }
+    return "";
+  }, []);
+
   if (isLoading) {
     return (
       <Card className="w-full">
@@ -763,6 +772,7 @@ const FamilyTreeComponent: React.FC = () => {
             data={treeData}
             orientation={treeConfig.orientation}
             pathFunc={customPathFunc}
+            pathClassFunc={pathClassFunc}
             translate={treeConfig.translate}
             nodeSize={treeConfig.nodeSize}
             separation={treeConfig.separation}

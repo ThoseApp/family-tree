@@ -29,6 +29,10 @@ export interface TreeNode {
     is_descendant?: boolean;
     has_children?: boolean;
     spouse_count?: number;
+    // Added for styling/placement rules
+    fathers_uid?: string;
+    mothers_uid?: string;
+    is_out_of_wedlock?: boolean;
   };
   children?: TreeNode[];
 }
@@ -41,6 +45,21 @@ export interface FamilyTreeState {
   spouseAssignments: Map<string, string>; // Maps descendant UID to spouse UID that currently has their children
   currentGeneration: number;
   lastClickedNodeId?: string;
+}
+
+// Helper: treat placeholder strings as missing values
+function isMissingUid(value?: string | null): boolean {
+  if (value === undefined || value === null) return true;
+  const v = String(value).trim().toLowerCase();
+  return (
+    v === "" ||
+    v === "#n/a" ||
+    v === "n/a" ||
+    v === "na" ||
+    v === "-" ||
+    v === "null" ||
+    v === "undefined"
+  );
 }
 
 /**
@@ -315,6 +334,10 @@ export function convertToTreeNode(
   const lineageColor = determineLineageColor(member, allMembers);
   const spouses = findSpouses(member, allMembers);
   const children = findChildren(member, allMembers);
+  // Consider out-of-wedlock when father UID is known but mother UID is missing,
+  // regardless of whether name placeholders exist for the mother.
+  const isOutOfWedlock =
+    !isMissingUid(member.fathers_uid) && isMissingUid(member.mothers_uid);
 
   // Validate color inheritance for debugging (only in development)
   if (process.env.NODE_ENV === "development" && !isSpouse(member.unique_id)) {
@@ -366,6 +389,9 @@ export function convertToTreeNode(
       is_descendant: isDescendant(member.unique_id),
       has_children: children.length > 0,
       spouse_count: spouses.length,
+      fathers_uid: member.fathers_uid,
+      mothers_uid: member.mothers_uid,
+      is_out_of_wedlock: isOutOfWedlock,
     },
   };
 
@@ -419,53 +445,83 @@ function buildSubTree(
 
     familyGroupNode.children!.push(...spouseNodes);
 
-    // Determine which spouse should have the children with consistent branching
-    let targetSpouseNode = null;
-    let selectedSpouseId = null;
+    // Determine which spouse should have the in-wedlock children with consistent branching
+    let targetSpouseNode: TreeNode | null = null;
+    let selectedSpouseId: string | null = null;
 
     // Priority 1: Check existing spouse assignment for this descendant (maintains consistency)
     const existingAssignment = state.spouseAssignments.get(member.unique_id);
     if (existingAssignment) {
-      targetSpouseNode = spouseNodes.find(
+      const found = spouseNodes.find(
         (s) => s.attributes!.unique_id === existingAssignment
       );
+      targetSpouseNode = found ?? null;
       selectedSpouseId = existingAssignment;
     }
 
     // Priority 2: Use parentSpouseContext for consistency down the tree (new assignments)
     if (!targetSpouseNode && parentSpouseContext) {
-      targetSpouseNode = spouseNodes.find(
+      const found = spouseNodes.find(
         (s) => s.attributes!.unique_id === parentSpouseContext
       );
+      targetSpouseNode = found ?? null;
       selectedSpouseId = parentSpouseContext;
     }
 
     // Priority 3: Check if the last clicked node was one of the spouses (for new branches)
     if (!targetSpouseNode && state.lastClickedNodeId) {
-      targetSpouseNode = spouseNodes.find(
+      const found = spouseNodes.find(
         (s) => s.attributes!.unique_id === state.lastClickedNodeId
       );
+      targetSpouseNode = found ?? null;
       selectedSpouseId = state.lastClickedNodeId;
     }
 
     // Priority 4: If no specific spouse context, use first spouse and establish pattern
     if (!targetSpouseNode && spouseNodes.length > 0) {
-      targetSpouseNode = spouseNodes[0];
-      selectedSpouseId = spouseNodes[0].attributes!.unique_id;
+      targetSpouseNode = spouseNodes[0] ?? null;
+      selectedSpouseId = spouseNodes[0]?.attributes!.unique_id ?? null;
     }
 
-    // Attach children to the target spouse, not the descendant
+    // Split children into out-of-wedlock vs others
+    // IMPORTANT: Out-of-wedlock children should show even if not in visibleNodes,
+    // so compute from the full children list, not only visible ones.
+    const outOfWedlockChildren = findChildren(member, allMembers).filter(
+      (child) =>
+        !isMissingUid(child.fathers_uid) && isMissingUid(child.mothers_uid)
+    );
+
+    const regularChildren = visibleChildren.filter(
+      (child) =>
+        !outOfWedlockChildren.some((ow) => ow.unique_id === child.unique_id)
+    );
+
+    // Attach regular children only to the selected spouse (maintain original behavior)
     if (targetSpouseNode) {
-      // Pass down the selected spouse ID as context for consistent branching down the tree
-      const childrenWithContext = visibleChildren.map((child) =>
+      const regularChildrenWithContext = regularChildren.map((child) =>
         buildSubTree(child, allMembers, state, selectedSpouseId || undefined)
       );
-      targetSpouseNode.children = childrenWithContext;
-      memberNode.children = []; // Remove children from descendant
-    } else {
-      // Should not happen due to our consistency rules, but keep for safety
-      memberNode.children = [];
+      targetSpouseNode.children = regularChildrenWithContext;
     }
+
+    // Attach out-of-wedlock children ONLY to spouse nodes whose children are expanded
+    if (spouseNodes.length > 0 && outOfWedlockChildren.length > 0) {
+      spouseNodes.forEach((spouseNode) => {
+        const spouseUid = spouseNode.attributes!.unique_id;
+        if (!state.expandedChildren.has(spouseUid)) return;
+
+        const owChildrenForThisSpouse = outOfWedlockChildren.map((child) =>
+          buildSubTree(child, allMembers, state, undefined)
+        );
+        spouseNode.children = [
+          ...(spouseNode.children || []),
+          ...owChildrenForThisSpouse,
+        ];
+      });
+    }
+
+    // Children should never be attached directly to the descendant node
+    memberNode.children = [];
 
     return familyGroupNode;
   }
@@ -474,7 +530,8 @@ function buildSubTree(
   // They must ALWAYS come from spouses to maintain tree branching consistency
 
   // If no family group (spouses not visible or don't exist), children are hidden
-  // This enforces the spouse-first branching rule throughout the entire tree
+  // This enforces the spouse-first branching rule throughout the entire tree.
+  // Requested behavior: Out-of-wedlock children should only be visible when a spouse group is expanded.
   memberNode.children = [];
 
   return memberNode;
