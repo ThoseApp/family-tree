@@ -149,7 +149,7 @@ const NoticeBoardCard = ({
         ) : null}
         <p className="text-gray-700 mb-3">{noticeBoard.description}</p>
         <p className="text-sm text-gray-500">
-          Editorial Admin: {noticeBoard.editor}
+          Published by: {noticeBoard.editor}
         </p>
         <p className="text-sm text-gray-500">Posted {formattedDate}</p>
         {showStatus && noticeBoard.status === "rejected" && (

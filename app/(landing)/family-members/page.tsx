@@ -50,6 +50,19 @@ const calculateAge = (birthDate?: string): number | null => {
   return age >= 0 ? age : null;
 };
 
+// Normalize text for robust search (case-insensitive, diacritics-insensitive)
+const normalizeText = (value?: string): string => {
+  if (!value) return "";
+  return value
+    .toString()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+};
+
+// Simple name-only search; keep other filters separate
+
 import { FamilyMemberRequestModal } from "@/components/modals/family-member-request-modal";
 
 import { useUserStore } from "@/stores/user-store";
@@ -72,6 +85,12 @@ const FamilyMembersPage = () => {
     // or update a list of user's pending requests.
     // For now, we just close the modal.
   };
+
+  // // Debounce search input to avoid filtering on every keystroke
+  // useEffect(() => {
+  //   const handle = setTimeout(() => setDebouncedSearch(searchInput), 250);
+  //   return () => clearTimeout(handle);
+  // }, [searchInput]);
 
   // Fetch family members on component mount
   useEffect(() => {
@@ -97,16 +116,8 @@ const FamilyMembersPage = () => {
     let filtered = [...familyMembers];
 
     if (searchInput.trim()) {
-      const searchLower = searchInput.toLowerCase().trim();
-
       filtered = filtered.filter((member) => {
-        // Ensure member exists and has required properties
-        if (!member || !member.id) return false;
-
-        // Search across multiple fields for a more comprehensive search
-        const name = String(member.name || "").toLowerCase();
-
-        return name.includes(searchLower);
+        return member.name.toLowerCase().includes(searchInput.toLowerCase());
       });
     }
 
@@ -182,10 +193,10 @@ const FamilyMembersPage = () => {
   const stats = useMemo(() => {
     const total = filteredFamilyMembers.length;
     const male = filteredFamilyMembers.filter(
-      (m) => m.gender === "Male"
+      (m) => normalizeText(m.gender) === "male"
     ).length;
     const female = filteredFamilyMembers.filter(
-      (m) => m.gender === "Female"
+      (m) => normalizeText(m.gender) === "female"
     ).length;
 
     return {
@@ -196,11 +207,7 @@ const FamilyMembersPage = () => {
     };
   }, [filteredFamilyMembers, familyMembers]);
 
-  const finalMembers = useMemo(() => {
-    return [...familyMembers].filter((member) => {
-      return member.name.toLowerCase().includes(searchInput.toLowerCase());
-    });
-  }, [familyMembers, searchInput]);
+  // Render list is driven by filteredFamilyMembers so UI matches stats
 
   return (
     <div className="pb-20">
@@ -401,30 +408,25 @@ const FamilyMembersPage = () => {
       )}
 
       {/* Empty State */}
-      {!isLoading &&
-        !error &&
-        finalMembers.length === 0 &&
-        familyMembers.length === 0 && (
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center py-12">
-                <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">
-                  No Family Members
-                </h3>
-                <p className="text-muted-foreground">
-                  Family member data will appear here once it&apos;s been added.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+      {!isLoading && !error && familyMembers.length === 0 && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center py-12">
+              <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No Family Members</h3>
+              <p className="text-muted-foreground">
+                Family member data will appear here once it&apos;s been added.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* No Results State */}
       {!isLoading &&
         !error &&
-        finalMembers.length === 0 &&
-        finalMembers.length > 0 && (
+        familyMembers.length > 0 &&
+        filteredFamilyMembers.length === 0 && (
           <Card>
             <CardContent className="pt-6">
               <div className="text-center py-12">
@@ -442,9 +444,9 @@ const FamilyMembersPage = () => {
         )}
 
       {/* Family Members Grid */}
-      {!isLoading && !error && finalMembers.length > 0 && (
+      {!isLoading && !error && filteredFamilyMembers.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-8">
-          {finalMembers.map((member) => (
+          {[...filteredFamilyMembers].map((member) => (
             <FamilyMemberCard key={member.id} member={member} />
           ))}
         </div>
