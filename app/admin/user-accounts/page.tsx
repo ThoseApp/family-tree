@@ -329,7 +329,7 @@ const UserAccountsPage = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Member</TableHead>
-                    <TableHead>Family ID</TableHead>
+                    <TableHead>Unique ID</TableHead>
                     <TableHead>Account Status</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Account Created</TableHead>

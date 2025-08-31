@@ -21,6 +21,10 @@ import {
   Shield,
   UserCheck,
   HomeIcon,
+  UserPlus,
+  Contact,
+  ClipboardPenLine,
+  ClipboardPlus,
 } from "lucide-react";
 import { dummyProfileImage } from "..";
 
@@ -43,7 +47,7 @@ export const navLinksTopSection: NavLink[] = [
   {
     label: "Member Requests",
     href: "/admin/member-requests",
-    icon: UsersIcon,
+    icon: UserPlus,
   },
   {
     label: "Publisher Management",
@@ -64,12 +68,12 @@ export const navLinksTopSection: NavLink[] = [
   {
     label: "Notice Board Requests",
     href: "/admin/notice-board-requests",
-    icon: Clipboard,
+    icon: ClipboardPlus,
   },
   {
     label: "Notice Board",
     href: "/admin/notice-board",
-    icon: UsersIcon,
+    icon: ClipboardPenLine,
   },
   // {
   //   label: "Timeline",
@@ -94,7 +98,7 @@ export const navLinksTopSection: NavLink[] = [
   {
     label: "Family Member Requests",
     href: "/admin/family-member-requests",
-    icon: UsersIcon,
+    icon: Contact,
   },
   {
     label: "Gallery",

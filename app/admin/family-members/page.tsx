@@ -12,6 +12,8 @@ import {
   X,
   UserCheck,
   UserX,
+  Mars,
+  Venus,
 } from "lucide-react";
 import { FamilyMemberModal } from "@/components/modals/family-member-modal";
 import { CreateAccountModal } from "@/components/modals/create-account-modal";
@@ -795,7 +797,7 @@ const FamilyMembersPage = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Male Members</CardTitle>
-            <UserCheck className="h-4 w-4 text-muted-foreground" />
+            <Mars className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{filteredStats.male}</div>
@@ -810,7 +812,7 @@ const FamilyMembersPage = () => {
             <CardTitle className="text-sm font-medium">
               Female Members
             </CardTitle>
-            <UserX className="h-4 w-4 text-muted-foreground" />
+            <Venus className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{filteredStats.female}</div>
