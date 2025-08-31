@@ -23,14 +23,14 @@ import EventDetailsModal from "@/components/modals/event-details-modal";
 import { Event } from "@/lib/types";
 
 const EventsPage = () => {
-  const { fetchEvents, events } = useEventsStore();
+  const { fetchUpcomingEvents, events } = useEventsStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
   useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
+    fetchUpcomingEvents();
+  }, [fetchUpcomingEvents]);
 
   const handleEventClick = (event: Event) => {
     setSelectedEvent(event);
@@ -307,7 +307,7 @@ const EventsPage = () => {
         {events.length === 0 && (
           <div className="text-center py-12">
             <h3 className="text-lg font-medium text-gray-900 mb-1">
-              No events available
+              No upcoming events available
             </h3>
             <p className="text-gray-500">
               Check back later for upcoming family events.
