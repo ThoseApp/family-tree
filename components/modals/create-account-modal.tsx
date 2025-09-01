@@ -217,7 +217,7 @@ export const CreateAccountModal: React.FC<CreateAccountModalProps> = ({
                 <p className="font-medium">{familyMember.name}</p>
               </div>
               <div>
-                <span className="text-gray-500">Family ID:</span>
+                <span className="text-gray-500">Unique ID:</span>
                 <p className="font-medium">{familyMember.id}</p>
               </div>
               {familyMember.birthDate && (

@@ -2384,27 +2384,6 @@ const FamilyTreeUploadPage = () => {
                 Existing Family Tree Data ({existingData.length} records)
               </span>
               <div className="flex items-center gap-2">
-                <div className="flex rounded-lg border p-1">
-                  <Button
-                    variant={viewMode === "table" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setViewMode("table")}
-                    className="flex items-center gap-1"
-                    data-view-mode="table"
-                  >
-                    <TableIcon className="h-4 w-4" />
-                    Table
-                  </Button>
-                  <Button
-                    variant={viewMode === "tree" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setViewMode("tree")}
-                    className="flex items-center gap-1"
-                  >
-                    <GitBranch className="h-4 w-4" />
-                    Tree
-                  </Button>
-                </div>
                 <Button
                   variant="outline"
                   size="sm"
