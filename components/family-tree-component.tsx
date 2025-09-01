@@ -121,6 +121,16 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
 
   const nameY = -nodeHeight / 2 + (nameLines.length > 1 ? 128 : 135);
   const uidY = -nodeHeight / 2 + (nameLines.length > 1 ? 155 : 150);
+  // Multiple birth badge sizing (dynamic for Twins/Triplets/etc.)
+  const badgePaddingX = 10;
+  const approxCharWidth = 7.2; // rough width per character for measuring label
+  const computedBadgeWidth = Math.max(
+    84,
+    (multipleBirthLabel?.length || 0) * approxCharWidth + badgePaddingX * 2
+  );
+  const badgeHeight = 24;
+  const badgeX = -nodeWidth / 2 + 8;
+  const badgeY = -nodeHeight / 2 + 8;
 
   return (
     <g onClick={onNodeClick}>
@@ -191,22 +201,23 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
 
       {/* Multiple birth badge */}
       {isMultipleBirth && multipleBirthLabel && (
-        <g>
+        <g filter="url(#badgeShadow)" pointerEvents="none">
           <rect
-            x={-nodeWidth / 2 + 10}
-            y={-nodeHeight / 2 + 10}
-            rx={6}
-            width={68}
-            height={22}
-            fill="#1F2937"
-            opacity={0.9}
+            x={badgeX}
+            y={badgeY}
+            rx={8}
+            width={computedBadgeWidth}
+            height={badgeHeight}
+            fill="#2563EB"
+            stroke="#FFFFFF"
+            strokeWidth={1}
           />
           <text
-            x={-nodeWidth / 2 + 10 + 34}
-            y={-nodeHeight / 2 + 26}
+            x={badgeX + computedBadgeWidth / 2}
+            y={badgeY + 15}
             textAnchor="middle"
-            fontSize="11"
-            fontWeight="600"
+            fontSize="12"
+            fontWeight="700"
             style={{ fill: "#FFFFFF" }}
           >
             {multipleBirthLabel}
@@ -259,6 +270,10 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
             />
           )}
         </clipPath>
+        {/* Subtle shadow for the multiple birth badge to improve contrast */}
+        <filter id="badgeShadow" x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="0" dy="1" stdDeviation="1" floodOpacity="0.25" />
+        </filter>
       </defs>
     </g>
   );
