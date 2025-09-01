@@ -105,6 +105,8 @@ interface FamilyMember {
   "Spouses' Last Name": string;
   "Spouse UID": string;
   "Date of Birth": string;
+  "Life Status": string;
+  "Email Address": string;
 }
 
 interface ProcessedMember {
@@ -127,6 +129,8 @@ interface ProcessedMember {
   spouses_last_name: string;
   spouse_uid?: string;
   date_of_birth: string | null;
+  life_status: "Alive" | "Deceased";
+  email_address?: string;
 }
 
 // Family Chart data format
@@ -168,6 +172,17 @@ interface FailedRecord {
   originalRow: number;
 }
 
+interface AccountCreationResult {
+  familyMemberId: string;
+  firstName: string;
+  lastName: string;
+  email?: string;
+  status: "created" | "failed" | "skipped_deceased" | "skipped_invalid_email";
+  userId?: string;
+  password?: string;
+  error?: string;
+}
+
 // Color scheme for the 4 main lineages
 const LINEAGE_COLORS = {
   LAKETU: "#8B4513", // Brown for originator
@@ -192,6 +207,12 @@ const FamilyTreeUploadPage = () => {
     failed: number;
     errors: string[];
     failedRecords: FailedRecord[];
+    accountResults?: {
+      success: number;
+      failed: number;
+      skipped: number;
+      results: AccountCreationResult[];
+    };
   } | null>(null);
   const [existingData, setExistingData] = useState<ProcessedMember[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
@@ -239,6 +260,8 @@ const FamilyTreeUploadPage = () => {
     "Spouses' First Name",
     "Spouses' Last Name",
     "Date of Birth",
+    "Life Status",
+    "Email Address",
   ];
 
   const handleFileSelect = useCallback(
@@ -410,6 +433,30 @@ const FamilyTreeUploadPage = () => {
           message: "Gender must be Male, Female, Other, M, or F",
         });
       }
+
+      // Validate Life Status
+      if (
+        row["Life Status"] &&
+        !["Alive", "Deceased", "alive", "deceased"].includes(row["Life Status"])
+      ) {
+        errors.push({
+          row: index + 1,
+          field: "Life Status",
+          message: "Life Status must be 'Alive' or 'Deceased'",
+        });
+      }
+
+      // Validate Email Address format if provided
+      if (row["Email Address"] && row["Email Address"].trim()) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(row["Email Address"].trim())) {
+          errors.push({
+            row: index + 1,
+            field: "Email Address",
+            message: "Invalid email format",
+          });
+        }
+      }
     });
 
     return errors;
@@ -447,6 +494,10 @@ const FamilyTreeUploadPage = () => {
         row["Date of Birth"] && isValidDate(row["Date of Birth"])
           ? new Date(row["Date of Birth"]).toISOString().split("T")[0]
           : null,
+      life_status: (row["Life Status"]?.toLowerCase() === "deceased"
+        ? "Deceased"
+        : "Alive") as "Alive" | "Deceased",
+      email_address: row["Email Address"]?.trim() || undefined,
     }));
   };
 
@@ -464,11 +515,21 @@ const FamilyTreeUploadPage = () => {
     const errors: string[] = [];
     const failedRecords: FailedRecord[] = [];
 
+    // Account creation tracking
+    const accountResults: AccountCreationResult[] = [];
+    let accountsCreated = 0;
+    let accountsFailed = 0;
+    let accountsSkipped = 0;
+
     try {
+      // Phase 1: Upload family tree data
       const batchSize = 50;
+      const totalSteps = processedData.length;
+      let currentStep = 0;
+
       for (let i = 0; i < processedData.length; i += batchSize) {
         const batch = processedData.slice(i, i + batchSize);
-        setUploadProgress((i / processedData.length) * 100);
+        setUploadProgress((currentStep / totalSteps) * 50); // First 50% for family data upload
 
         const { data, error } = await supabase
           .from("family-tree")
@@ -490,21 +551,143 @@ const FamilyTreeUploadPage = () => {
         } else {
           successCount += batch.length;
         }
+
+        currentStep += batch.length;
       }
 
+      // Phase 2: Create accounts for eligible family members
+      if (successCount > 0) {
+        toast.info("Family data uploaded! Now creating accounts...");
+
+        // Filter members eligible for account creation
+        const eligibleMembers = processedData.filter(
+          (member) =>
+            member.life_status === "Alive" &&
+            member.email_address &&
+            member.email_address.trim() !== ""
+        );
+
+        console.log(
+          `Found ${eligibleMembers.length} eligible members for account creation`
+        );
+
+        for (let i = 0; i < eligibleMembers.length; i++) {
+          const member = eligibleMembers[i];
+          setUploadProgress(50 + (i / eligibleMembers.length) * 50); // Second 50% for account creation
+
+          try {
+            // Validate email format before attempting creation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(member.email_address!)) {
+              accountResults.push({
+                familyMemberId: member.unique_id,
+                firstName: member.first_name,
+                lastName: member.last_name,
+                email: member.email_address,
+                status: "skipped_invalid_email",
+              });
+              accountsSkipped++;
+              continue;
+            }
+
+            // Call the existing create-family-accounts API
+            const response = await fetch("/api/admin/create-family-accounts", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                familyMemberId: member.unique_id,
+                firstName: member.first_name,
+                lastName: member.last_name,
+                email: member.email_address,
+                phoneNumber: "", // Optional - can be added to family tree if needed
+                dateOfBirth: member.date_of_birth || undefined,
+              }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+              accountResults.push({
+                familyMemberId: member.unique_id,
+                firstName: member.first_name,
+                lastName: member.last_name,
+                email: member.email_address,
+                status: "created",
+                userId: result.userId,
+                password: result.password,
+              });
+              accountsCreated++;
+            } else {
+              accountResults.push({
+                familyMemberId: member.unique_id,
+                firstName: member.first_name,
+                lastName: member.last_name,
+                email: member.email_address,
+                status: "failed",
+                error: result.message || "Account creation failed",
+              });
+              accountsFailed++;
+            }
+          } catch (accountError) {
+            console.error(
+              `Error creating account for ${member.unique_id}:`,
+              accountError
+            );
+            accountResults.push({
+              familyMemberId: member.unique_id,
+              firstName: member.first_name,
+              lastName: member.last_name,
+              email: member.email_address,
+              status: "failed",
+              error:
+                accountError instanceof Error
+                  ? accountError.message
+                  : "Unknown error",
+            });
+            accountsFailed++;
+          }
+        }
+      }
+
+      // Set comprehensive results
       setUploadResults({
         success: successCount,
         failed: failedCount,
         errors,
         failedRecords,
+        accountResults: {
+          success: accountsCreated,
+          failed: accountsFailed,
+          skipped: accountsSkipped,
+          results: accountResults,
+        },
       });
 
+      // Show success messages
       if (successCount > 0) {
         toast.success(`Successfully uploaded ${successCount} family members`);
+
+        if (accountsCreated > 0) {
+          toast.success(`Created ${accountsCreated} user accounts`);
+        }
+
+        if (accountsSkipped > 0) {
+          toast.info(
+            `Skipped ${accountsSkipped} accounts (deceased members or invalid emails)`
+          );
+        }
+
+        if (accountsFailed > 0) {
+          toast.warning(`Failed to create ${accountsFailed} accounts`);
+        }
+
         refreshData();
       }
+
       if (failedCount > 0) {
-        toast.error(`Failed to upload ${failedCount} records`);
+        toast.error(`Failed to upload ${failedCount} family records`);
       }
     } catch (error) {
       console.error("Upload error:", error);
@@ -519,24 +702,24 @@ const FamilyTreeUploadPage = () => {
   const downloadTemplate = () => {
     const templateHeader = requiredColumns.join(",");
     const sampleData = [
-      '"https://example.com/laketu.jpg","LAKETU","Male","LAKETU","MOSURO","","","","","0","0","Single","","","1850-01-01"',
-      '"https://example.com/egundebi.jpg","EGUNDEBI","Male","EGUNDEBI","MOSURO","LAKETU","MOSURO","","","1","1","Married","ABIKE","ADEBAYO","1875-03-15"',
-      '"https://example.com/abike.jpg","S001","Female","ABIKE","ADEBAYO","","","","","0","0","Married","EGUNDEBI","MOSURO","1878-06-20"',
-      '"https://example.com/adelaja.jpg","D001","Male","ADELAJA","MOSURO","EGUNDEBI","MOSURO","ABIKE","ADEBAYO","1","1","Married","FOLAKE","OGUNDIMU","1900-01-10"',
-      '"https://example.com/adunni.jpg","D002","Female","ADUNNI","MOSURO","EGUNDEBI","MOSURO","ABIKE","ADEBAYO","2","0","Married","BABATUNDE","OGUNDIMU","1902-05-18"',
-      '"https://example.com/adebayo.jpg","D003","Male","ADEBAYO","MOSURO","EGUNDEBI","MOSURO","ABIKE","ADEBAYO","3","1","Married","KEMI","ADEYEMI","1904-08-25"',
-      '"https://example.com/aduke.jpg","D004","Female","ADUKE","MOSURO","EGUNDEBI","MOSURO","ABIKE","ADEBAYO","4","0","Married","TAIWO","ADEYEMI","1906-12-30"',
-      '"https://example.com/folake.jpg","S002","Female","FOLAKE","OGUNDIMU","","","","","0","0","Married","ADELAJA","MOSURO","1903-02-14"',
-      '"https://example.com/babatunde.jpg","S003","Male","BABATUNDE","OGUNDIMU","","","","","0","0","Married","ADUNNI","MOSURO","1899-09-12"',
-      '"https://example.com/kemi.jpg","S004","Female","KEMI","ADEYEMI","","","","","0","0","Married","ADEBAYO","MOSURO","1907-04-03"',
-      '"https://example.com/taiwo.jpg","S005","Male","TAIWO","ADEYEMI","","","","","0","0","Married","ADUKE","MOSURO","1905-11-22"',
-      '"https://example.com/adeola.jpg","D005","Male","ADEOLA","MOSURO","ADELAJA","MOSURO","FOLAKE","OGUNDIMU","1","1","Single","","","1925-07-08"',
-      '"https://example.com/adebisi.jpg","D006","Female","ADEBISI","MOSURO","ADELAJA","MOSURO","FOLAKE","OGUNDIMU","2","0","Single","","","1927-11-15"',
-      '"https://example.com/kehinde.jpg","D007","Male","KEHINDE","OGUNDIMU","BABATUNDE","OGUNDIMU","ADUNNI","MOSURO","1","1","Single","","","1930-03-20"',
-      '"https://example.com/taiye.jpg","D008","Male","TAIYE","OGUNDIMU","BABATUNDE","OGUNDIMU","ADUNNI","MOSURO","1","1","Single","","","1930-03-20"',
-      '"https://example.com/adebayo_child1.jpg","D009","Male","ADEBAYO_JR","MOSURO","ADEBAYO","MOSURO","KEMI","ADEYEMI","1","1","Single","","","1932-01-12"',
-      '"https://example.com/second_wife.jpg","S006","Female","FUNMI","ADEYEMI","","","","","0","2","Married","ADEBAYO","MOSURO","1910-08-17"',
-      '"https://example.com/adebayo_child2.jpg","D010","Female","FUNMILAYO","MOSURO","ADEBAYO","MOSURO","FUNMI","ADEYEMI","1","0","Single","","","1935-06-05"',
+      '"https://example.com/laketu.jpg","LAKETU","Male","LAKETU","MOSURO","","","","","0","0","Single","","","1850-01-01","Deceased",""',
+      '"https://example.com/egundebi.jpg","EGUNDEBI","Male","EGUNDEBI","MOSURO","LAKETU","MOSURO","","","1","1","Married","ABIKE","ADEBAYO","1875-03-15","Deceased",""',
+      '"https://example.com/abike.jpg","S001","Female","ABIKE","ADEBAYO","","","","","0","0","Married","EGUNDEBI","MOSURO","1878-06-20","Deceased",""',
+      '"https://example.com/adelaja.jpg","D001","Male","ADELAJA","MOSURO","EGUNDEBI","MOSURO","ABIKE","ADEBAYO","1","1","Married","FOLAKE","OGUNDIMU","1900-01-10","Deceased",""',
+      '"https://example.com/adunni.jpg","D002","Female","ADUNNI","MOSURO","EGUNDEBI","MOSURO","ABIKE","ADEBAYO","2","0","Married","BABATUNDE","OGUNDIMU","1902-05-18","Deceased",""',
+      '"https://example.com/adebayo.jpg","D003","Male","ADEBAYO","MOSURO","EGUNDEBI","MOSURO","ABIKE","ADEBAYO","3","1","Married","KEMI","ADEYEMI","1904-08-25","Deceased",""',
+      '"https://example.com/aduke.jpg","D004","Female","ADUKE","MOSURO","EGUNDEBI","MOSURO","ABIKE","ADEBAYO","4","0","Married","TAIWO","ADEYEMI","1906-12-30","Deceased",""',
+      '"https://example.com/folake.jpg","S002","Female","FOLAKE","OGUNDIMU","","","","","0","0","Married","ADELAJA","MOSURO","1903-02-14","Deceased",""',
+      '"https://example.com/babatunde.jpg","S003","Male","BABATUNDE","OGUNDIMU","","","","","0","0","Married","ADUNNI","MOSURO","1899-09-12","Deceased",""',
+      '"https://example.com/kemi.jpg","S004","Female","KEMI","ADEYEMI","","","","","0","0","Married","ADEBAYO","MOSURO","1907-04-03","Deceased",""',
+      '"https://example.com/taiwo.jpg","S005","Male","TAIWO","ADEYEMI","","","","","0","0","Married","ADUKE","MOSURO","1905-11-22","Deceased",""',
+      '"https://example.com/adeola.jpg","D005","Male","ADEOLA","MOSURO","ADELAJA","MOSURO","FOLAKE","OGUNDIMU","1","1","Single","","","1925-07-08","Alive","adeola.mosuro@example.com"',
+      '"https://example.com/adebisi.jpg","D006","Female","ADEBISI","MOSURO","ADELAJA","MOSURO","FOLAKE","OGUNDIMU","2","0","Single","","","1927-11-15","Alive","adebisi.mosuro@example.com"',
+      '"https://example.com/kehinde.jpg","D007","Male","KEHINDE","OGUNDIMU","BABATUNDE","OGUNDIMU","ADUNNI","MOSURO","1","1","Single","","","1930-03-20","Alive","kehinde.ogundimu@example.com"',
+      '"https://example.com/taiye.jpg","D008","Male","TAIYE","OGUNDIMU","BABATUNDE","OGUNDIMU","ADUNNI","MOSURO","1","1","Single","","","1930-03-20","Alive","taiye.ogundimu@example.com"',
+      '"https://example.com/adebayo_child1.jpg","D009","Male","ADEBAYO_JR","MOSURO","ADEBAYO","MOSURO","KEMI","ADEYEMI","1","1","Single","","","1932-01-12","Alive","adebayo.jr@example.com"',
+      '"https://example.com/second_wife.jpg","S006","Female","FUNMI","ADEYEMI","","","","","0","2","Married","ADEBAYO","MOSURO","1910-08-17","Deceased",""',
+      '"https://example.com/adebayo_child2.jpg","D010","Female","FUNMILAYO","MOSURO","ADEBAYO","MOSURO","FUNMI","ADEYEMI","1","0","Single","","","1935-06-05","Alive","funmilayo.mosuro@example.com"',
     ];
 
     const csvContent = templateHeader + "\n" + sampleData.join("\n");
@@ -2459,6 +2642,12 @@ const FamilyTreeUploadPage = () => {
                         <TableHead className="min-w-[120px]">
                           Spouse UID
                         </TableHead>
+                        <TableHead className="min-w-[120px]">
+                          Life Status
+                        </TableHead>
+                        <TableHead className="min-w-[200px]">
+                          Email Address
+                        </TableHead>
                         <TableHead className="min-w-[200px]">
                           Picture Link
                         </TableHead>
@@ -2510,6 +2699,30 @@ const FamilyTreeUploadPage = () => {
                           <TableCell>{member.spouses_first_name}</TableCell>
                           <TableCell>{member.spouses_last_name}</TableCell>
                           <TableCell>{member.spouse_uid || ""}</TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                member.life_status === "Alive"
+                                  ? "default"
+                                  : "secondary"
+                              }
+                            >
+                              {member.life_status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {member.email_address && (
+                              <div className="space-y-1">
+                                <div className="text-blue-600 hover:text-blue-800 truncate">
+                                  {member.email_address}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {/* Add account status indicator if needed */}
+                                  Account Status: Active
+                                </div>
+                              </div>
+                            )}
+                          </TableCell>
                           <TableCell>
                             {member.picture_link && (
                               <a
@@ -2828,6 +3041,8 @@ const FamilyTreeUploadPage = () => {
                       <TableHead>Mother UID</TableHead>
                       <TableHead>Spouse</TableHead>
                       <TableHead>Spouse UID</TableHead>
+                      <TableHead>Life Status</TableHead>
+                      <TableHead>Email Address</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -2856,6 +3071,24 @@ const FamilyTreeUploadPage = () => {
                           {member["Spouses' Last Name"]}
                         </TableCell>
                         <TableCell>{member["Spouse UID"] || ""}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              member["Life Status"]?.toLowerCase() === "alive"
+                                ? "default"
+                                : "secondary"
+                            }
+                          >
+                            {member["Life Status"] || "Alive"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {member["Email Address"] && (
+                            <span className="text-blue-600">
+                              {member["Email Address"]}
+                            </span>
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -2891,16 +3124,140 @@ const FamilyTreeUploadPage = () => {
                   {uploadResults.success}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Successfully Uploaded
+                  Family Members Uploaded
                 </div>
               </div>
               <div className="p-4 border rounded-lg text-center">
                 <div className="text-2xl font-bold text-red-600">
                   {uploadResults.failed}
                 </div>
-                <div className="text-sm text-muted-foreground">Failed</div>
+                <div className="text-sm text-muted-foreground">
+                  Upload Failed
+                </div>
               </div>
             </div>
+
+            {/* Account Creation Results */}
+            {uploadResults.accountResults && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-blue-600">
+                  Account Creation Results
+                </h3>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="p-4 border rounded-lg text-center">
+                    <div className="text-2xl font-bold text-green-600">
+                      {uploadResults.accountResults.success}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Accounts Created
+                    </div>
+                  </div>
+                  <div className="p-4 border rounded-lg text-center">
+                    <div className="text-2xl font-bold text-yellow-600">
+                      {uploadResults.accountResults.skipped}
+                    </div>
+                    <div className="text-sm text-muted-foreground">Skipped</div>
+                  </div>
+                  <div className="p-4 border rounded-lg text-center">
+                    <div className="text-2xl font-bold text-red-600">
+                      {uploadResults.accountResults.failed}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Account Creation Failed
+                    </div>
+                  </div>
+                </div>
+
+                {/* Account Creation Details */}
+                {uploadResults.accountResults.results.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Account Creation Details:</h4>
+                    <div className="border rounded-lg overflow-hidden">
+                      <div className="max-h-96 overflow-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Family Member ID</TableHead>
+                              <TableHead>Name</TableHead>
+                              <TableHead>Email</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead>Details</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {uploadResults.accountResults.results.map(
+                              (result, index) => (
+                                <TableRow key={index}>
+                                  <TableCell className="font-medium">
+                                    {result.familyMemberId}
+                                  </TableCell>
+                                  <TableCell>
+                                    {result.firstName} {result.lastName}
+                                  </TableCell>
+                                  <TableCell>
+                                    {result.email || "No email"}
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge
+                                      variant={
+                                        result.status === "created"
+                                          ? "default"
+                                          : result.status === "failed"
+                                          ? "destructive"
+                                          : "secondary"
+                                      }
+                                    >
+                                      {result.status === "created"
+                                        ? "Account Created"
+                                        : result.status === "failed"
+                                        ? "Failed"
+                                        : result.status === "skipped_deceased"
+                                        ? "Skipped (Deceased)"
+                                        : result.status ===
+                                          "skipped_invalid_email"
+                                        ? "Skipped (Invalid Email)"
+                                        : result.status}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell className="text-sm">
+                                    {result.status === "created" &&
+                                      result.password && (
+                                        <div className="space-y-1">
+                                          <div>User ID: {result.userId}</div>
+                                          <div className="font-mono text-xs bg-gray-100 p-1 rounded">
+                                            Password: {result.password}
+                                          </div>
+                                        </div>
+                                      )}
+                                    {result.status === "failed" &&
+                                      result.error && (
+                                        <span className="text-red-600">
+                                          {result.error}
+                                        </span>
+                                      )}
+                                    {result.status === "skipped_deceased" && (
+                                      <span className="text-gray-600">
+                                        Member is deceased
+                                      </span>
+                                    )}
+                                    {result.status ===
+                                      "skipped_invalid_email" && (
+                                      <span className="text-yellow-600">
+                                        Invalid email format
+                                      </span>
+                                    )}
+                                  </TableCell>
+                                </TableRow>
+                              )
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {uploadResults.errors.length > 0 && (
               <div className="space-y-2">

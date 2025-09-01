@@ -86,7 +86,7 @@ export const navLinksTopSection: NavLink[] = [
   //   icon: Hourglass,
   // },
   {
-    label: "Family Tree",
+    label: "Family Tree Upload",
     href: "/admin/family-tree",
     icon: TreesIcon,
   },

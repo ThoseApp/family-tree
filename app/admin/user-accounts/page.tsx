@@ -43,6 +43,7 @@ import { processedMemberToFamilyMember } from "@/lib/utils/family-tree-helpers";
 interface UserAccountWithFamily extends UserProfile {
   hasAccount: boolean;
   accountCreatedAt?: string;
+  life_status?: "Alive" | "Deceased";
 }
 
 const UserAccountsPage = () => {
@@ -98,6 +99,7 @@ const UserAccountsPage = () => {
             ...profile,
             hasAccount: true,
             accountCreatedAt: profile.created_at,
+            life_status: familyMember.life_status || "Alive",
           });
         }
       });
@@ -114,7 +116,7 @@ const UserAccountsPage = () => {
             user_id: "",
             first_name: familyMember.first_name,
             last_name: familyMember.last_name,
-            email: "",
+            email: familyMember.email_address || "",
             phone_number: "",
             relative: "",
             relationship_to_relative: "",
@@ -126,6 +128,7 @@ const UserAccountsPage = () => {
             created_at: "",
             updated_at: "",
             hasAccount: false,
+            life_status: familyMember.life_status || "Alive",
           });
         }
       });
@@ -158,6 +161,13 @@ const UserAccountsPage = () => {
   const totalFamilyMembers = familyMembers.length;
   const membersWithAccounts = familyMembers.filter((m) => m.hasAccount).length;
   const membersWithoutAccounts = totalFamilyMembers - membersWithAccounts;
+  const aliveMembers = familyMembers.filter(
+    (m) => m.life_status === "Alive"
+  ).length;
+  const deceasedMembers = totalFamilyMembers - aliveMembers;
+  const eligibleForAccounts = familyMembers.filter(
+    (m) => !m.hasAccount && m.life_status === "Alive"
+  ).length;
 
   const getAccountStatusBadge = (member: UserAccountWithFamily) => {
     if (!member.hasAccount) {
@@ -179,6 +189,14 @@ const UserAccountsPage = () => {
 
   // Handle creating user account for family member
   const handleCreateAccount = (member: UserAccountWithFamily) => {
+    // Check if member is deceased
+    if (member.life_status === "Deceased") {
+      toast.error("Cannot create account for deceased family member", {
+        description: `${member.first_name} ${member.last_name} is marked as deceased.`,
+      });
+      return;
+    }
+
     // Convert UserAccountWithFamily to FamilyMember format for the modal
     const familyMember: FamilyMember = {
       id: member.family_tree_uid || member.id,
@@ -187,6 +205,8 @@ const UserAccountsPage = () => {
       description: "Family member",
       imageSrc: member.image || "",
       birthDate: member.date_of_birth || "",
+      lifeStatus: member.life_status || "Alive",
+      emailAddress: member.email || "",
     };
 
     setCreatingAccountFor(familyMember);
@@ -233,11 +253,11 @@ const UserAccountsPage = () => {
           <Button
             variant="outline"
             onClick={() => setIsBulkCreateModalOpen(true)}
-            disabled={membersWithoutAccounts === 0}
+            disabled={eligibleForAccounts === 0}
             className="flex items-center gap-2"
           >
             <Users className="h-4 w-4" />
-            Bulk Create ({membersWithoutAccounts})
+            Bulk Create ({eligibleForAccounts})
           </Button>
           <Button
             variant="outline"
@@ -251,7 +271,7 @@ const UserAccountsPage = () => {
       </div>
 
       {/* STATISTICS CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -260,6 +280,9 @@ const UserAccountsPage = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalFamilyMembers}</div>
+            <div className="text-xs text-muted-foreground mt-1">
+              {aliveMembers} alive, {deceasedMembers} deceased
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -272,17 +295,38 @@ const UserAccountsPage = () => {
             <div className="text-2xl font-bold text-green-600">
               {membersWithAccounts}
             </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Active user accounts
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Without Accounts
+              Eligible for Accounts
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
-              {membersWithoutAccounts}
+            <div className="text-2xl font-bold text-blue-600">
+              {eligibleForAccounts}
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Alive members without accounts
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Deceased Members
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-gray-600">
+              {deceasedMembers}
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Cannot create accounts
             </div>
           </CardContent>
         </Card>
@@ -330,6 +374,7 @@ const UserAccountsPage = () => {
                   <TableRow>
                     <TableHead>Member</TableHead>
                     <TableHead>Unique ID</TableHead>
+                    <TableHead>Life Status</TableHead>
                     <TableHead>Account Status</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Account Created</TableHead>
@@ -362,6 +407,17 @@ const UserAccountsPage = () => {
                           {member.family_tree_uid}
                         </code>
                       </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            member.life_status === "Alive"
+                              ? "default"
+                              : "secondary"
+                          }
+                        >
+                          {member.life_status || "Alive"}
+                        </Badge>
+                      </TableCell>
                       <TableCell>{getAccountStatusBadge(member)}</TableCell>
                       <TableCell>
                         {member.hasAccount ? (
@@ -385,6 +441,15 @@ const UserAccountsPage = () => {
                           <span className="text-sm text-green-600">
                             Account exists
                           </span>
+                        ) : member.life_status === "Deceased" ? (
+                          <div className="flex flex-col items-start">
+                            <Badge variant="secondary" className="text-xs">
+                              Deceased
+                            </Badge>
+                            <span className="text-xs text-muted-foreground mt-1">
+                              Cannot create account
+                            </span>
+                          </div>
                         ) : (
                           <Button
                             variant="outline"
@@ -457,7 +522,7 @@ const UserAccountsPage = () => {
         isOpen={isBulkCreateModalOpen}
         onClose={() => setIsBulkCreateModalOpen(false)}
         familyMembersWithoutAccounts={familyMembers.filter(
-          (member) => !member.hasAccount
+          (member) => !member.hasAccount && member.life_status === "Alive"
         )}
         onSuccess={handleCreateAccountSuccess}
       />
