@@ -194,7 +194,7 @@ async function sendInvitationEmail(
         <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #2563eb;">
           <p style="margin: 0 0 10px 0;"><strong>Email:</strong> ${credentials.email}</p>
           <p style="margin: 0 0 10px 0;"><strong>Password:</strong> ${credentials.password}</p>
-          <p style="margin: 0;"><strong>Family ID:</strong> ${credentials.familyMemberId}</p>
+          <p style="margin: 0;"><strong>Unique ID:</strong> ${credentials.familyMemberId}</p>
         </div>
         
         <p style="margin-top: 30px;">Yours,</p>

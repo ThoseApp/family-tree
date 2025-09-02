@@ -6,13 +6,15 @@ import { DataTable } from "@/components/ui/data-table";
 interface FamilyMemberRequestsTableProps {
   data: FamilyMemberRequest[];
   onRefresh?: () => void;
+  onViewDetails?: (request: FamilyMemberRequest) => void;
 }
 
 const FamilyMemberRequestsTable = ({
   data,
   onRefresh,
+  onViewDetails,
 }: FamilyMemberRequestsTableProps) => {
-  const columns = createColumns(onRefresh);
+  const columns = createColumns(onRefresh, onViewDetails);
 
   return <DataTable columns={columns} data={data} />;
 };

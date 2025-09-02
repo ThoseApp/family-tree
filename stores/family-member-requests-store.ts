@@ -23,7 +23,7 @@ export const useFamilyMemberRequestsStore = create<FamilyMemberRequestsState>(
         const { data, error } = await supabase
           .from("family_member_requests")
           .select("*")
-          .eq("status", "pending")
+          // .eq("status", "pending")
           .order("created_at", { ascending: false });
 
         if (error) throw error;
