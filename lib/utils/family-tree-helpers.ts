@@ -90,6 +90,8 @@ export function familyMemberToProcessedMember(
       familyMember.birthDate && familyMember.birthDate.trim() !== ""
         ? familyMember.birthDate
         : null,
+    life_status: familyMember.lifeStatus || "Alive",
+    email_address: familyMember.emailAddress || undefined,
   };
 }
 

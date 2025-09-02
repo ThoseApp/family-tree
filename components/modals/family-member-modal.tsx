@@ -36,6 +36,8 @@ import { toast } from "sonner";
 import { uploadImage } from "@/lib/file-upload";
 import { BucketFolderEnum } from "@/lib/constants/enums";
 import { EnhancedCalendar } from "../ui/enhanced-calendar";
+import { useFamilyMemberDropdowns } from "@/hooks/use-family-member-dropdowns";
+import { generateUniqueId } from "@/lib/utils/unique-id-generator";
 
 interface FamilyMemberModalProps {
   isOpen: boolean;
@@ -89,11 +91,32 @@ export const FamilyMemberModal = ({
     gender: "",
     orderOfBirth: 1,
     orderOfMarriage: 1,
+    lifeStatus: "Alive",
+    emailAddress: "",
+    fathers_uid: undefined,
+    mothers_uid: undefined,
+    spouse_uid: undefined,
   });
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
   const [imageUploading, setImageUploading] = useState(false);
+
+  // Family member dropdown data
+  const {
+    isLoading: dropdownsLoading,
+    error: dropdownsError,
+    allMembers,
+    fatherOptions,
+    motherOptions,
+    spouseOptions,
+    getMotherOptionsForFather,
+    getFirstHusbandForMother,
+  } = useFamilyMemberDropdowns();
+
+  // Selected relationship state for conditional dropdowns
+  const [selectedFatherId, setSelectedFatherId] = useState<string>("");
+  const [selectedMotherId, setSelectedMotherId] = useState<string>("");
 
   // Reset form function
   const resetForm = () => {
@@ -108,10 +131,17 @@ export const FamilyMemberModal = ({
       orderOfBirth: 1,
       spouseName: "",
       orderOfMarriage: 1,
+      lifeStatus: "Alive",
+      emailAddress: "",
+      fathers_uid: undefined,
+      mothers_uid: undefined,
+      spouse_uid: undefined,
     });
     setSelectedDate(undefined);
     setSelectedImage(null);
     setImagePreview("");
+    setSelectedFatherId("");
+    setSelectedMotherId("");
   };
 
   // Initialize form data when modal opens or editData changes
@@ -130,6 +160,11 @@ export const FamilyMemberModal = ({
         orderOfBirth: editData.orderOfBirth || 1,
         spouseName: editData.spouseName || "",
         orderOfMarriage: editData.orderOfMarriage || 1,
+        lifeStatus: editData.lifeStatus || "Alive",
+        emailAddress: editData.emailAddress || "",
+        fathers_uid: editData.fathers_uid || undefined,
+        mothers_uid: editData.mothers_uid || undefined,
+        spouse_uid: editData.spouse_uid || undefined,
       });
 
       // Set image preview only if it's not a default image
@@ -139,11 +174,29 @@ export const FamilyMemberModal = ({
 
       // Set date only if it's valid
       setSelectedDate(parsedDate);
+
+      // For edit mode, try to find and set the relationship IDs
+      // This will be used for the conditional dropdowns
+      if (editData.fatherName && allMembers.length > 0) {
+        const father = allMembers.find(
+          (member) =>
+            `${member.first_name} ${member.last_name}` === editData.fatherName
+        );
+        if (father) setSelectedFatherId(father.unique_id);
+      }
+
+      if (editData.motherName && allMembers.length > 0) {
+        const mother = allMembers.find(
+          (member) =>
+            `${member.first_name} ${member.last_name}` === editData.motherName
+        );
+        if (mother) setSelectedMotherId(mother.unique_id);
+      }
     } else {
       // Reset form for add mode
       resetForm();
     }
-  }, [editData, mode, isOpen]);
+  }, [editData, mode, isOpen, allMembers]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -162,6 +215,81 @@ export const FamilyMemberModal = ({
     setFormData((prev) => ({
       ...prev,
       [name]: value,
+    }));
+  };
+
+  // Handle father selection with conditional mother dropdown
+  const handleFatherSelect = (fatherId: string) => {
+    const actualFatherId = fatherId === "none" ? "" : fatherId;
+    setSelectedFatherId(actualFatherId);
+
+    // Find the selected father to get the name
+    const father = actualFatherId
+      ? allMembers.find((member) => member.unique_id === actualFatherId)
+      : null;
+    const fatherName = father ? `${father.first_name} ${father.last_name}` : "";
+
+    setFormData((prev) => ({
+      ...prev,
+      fatherName,
+      fathers_uid: actualFatherId || undefined,
+      // Clear mother selection when father changes
+      motherName: "",
+      mothers_uid: undefined,
+    }));
+
+    // Reset mother selection
+    setSelectedMotherId("");
+  };
+
+  // Handle mother selection with auto father selection
+  const handleMotherSelect = (motherId: string) => {
+    const actualMotherId = motherId === "none" ? "" : motherId;
+    setSelectedMotherId(actualMotherId);
+
+    // Find the selected mother to get the name
+    const mother = actualMotherId
+      ? allMembers.find((member) => member.unique_id === actualMotherId)
+      : null;
+    const motherName = mother ? `${mother.first_name} ${mother.last_name}` : "";
+
+    setFormData((prev) => ({
+      ...prev,
+      motherName,
+      mothers_uid: actualMotherId || undefined,
+    }));
+
+    // If no father is selected and mother has a husband, auto-select the first husband
+    if (!selectedFatherId && actualMotherId) {
+      const firstHusband = getFirstHusbandForMother(actualMotherId);
+      if (firstHusband) {
+        const husband = allMembers.find(
+          (member) => member.unique_id === firstHusband
+        );
+        if (husband) {
+          setSelectedFatherId(firstHusband);
+          setFormData((prev) => ({
+            ...prev,
+            fatherName: `${husband.first_name} ${husband.last_name}`,
+            fathers_uid: firstHusband,
+          }));
+        }
+      }
+    }
+  };
+
+  // Handle spouse selection (only for males)
+  const handleSpouseSelect = (spouseId: string) => {
+    const actualSpouseId = spouseId === "none" ? "" : spouseId;
+    const spouse = actualSpouseId
+      ? allMembers.find((member) => member.unique_id === actualSpouseId)
+      : null;
+    const spouseName = spouse ? `${spouse.first_name} ${spouse.last_name}` : "";
+
+    setFormData((prev) => ({
+      ...prev,
+      spouseName,
+      spouse_uid: actualSpouseId || undefined,
     }));
   };
 
@@ -240,6 +368,24 @@ export const FamilyMemberModal = ({
       return;
     }
 
+    // Validate that at least one parent is selected (not required for females)
+    const hasFather = (formData.fatherName || "").trim() !== "";
+    const hasMother = (formData.motherName || "").trim() !== "";
+
+    if (!hasFather && !hasMother && formData.gender !== "Female") {
+      toast.error(
+        "At least one parent (Father or Mother) is required for male members"
+      );
+      return;
+    }
+
+    // Validate email format if provided
+    const email = (formData.emailAddress || "").trim();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
     // Validate order values with proper fallbacks
     const orderOfBirth = formData.orderOfBirth ?? 1;
     const orderOfMarriage = formData.orderOfMarriage ?? 1;
@@ -255,6 +401,12 @@ export const FamilyMemberModal = ({
     }
 
     try {
+      // Generate unique ID for new members
+      let uniqueId = formData.unique_id;
+      if (mode === "add" && allMembers.length > 0) {
+        uniqueId = generateUniqueId(formData.gender || "Male", allMembers);
+      }
+
       // Clean up form data before sending with proper null handling
       const cleanedData = {
         ...formData,
@@ -266,6 +418,9 @@ export const FamilyMemberModal = ({
         gender: formData.gender || undefined,
         orderOfBirth,
         orderOfMarriage,
+        lifeStatus: formData.lifeStatus || "Alive",
+        emailAddress: email || undefined,
+        unique_id: uniqueId,
         // Ensure imageSrc is either a valid string or empty string
         imageSrc: formData.imageSrc || "",
       };
@@ -378,7 +533,7 @@ export const FamilyMemberModal = ({
                 placeholder="Enter full name"
                 value={formData.name}
                 onChange={handleInputChange}
-                disabled={isLoading}
+                disabled={isLoading || dropdownsLoading}
                 required
                 maxLength={100}
               />
@@ -391,11 +546,11 @@ export const FamilyMemberModal = ({
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="gender">Gender</Label>
+              <Label htmlFor="gender">Gender *</Label>
               <Select
                 value={formData.gender}
                 onValueChange={(value) => handleSelectChange("gender", value)}
-                disabled={isLoading}
+                disabled={isLoading || dropdownsLoading}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select gender" />
@@ -406,6 +561,50 @@ export const FamilyMemberModal = ({
                   <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          {/* Life Status and Email */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="lifeStatus">Life Status</Label>
+              <Select
+                value={formData.lifeStatus}
+                onValueChange={(value) =>
+                  handleSelectChange(
+                    "lifeStatus",
+                    value as "Alive" | "Deceased"
+                  )
+                }
+                disabled={isLoading || dropdownsLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select life status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Alive">Alive</SelectItem>
+                  <SelectItem value="Deceased">Deceased</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="emailAddress">Email Address</Label>
+              <Input
+                id="emailAddress"
+                name="emailAddress"
+                type="email"
+                placeholder="Enter email address (optional)"
+                value={formData.emailAddress}
+                onChange={handleInputChange}
+                disabled={isLoading || dropdownsLoading}
+                maxLength={255}
+              />
+              {formData.emailAddress && formData.emailAddress.length > 240 && (
+                <p className="text-xs text-orange-600">
+                  Email address is getting long.
+                </p>
+              )}
             </div>
           </div>
 
@@ -454,41 +653,84 @@ export const FamilyMemberModal = ({
             </Popover>
           </div>
 
-          {/* Parents */}
+          {/* Parents - At least one is required for males */}
+          <div className="grid gap-2">
+            <div className="flex items-center gap-2">
+              <Label className="text-sm font-medium">
+                Parents {formData.gender !== "Female" ? "*" : ""}
+              </Label>
+              <span className="text-xs text-muted-foreground">
+                {formData.gender === "Female"
+                  ? "(Optional for female members)"
+                  : "(At least one parent is required for male members)"}
+              </span>
+            </div>
+
+            {dropdownsError && (
+              <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded p-2">
+                Failed to load family members: {dropdownsError}
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label htmlFor="fatherName">Father&apos;s Name</Label>
-              <Input
-                id="fatherName"
-                name="fatherName"
-                placeholder="Enter father's name"
-                value={formData.fatherName}
-                onChange={handleInputChange}
-                disabled={isLoading}
-                maxLength={100}
-              />
-              {(formData.fatherName?.length || 0) > 90 && (
-                <p className="text-xs text-orange-600">
-                  Name is getting long and may be truncated.
-                </p>
+              {dropdownsLoading ? (
+                <div className="flex items-center justify-center h-10 border rounded">
+                  <LoadingIcon className="h-4 w-4" />
+                  <span className="ml-2 text-sm">Loading fathers...</span>
+                </div>
+              ) : (
+                <Select
+                  value={selectedFatherId || "none"}
+                  onValueChange={handleFatherSelect}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select father" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No Father</SelectItem>
+                    {fatherOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               )}
             </div>
 
             <div className="grid gap-2">
               <Label htmlFor="motherName">Mother&apos;s Name</Label>
-              <Input
-                id="motherName"
-                name="motherName"
-                placeholder="Enter mother's name"
-                value={formData.motherName}
-                onChange={handleInputChange}
-                disabled={isLoading}
-                maxLength={100}
-              />
-              {(formData.motherName?.length || 0) > 90 && (
-                <p className="text-xs text-orange-600">
-                  Name is getting long and may be truncated.
-                </p>
+              {dropdownsLoading ? (
+                <div className="flex items-center justify-center h-10 border rounded">
+                  <LoadingIcon className="h-4 w-4" />
+                  <span className="ml-2 text-sm">Loading mothers...</span>
+                </div>
+              ) : (
+                <Select
+                  value={selectedMotherId || "none"}
+                  onValueChange={handleMotherSelect}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select mother" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No Mother</SelectItem>
+                    {/* Show conditional mothers based on father selection */}
+                    {(selectedFatherId
+                      ? getMotherOptionsForFather(selectedFatherId)
+                      : motherOptions
+                    ).map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               )}
             </div>
           </div>
@@ -506,24 +748,58 @@ export const FamilyMemberModal = ({
                 placeholder="1"
                 value={formData.orderOfBirth}
                 onChange={handleInputChange}
-                disabled={isLoading}
+                disabled={isLoading || dropdownsLoading}
               />
             </div>
 
             <div className="grid gap-2">
               <Label htmlFor="spouseName">Spouse Name</Label>
-              <Input
-                id="spouseName"
-                name="spouseName"
-                placeholder="Enter spouse name"
-                value={formData.spouseName}
-                onChange={handleInputChange}
-                disabled={isLoading}
-                maxLength={100}
-              />
-              {(formData.spouseName?.length || 0) > 90 && (
-                <p className="text-xs text-orange-600">
-                  Name is getting long and may be truncated.
+              {formData.gender === "Male" ? (
+                dropdownsLoading ? (
+                  <div className="flex items-center justify-center h-10 border rounded">
+                    <LoadingIcon className="h-4 w-4" />
+                    <span className="ml-2 text-sm">Loading...</span>
+                  </div>
+                ) : (
+                  <Select
+                    value={
+                      formData.spouseName?.trim()
+                        ? spouseOptions.find((option) =>
+                            option.label.includes(
+                              formData.spouseName?.split(" (")[0] || ""
+                            )
+                          )?.value || "none"
+                        : "none"
+                    }
+                    onValueChange={handleSpouseSelect}
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select spouse" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No Spouse</SelectItem>
+                      {spouseOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )
+              ) : (
+                <Input
+                  id="spouseName"
+                  name="spouseName"
+                  placeholder="Spouse selection only for males"
+                  value={formData.spouseName}
+                  disabled={true}
+                  className="bg-gray-50 text-gray-500"
+                />
+              )}
+              {formData.gender !== "Male" && (
+                <p className="text-xs text-muted-foreground">
+                  Spouse selection is only available for male family members
                 </p>
               )}
             </div>
@@ -539,7 +815,7 @@ export const FamilyMemberModal = ({
                 placeholder="1"
                 value={formData.orderOfMarriage}
                 onChange={handleInputChange}
-                disabled={isLoading}
+                disabled={isLoading || dropdownsLoading}
               />
             </div>
           </div>
@@ -575,12 +851,24 @@ export const FamilyMemberModal = ({
           </Button>
           <Button
             onClick={handleConfirm}
-            disabled={isLoading || imageUploading || !formData.name.trim()}
+            disabled={
+              isLoading ||
+              imageUploading ||
+              dropdownsLoading ||
+              !formData.name.trim() ||
+              (formData.gender !== "Female" &&
+                !formData.fatherName?.trim() &&
+                !formData.motherName?.trim())
+            }
             className="bg-foreground text-background rounded-full hover:bg-foreground/80"
           >
-            {(isLoading || imageUploading) && <LoadingIcon className="mr-2" />}
+            {(isLoading || imageUploading || dropdownsLoading) && (
+              <LoadingIcon className="mr-2" />
+            )}
             {imageUploading
               ? "Uploading Image..."
+              : dropdownsLoading
+              ? "Loading Family Data..."
               : mode === "add"
               ? "Add Family Member"
               : "Update Family Member"}
