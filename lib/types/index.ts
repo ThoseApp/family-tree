@@ -82,9 +82,14 @@ export interface FamilyMember {
   birthDate: string;
   fatherName?: string;
   motherName?: string;
+  fathers_uid?: string;
+  mothers_uid?: string;
   orderOfBirth?: number;
   spouseName?: string;
+  spouse_uid?: string;
   orderOfMarriage?: number;
+  lifeStatus?: "Alive" | "Deceased";
+  emailAddress?: string;
 }
 
 // Database family member structure from family-tree table
@@ -108,6 +113,8 @@ export interface ProcessedMember {
   spouses_last_name: string;
   spouse_uid?: string;
   date_of_birth: string | null;
+  life_status: "Alive" | "Deceased";
+  email_address?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -334,6 +341,33 @@ export interface BulkAccountCreationResult {
   errors: string[];
 }
 
+// Family Tree Upload with Account Creation Types
+export interface FamilyTreeUploadResult {
+  familyMembersUploaded: {
+    success: number;
+    failed: number;
+    errors: string[];
+    failedRecords: any[];
+  };
+  accountsCreated: {
+    success: number;
+    failed: number;
+    skipped: number; // Skipped due to deceased status or invalid email
+    results: UploadAccountCreationResult[];
+  };
+}
+
+export interface UploadAccountCreationResult {
+  familyMemberId: string;
+  firstName: string;
+  lastName: string;
+  email?: string;
+  status: "created" | "failed" | "skipped_deceased" | "skipped_invalid_email";
+  userId?: string;
+  password?: string;
+  error?: string;
+}
+
 export interface EmailCredentials {
   email: string;
   password: string;
@@ -353,6 +387,7 @@ export interface OnboardingStep {
 
 export interface FamilyMemberRequest {
   id: string;
+  unique_id?: string;
   first_name: string;
   last_name: string;
   gender?: string;
@@ -361,12 +396,17 @@ export interface FamilyMemberRequest {
   marital_status?: string;
   fathers_first_name?: string;
   fathers_last_name?: string;
+  fathers_uid?: string;
   mothers_first_name?: string;
   mothers_last_name?: string;
+  mothers_uid?: string;
   spouses_first_name?: string;
   spouses_last_name?: string;
+  spouse_uid?: string;
   order_of_birth?: number;
   order_of_marriage?: number;
+  life_status?: "Alive" | "Deceased";
+  email_address?: string;
   requested_by_user_id: string;
   status: "pending" | "approved" | "rejected";
   created_at: string;

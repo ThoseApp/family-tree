@@ -36,6 +36,7 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { uploadImage } from "@/lib/file-upload";
 import { BucketFolderEnum } from "@/lib/constants/enums";
+import { useFamilyMemberDropdowns } from "@/hooks/use-family-member-dropdowns";
 
 interface FamilyMemberRequestModalProps {
   isOpen: boolean;
@@ -46,7 +47,13 @@ interface FamilyMemberRequestModalProps {
 export const FamilyMemberRequestModal: React.FC<
   FamilyMemberRequestModalProps
 > = ({ isOpen, onClose, onSuccess }) => {
-  const [formData, setFormData] = useState<Partial<FamilyMember>>({});
+  const [formData, setFormData] = useState<Partial<FamilyMember>>({
+    lifeStatus: "Alive",
+    emailAddress: "",
+    fathers_uid: undefined,
+    mothers_uid: undefined,
+    spouse_uid: undefined,
+  });
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useUserStore();
   const [selectedDate, setSelectedDate] = useState<Date>();
@@ -54,12 +61,36 @@ export const FamilyMemberRequestModal: React.FC<
   const [imagePreview, setImagePreview] = useState("");
   const [imageUploading, setImageUploading] = useState(false);
 
+  // Family member dropdown data
+  const {
+    isLoading: dropdownsLoading,
+    error: dropdownsError,
+    allMembers,
+    fatherOptions,
+    motherOptions,
+    spouseOptions,
+    getMotherOptionsForFather,
+    getFirstHusbandForMother,
+  } = useFamilyMemberDropdowns();
+
+  // Selected relationship state for conditional dropdowns
+  const [selectedFatherId, setSelectedFatherId] = useState<string>("");
+  const [selectedMotherId, setSelectedMotherId] = useState<string>("");
+
   useEffect(() => {
     if (isOpen) {
-      setFormData({});
+      setFormData({
+        lifeStatus: "Alive",
+        emailAddress: "",
+        fathers_uid: undefined,
+        mothers_uid: undefined,
+        spouse_uid: undefined,
+      });
       setSelectedDate(undefined);
       setSelectedImage(null);
       setImagePreview("");
+      setSelectedFatherId("");
+      setSelectedMotherId("");
     }
   }, [isOpen]);
 
@@ -78,6 +109,81 @@ export const FamilyMemberRequestModal: React.FC<
 
   const handleSelectChange = (name: keyof FamilyMember, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Handle father selection with conditional mother dropdown
+  const handleFatherSelect = (fatherId: string) => {
+    const actualFatherId = fatherId === "none" ? "" : fatherId;
+    setSelectedFatherId(actualFatherId);
+
+    // Find the selected father to get the name
+    const father = actualFatherId
+      ? allMembers.find((member) => member.unique_id === actualFatherId)
+      : null;
+    const fatherName = father ? `${father.first_name} ${father.last_name}` : "";
+
+    setFormData((prev) => ({
+      ...prev,
+      fatherName,
+      fathers_uid: actualFatherId || undefined,
+      // Clear mother selection when father changes
+      motherName: "",
+      mothers_uid: undefined,
+    }));
+
+    // Reset mother selection
+    setSelectedMotherId("");
+  };
+
+  // Handle mother selection with auto father selection
+  const handleMotherSelect = (motherId: string) => {
+    const actualMotherId = motherId === "none" ? "" : motherId;
+    setSelectedMotherId(actualMotherId);
+
+    // Find the selected mother to get the name
+    const mother = actualMotherId
+      ? allMembers.find((member) => member.unique_id === actualMotherId)
+      : null;
+    const motherName = mother ? `${mother.first_name} ${mother.last_name}` : "";
+
+    setFormData((prev) => ({
+      ...prev,
+      motherName,
+      mothers_uid: actualMotherId || undefined,
+    }));
+
+    // If no father is selected and mother has a husband, auto-select the first husband
+    if (!selectedFatherId && actualMotherId) {
+      const firstHusband = getFirstHusbandForMother(actualMotherId);
+      if (firstHusband) {
+        const husband = allMembers.find(
+          (member) => member.unique_id === firstHusband
+        );
+        if (husband) {
+          setSelectedFatherId(firstHusband);
+          setFormData((prev) => ({
+            ...prev,
+            fatherName: `${husband.first_name} ${husband.last_name}`,
+            fathers_uid: firstHusband,
+          }));
+        }
+      }
+    }
+  };
+
+  // Handle spouse selection (only for males)
+  const handleSpouseSelect = (spouseId: string) => {
+    const actualSpouseId = spouseId === "none" ? "" : spouseId;
+    const spouse = actualSpouseId
+      ? allMembers.find((member) => member.unique_id === actualSpouseId)
+      : null;
+    const spouseName = spouse ? `${spouse.first_name} ${spouse.last_name}` : "";
+
+    setFormData((prev) => ({
+      ...prev,
+      spouseName,
+      spouse_uid: actualSpouseId || undefined,
+    }));
   };
 
   const handleDateChange = (date: Date | undefined) => {
@@ -137,12 +243,46 @@ export const FamilyMemberRequestModal: React.FC<
       return;
     }
 
+    // Validate that at least one parent is selected (not required for females)
+    const hasFather = (formData.fatherName || "").trim() !== "";
+    const hasMother = (formData.motherName || "").trim() !== "";
+
+    if (!hasFather && !hasMother && formData.gender !== "Female") {
+      toast.error(
+        "At least one parent (Father or Mother) is required for male members"
+      );
+      return;
+    }
+
+    // Validate email format if provided
+    const email = (formData.emailAddress || "").trim();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
     setIsLoading(true);
     try {
+      // Clean up form data before sending
+      const cleanedData = {
+        ...formData,
+        name: formData.name.trim(),
+        fatherName: hasFather ? formData.fatherName?.trim() : undefined,
+        motherName: hasMother ? formData.motherName?.trim() : undefined,
+        spouseName: formData.spouseName?.trim() || undefined,
+        description: formData.description?.trim() || "",
+        lifeStatus: formData.lifeStatus || "Alive",
+        emailAddress: email || undefined,
+        fathers_uid: formData.fathers_uid || undefined,
+        mothers_uid: formData.mothers_uid || undefined,
+        spouse_uid: formData.spouse_uid || undefined,
+        requested_by_user_id: user.id,
+      };
+
       const response = await fetch("/api/family-member-requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, requested_by_user_id: user.id }),
+        body: JSON.stringify(cleanedData),
       });
       if (!response.ok) {
         const errorData = await response.json();
@@ -245,16 +385,19 @@ export const FamilyMemberRequestModal: React.FC<
               <Input
                 id="name"
                 name="name"
+                placeholder="Enter full name"
                 value={formData.name || ""}
                 onChange={handleChange}
+                disabled={dropdownsLoading}
                 required
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="gender">Gender</Label>
+              <Label htmlFor="gender">Gender *</Label>
               <Select
                 value={formData.gender || ""}
                 onValueChange={(value) => handleSelectChange("gender", value)}
+                disabled={dropdownsLoading}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select gender" />
@@ -265,6 +408,45 @@ export const FamilyMemberRequestModal: React.FC<
                   <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          {/* Life Status and Email */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="lifeStatus">Life Status</Label>
+              <Select
+                value={formData.lifeStatus || "Alive"}
+                onValueChange={(value) =>
+                  handleSelectChange(
+                    "lifeStatus",
+                    value as "Alive" | "Deceased"
+                  )
+                }
+                disabled={dropdownsLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select life status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Alive">Alive</SelectItem>
+                  <SelectItem value="Deceased">Deceased</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="emailAddress">Email Address</Label>
+              <Input
+                id="emailAddress"
+                name="emailAddress"
+                type="email"
+                placeholder="Enter email address (optional)"
+                value={formData.emailAddress || ""}
+                onChange={handleChange}
+                disabled={dropdownsLoading}
+                maxLength={255}
+              />
             </div>
           </div>
           <div className="grid gap-2">
@@ -295,24 +477,85 @@ export const FamilyMemberRequestModal: React.FC<
               </PopoverContent>
             </Popover>
           </div>
+          {/* Parents - At least one is required for males */}
+          <div className="grid gap-2">
+            <div className="flex items-center gap-2">
+              <Label className="text-sm font-medium">
+                Parents {formData.gender !== "Female" ? "*" : ""}
+              </Label>
+              <span className="text-xs text-muted-foreground">
+                {formData.gender === "Female"
+                  ? "(Optional for female members)"
+                  : "(At least one parent is required for male members)"}
+              </span>
+            </div>
+
+            {dropdownsError && (
+              <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded p-2">
+                Failed to load family members: {dropdownsError}
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label htmlFor="fatherName">Father&apos;s Name</Label>
-              <Input
-                id="fatherName"
-                name="fatherName"
-                value={formData.fatherName || ""}
-                onChange={handleChange}
-              />
+              {dropdownsLoading ? (
+                <div className="flex items-center justify-center h-10 border rounded">
+                  <LoadingIcon className="h-4 w-4" />
+                  <span className="ml-2 text-sm">Loading fathers...</span>
+                </div>
+              ) : (
+                <Select
+                  value={selectedFatherId || "none"}
+                  onValueChange={handleFatherSelect}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select father" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No Father</SelectItem>
+                    {fatherOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
+
             <div className="grid gap-2">
               <Label htmlFor="motherName">Mother&apos;s Name</Label>
-              <Input
-                id="motherName"
-                name="motherName"
-                value={formData.motherName || ""}
-                onChange={handleChange}
-              />
+              {dropdownsLoading ? (
+                <div className="flex items-center justify-center h-10 border rounded">
+                  <LoadingIcon className="h-4 w-4" />
+                  <span className="ml-2 text-sm">Loading mothers...</span>
+                </div>
+              ) : (
+                <Select
+                  value={selectedMotherId || "none"}
+                  onValueChange={handleMotherSelect}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select mother" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No Mother</SelectItem>
+                    {/* Show conditional mothers based on father selection */}
+                    {(selectedFatherId
+                      ? getMotherOptionsForFather(selectedFatherId)
+                      : motherOptions
+                    ).map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>
           <div className="grid grid-cols-3 gap-4">
@@ -323,18 +566,62 @@ export const FamilyMemberRequestModal: React.FC<
                 name="orderOfBirth"
                 type="number"
                 min="1"
+                placeholder="e.g., 1, 2, 3..."
                 value={formData.orderOfBirth || ""}
                 onChange={handleChange}
+                disabled={dropdownsLoading}
               />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="spouseName">Spouse Name</Label>
-              <Input
-                id="spouseName"
-                name="spouseName"
-                value={formData.spouseName || ""}
-                onChange={handleChange}
-              />
+              {formData.gender === "Male" ? (
+                dropdownsLoading ? (
+                  <div className="flex items-center justify-center h-10 border rounded">
+                    <LoadingIcon className="h-4 w-4" />
+                    <span className="ml-2 text-sm">Loading...</span>
+                  </div>
+                ) : (
+                  <Select
+                    value={
+                      formData.spouseName?.trim()
+                        ? spouseOptions.find((option) =>
+                            option.label.includes(
+                              formData.spouseName?.split(" (")[0] || ""
+                            )
+                          )?.value || "none"
+                        : "none"
+                    }
+                    onValueChange={handleSpouseSelect}
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select spouse" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No Spouse</SelectItem>
+                      {spouseOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )
+              ) : (
+                <Input
+                  id="spouseName"
+                  name="spouseName"
+                  placeholder="Spouse selection only for males"
+                  value={formData.spouseName || ""}
+                  disabled={true}
+                  className="bg-gray-50 text-gray-500"
+                />
+              )}
+              {formData.gender !== "Male" && (
+                <p className="text-xs text-muted-foreground">
+                  Spouse selection is only available for male family members
+                </p>
+              )}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="orderOfMarriage">Order of Marriage</Label>
@@ -343,8 +630,10 @@ export const FamilyMemberRequestModal: React.FC<
                 name="orderOfMarriage"
                 type="number"
                 min="1"
+                placeholder="e.g., 1, 2, 3..."
                 value={formData.orderOfMarriage || ""}
                 onChange={handleChange}
+                disabled={dropdownsLoading}
               />
             </div>
           </div>
@@ -353,6 +642,7 @@ export const FamilyMemberRequestModal: React.FC<
             <Textarea
               id="description"
               name="description"
+              placeholder="Enter any additional information about this family member (optional)"
               value={formData.description || ""}
               onChange={handleChange}
               rows={3}
@@ -366,11 +656,26 @@ export const FamilyMemberRequestModal: React.FC<
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading || imageUploading}>
-              {(isLoading || imageUploading) && (
+            <Button
+              type="submit"
+              disabled={
+                isLoading ||
+                imageUploading ||
+                dropdownsLoading ||
+                !formData.name?.trim() ||
+                (formData.gender !== "Female" &&
+                  !formData.fatherName?.trim() &&
+                  !formData.motherName?.trim())
+              }
+            >
+              {(isLoading || imageUploading || dropdownsLoading) && (
                 <LoadingIcon className="mr-2 h-4 w-4" />
               )}
-              Submit Request
+              {dropdownsLoading
+                ? "Loading Family Data..."
+                : imageUploading
+                ? "Uploading Image..."
+                : "Submit Request"}
             </Button>
           </DialogFooter>
         </form>
