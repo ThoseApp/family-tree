@@ -98,7 +98,7 @@ interface FamilyMember {
   "Mothers' First Name": string;
   "Mothers' Last Name": string;
   "Mothers' UID": string;
-  "Order of Birth": number;
+  "Order of Birth (Motherline)": number;
   "Order of Marriage": number;
   "Marital Status": string;
   "Spouses' First Name": string;
@@ -254,7 +254,7 @@ const FamilyTreeUploadPage = () => {
     "Fathers' Last Name",
     "Mothers' First Name",
     "Mothers' Last Name",
-    "Order of Birth",
+    "Order of Birth (Motherline)",
     "Order of Marriage",
     "Marital Status",
     "Spouses' First Name",
@@ -480,8 +480,8 @@ const FamilyTreeUploadPage = () => {
       mothers_first_name: row["Mothers' First Name"] || "",
       mothers_last_name: row["Mothers' Last Name"] || "",
       mothers_uid: row["Mothers' UID"] || undefined,
-      order_of_birth: row["Order of Birth"]
-        ? Number(row["Order of Birth"])
+      order_of_birth: row["Order of Birth (Motherline)"]
+        ? Number(row["Order of Birth (Motherline)"])
         : null,
       order_of_marriage: row["Order of Marriage"]
         ? Number(row["Order of Marriage"])
@@ -2625,7 +2625,7 @@ const FamilyTreeUploadPage = () => {
                           Mother&apos;s UID
                         </TableHead>
                         <TableHead className="min-w-[100px]">
-                          Order of Birth
+                          Order of Birth (Motherline)
                         </TableHead>
                         <TableHead className="min-w-[120px]">
                           Order of Marriage
