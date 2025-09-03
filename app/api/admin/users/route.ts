@@ -2,6 +2,12 @@ import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserRoleFromMetadata } from "@/lib/types";
 
+// Ensure this route is always dynamic and not statically rendered/cached
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
+export const runtime = "nodejs";
+
 // Create admin client with service role key
 const createAdminClient = () => {
   return createClient(
