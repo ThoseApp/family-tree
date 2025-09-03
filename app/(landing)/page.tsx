@@ -28,9 +28,9 @@ export default function Home() {
   } = useGalleryStore();
   const { fetchApprovedNoticeBoards } = useNoticeBoardStore();
 
-  const familyTreeSection = sections.family_tree;
-  const historySection = sections.hero;
-  const gallerySection = sections.gallery_preview;
+  const familyTreeSection = sections.family_tree || {};
+  const historySection = sections.hero || {};
+  const gallerySection = sections.gallery_preview || {};
 
   // Fetch gallery data on component mount
   useEffect(() => {
@@ -69,12 +69,15 @@ export default function Home() {
         {/* Hero Section */}
         <motion.div
           className={`px-4 md:px-10 xl:px-16 ${
-            historySection.image_url ? `bg-cover bg-center` : ""
+            historySection && historySection.image_url
+              ? `bg-cover bg-center`
+              : ""
           }`}
           style={{
-            backgroundImage: historySection.image_url
-              ? `url(${historySection.image_url})`
-              : "none",
+            backgroundImage:
+              historySection && historySection.image_url
+                ? `url(${historySection.image_url})`
+                : "none",
           }}
           variants={fadeInUp}
         >
