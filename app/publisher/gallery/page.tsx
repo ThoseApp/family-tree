@@ -14,6 +14,8 @@ import {
   X,
   FileImage,
   FileVideo,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import GalleryTable from "@/components/tables/gallery";
@@ -22,6 +24,7 @@ import { useAlbumStore } from "@/stores/album-store";
 import { LoadingIcon } from "@/components/loading-icon";
 import { ImagePreviewModal } from "@/components/modals/image-preview-modal";
 import { CreateAlbumModal } from "@/components/modals/create-album-modal";
+import { EditAlbumModal } from "@/components/modals/edit-album-modal";
 import { ImportFromWebModal } from "@/components/modals/import-from-web-modal";
 import { toast } from "sonner";
 import AlbumGrid from "@/components/album-grid";
@@ -71,6 +74,7 @@ const Page = () => {
     fetchUserAlbums,
     createAlbum,
     deleteAlbum,
+    updateAlbum,
   } = useAlbumStore();
   const [viewMode, setViewMode] = useState<"albums" | "grid" | "table">(
     "albums"
@@ -90,6 +94,12 @@ const Page = () => {
   const [editingCaption, setEditingCaption] = useState("");
   const [selectedAlbum, setSelectedAlbum] = useState<any>(null);
   const [albumGallery, setAlbumGallery] = useState<any[]>([]);
+  const [isEditAlbumModalOpen, setIsEditAlbumModalOpen] = useState(false);
+  const [albumBeingEdited, setAlbumBeingEdited] = useState<any>(null);
+  const [isDeleteAlbumDialogOpen, setIsDeleteAlbumDialogOpen] = useState(false);
+  const [albumToDelete, setAlbumToDelete] = useState<any>(null);
+  const [isDeletingImage, setIsDeletingImage] = useState(false);
+  const [isDeletingAlbum, setIsDeletingAlbum] = useState(false);
 
   // Enhanced filtering states
   const [fileTypeFilter, setFileTypeFilter] = useState<string>("all");
@@ -333,6 +343,7 @@ const Page = () => {
     if (!imageToDelete) return;
 
     try {
+      setIsDeletingImage(true);
       await deleteFromGallery(imageToDelete);
       toast.success("Image deleted successfully");
       // If we're previewing the image that was deleted, close the preview
@@ -345,6 +356,7 @@ const Page = () => {
     } finally {
       setIsDeleteDialogOpen(false);
       setImageToDelete(null);
+      setIsDeletingImage(false);
     }
   };
 
@@ -452,6 +464,61 @@ const Page = () => {
   const handleBackToAllAlbums = () => {
     setSelectedAlbum(null);
     setAlbumGallery([]);
+  };
+
+  const handleOpenEditAlbum = (album: any) => {
+    setAlbumBeingEdited(album);
+    setIsEditAlbumModalOpen(true);
+  };
+
+  const handleConfirmEditAlbum = async (name: string, description?: string) => {
+    if (!albumBeingEdited) return;
+    try {
+      await updateAlbum(albumBeingEdited.id, { name, description });
+      toast.success("Album updated successfully");
+      setIsEditAlbumModalOpen(false);
+      setAlbumBeingEdited(null);
+      if (selectedAlbum && selectedAlbum.id === albumBeingEdited.id) {
+        setSelectedAlbum({
+          ...selectedAlbum,
+          name,
+          description: description || "",
+        });
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to update album");
+    }
+  };
+
+  const handleRequestDeleteAlbum = (album: any) => {
+    setAlbumToDelete(album);
+    setIsDeleteAlbumDialogOpen(true);
+  };
+
+  const confirmDeleteAlbum = async () => {
+    if (!albumToDelete) return;
+    if ((albumToDelete.item_count || 0) > 0) {
+      toast.error(
+        "Cannot delete album that contains items. Move or delete items first."
+      );
+      setIsDeleteAlbumDialogOpen(false);
+      setAlbumToDelete(null);
+      return;
+    }
+    try {
+      setIsDeletingAlbum(true);
+      await deleteAlbum(albumToDelete.id);
+      toast.success("Album deleted successfully");
+      if (selectedAlbum?.id === albumToDelete.id) {
+        handleBackToAllAlbums();
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to delete album");
+    } finally {
+      setIsDeleteAlbumDialogOpen(false);
+      setAlbumToDelete(null);
+      setIsDeletingAlbum(false);
+    }
   };
 
   // Calculate status counts
@@ -809,10 +876,31 @@ const Page = () => {
                       onClick={() => handleSidebarAlbumClick(album)}
                     >
                       <Folder className="w-4 h-4" />
-                      <span className="text-sm">{album.name}</span>
+                      <span className="text-sm truncate max-w-[120px]">
+                        {album.name}
+                      </span>
                       <span className="text-xs text-gray-400 ml-auto">
                         {album.item_count}
                       </span>
+                      <div
+                        className="flex items-center gap-1 ml-2"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          className="p-1 rounded hover:bg-gray-200"
+                          aria-label="Edit album"
+                          onClick={() => handleOpenEditAlbum(album)}
+                        >
+                          <Pencil className="w-4 h-4 text-gray-500" />
+                        </button>
+                        <button
+                          className="p-1 rounded hover:bg-gray-200"
+                          aria-label="Delete album"
+                          onClick={() => handleRequestDeleteAlbum(album)}
+                        >
+                          <Trash2 className="w-4 h-4 text-gray-500" />
+                        </button>
+                      </div>
                     </div>
                   ))
                 ) : !selectedAlbum ? (
@@ -875,6 +963,22 @@ const Page = () => {
                       <p className="text-gray-500 text-sm mt-1">
                         {albumGallery.length} items
                       </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        className="rounded-full"
+                        onClick={() => handleOpenEditAlbum(selectedAlbum)}
+                      >
+                        <Pencil className="w-4 h-4 mr-2" /> Edit
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        className="rounded-full"
+                        onClick={() => handleRequestDeleteAlbum(selectedAlbum)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" /> Delete
+                      </Button>
                     </div>
                   </div>
 
@@ -1021,10 +1125,10 @@ const Page = () => {
             <Button
               variant="destructive"
               onClick={confirmDelete}
-              disabled={isLoading}
+              disabled={isDeletingImage}
               className="rounded-full"
             >
-              {isLoading && <LoadingIcon className="mr-2" />}
+              {isDeletingImage && <LoadingIcon className="mr-2" />}
               Delete
             </Button>
             <Button
@@ -1038,6 +1142,51 @@ const Page = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* DELETE ALBUM CONFIRMATION DIALOG */}
+      <Dialog
+        open={isDeleteAlbumDialogOpen}
+        onOpenChange={setIsDeleteAlbumDialogOpen}
+      >
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Delete Album</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete the album "{albumToDelete?.name}"?
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex justify-end gap-2 mt-4">
+            <Button
+              variant="destructive"
+              onClick={confirmDeleteAlbum}
+              disabled={isDeletingAlbum}
+              className="rounded-full"
+            >
+              {isDeletingAlbum && <LoadingIcon className="mr-2" />}
+              Delete
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-full"
+              onClick={() => setIsDeleteAlbumDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* EDIT ALBUM MODAL */}
+      <EditAlbumModal
+        isOpen={isEditAlbumModalOpen}
+        onClose={() => setIsEditAlbumModalOpen(false)}
+        onConfirm={handleConfirmEditAlbum}
+        isLoading={albumsLoading}
+        defaultName={albumBeingEdited?.name || ""}
+        defaultDescription={albumBeingEdited?.description || ""}
+      />
 
       {/* CREATE ALBUM MODAL */}
       <CreateAlbumModal
