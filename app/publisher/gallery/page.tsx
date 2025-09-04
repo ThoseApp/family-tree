@@ -1152,8 +1152,8 @@ const Page = () => {
           <DialogHeader>
             <DialogTitle>Delete Album</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete the album "{albumToDelete?.name}"?
-              This action cannot be undone.
+              Are you sure you want to delete the album &quot;
+              {albumToDelete?.name}&quot;? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex justify-end gap-2 mt-4">
