@@ -33,6 +33,8 @@ export interface TreeNode {
     fathers_uid?: string;
     mothers_uid?: string;
     is_out_of_wedlock?: boolean;
+    // For dotted-link origin determination
+    ow_source?: "father" | "mother";
     // Multiple birth indicators
     is_multiple_birth?: boolean;
     multiple_birth_label?: string;
@@ -322,7 +324,7 @@ export function findChildren(
   );
 
   return uniqueChildren.sort(
-    (a, b) => (a.order_of_birth || 0) - (b.order_of_birth || 0)
+    (a, b) => (b.order_of_birth || 0) - (a.order_of_birth || 0)
   );
 }
 
@@ -340,7 +342,8 @@ export function convertToTreeNode(
   // Consider out-of-wedlock when father UID is known but mother UID is missing,
   // regardless of whether name placeholders exist for the mother.
   const isOutOfWedlock =
-    !isMissingUid(member.fathers_uid) && isMissingUid(member.mothers_uid);
+    (!isMissingUid(member.fathers_uid) && isMissingUid(member.mothers_uid)) ||
+    (!isMissingUid(member.mothers_uid) && isMissingUid(member.fathers_uid));
 
   // Validate color inheritance for debugging (only in development)
   if (process.env.NODE_ENV === "development" && !isSpouse(member.unique_id)) {
@@ -395,6 +398,13 @@ export function convertToTreeNode(
       fathers_uid: member.fathers_uid,
       mothers_uid: member.mothers_uid,
       is_out_of_wedlock: isOutOfWedlock,
+      ow_source:
+        !isMissingUid(member.fathers_uid) && isMissingUid(member.mothers_uid)
+          ? "father"
+          : !isMissingUid(member.mothers_uid) &&
+            isMissingUid(member.fathers_uid)
+          ? "mother"
+          : undefined,
       // Defaults for multiple birth badge
       is_multiple_birth: false,
       multiple_birth_label: undefined,
@@ -447,7 +457,7 @@ function buildSubTree(
   // Find and build subtrees for visible children.
   const visibleChildren = findChildren(member, allMembers)
     .filter((child) => state.visibleNodes.has(child.unique_id))
-    .sort((a, b) => (a.order_of_birth || 0) - (b.order_of_birth || 0));
+    .sort((a, b) => (b.order_of_birth || 0) - (a.order_of_birth || 0));
 
   const childrenSubTrees = visibleChildren.map((child) =>
     buildSubTree(child, allMembers, state, parentSpouseContext)
@@ -460,6 +470,7 @@ function buildSubTree(
         unique_id: `FAMILY_${member.unique_id}`,
         gender: "family",
         lineage_color: determineLineageColor(member, allMembers),
+        spouse_count: spouses.length,
       },
       children: [memberNode],
     };
@@ -510,13 +521,18 @@ function buildSubTree(
       selectedSpouseId = spouseNodes[0]?.attributes!.unique_id ?? null;
     }
 
-    // Split children into out-of-wedlock vs others
-    // IMPORTANT: Out-of-wedlock children should show even if not in visibleNodes,
-    // so compute from the full children list, not only visible ones.
-    const outOfWedlockChildren = findChildren(member, allMembers).filter(
+    // Split children into out-of-wedlock vs others (both father-known and mother-known)
+    // Compute from the full children list (not only visible) so detection is accurate.
+    const allChildren = findChildren(member, allMembers);
+    const owChildrenFather = allChildren.filter(
       (child) =>
         !isMissingUid(child.fathers_uid) && isMissingUid(child.mothers_uid)
     );
+    const owChildrenMother = allChildren.filter(
+      (child) =>
+        !isMissingUid(child.mothers_uid) && isMissingUid(child.fathers_uid)
+    );
+    const outOfWedlockChildren = [...owChildrenFather, ...owChildrenMother];
 
     const regularChildren = visibleChildren.filter(
       (child) =>
@@ -531,24 +547,42 @@ function buildSubTree(
       targetSpouseNode.children = regularChildrenWithContext;
     }
 
-    // Attach out-of-wedlock children ONLY to spouse nodes whose children are expanded
-    if (spouseNodes.length > 0 && outOfWedlockChildren.length > 0) {
-      spouseNodes.forEach((spouseNode) => {
-        const spouseUid = spouseNode.attributes!.unique_id;
-        if (!state.expandedChildren.has(spouseUid)) return;
-
-        const owChildrenForThisSpouse = outOfWedlockChildren.map((child) =>
+    // Attach OUT-OF-WEDLOCK children to the correct parent node with dotted links.
+    // Gated by spouse expansion to keep progressive disclosure consistent.
+    const anySpouseChildrenExpanded = spouseNodes.some((s) =>
+      state.expandedChildren.has(s.attributes!.unique_id)
+    );
+    if (anySpouseChildrenExpanded) {
+      // Father-known, mother-missing → attach under father (this member if male descendant)
+      if (owChildrenFather.length > 0) {
+        const owChildrenForFather = owChildrenFather.map((child) =>
           buildSubTree(child, allMembers, state, undefined)
         );
-        spouseNode.children = [
-          ...(spouseNode.children || []),
-          ...owChildrenForThisSpouse,
+        memberNode.children = [
+          ...(memberNode.children || []),
+          ...owChildrenForFather,
         ];
-      });
+      }
+      // Mother-known, father-missing → attach under the mother if she is among spouse nodes
+      if (owChildrenMother.length > 0 && spouseNodes.length > 0) {
+        spouseNodes.forEach((spNode) => {
+          // spNode is female spouse. Attach mother-known out-of-wedlock children under her
+          const owChildrenForMother = owChildrenMother.map((child) =>
+            buildSubTree(child, allMembers, state, undefined)
+          );
+          spNode.children = [
+            ...(spNode.children || []),
+            ...owChildrenForMother,
+          ];
+        });
+      }
     }
 
     // Children should never be attached directly to the descendant node
-    memberNode.children = [];
+    // EXCEPTION: out-of-wedlock children are attached to the father so links originate from him.
+    if (!memberNode.children) {
+      memberNode.children = [];
+    }
 
     return familyGroupNode;
   }
@@ -612,7 +646,7 @@ export function buildTreeData(
 
   const directChildren = findChildren(laketu, allMembers)
     .filter((child) => state.visibleNodes.has(child.unique_id))
-    .sort((a, b) => (a.order_of_birth || 0) - (b.order_of_birth || 0));
+    .sort((a, b) => (b.order_of_birth || 0) - (a.order_of_birth || 0));
 
   // CONSISTENCY RULE: Children ALWAYS come from spouse (Princess), NEVER from descendant (Laketu)
   if (princess && state.visibleNodes.has(princess.unique_id)) {

@@ -65,6 +65,34 @@ const customPathFunc = (
     }
   }
 
+  // For monogamous families (exactly one spouse), route child links from midpoint between parents
+  // to visually indicate linkage to both parents.
+  const isSpouseSource = sourceAttrs?.is_spouse === true;
+  const isChildTarget =
+    target.data &&
+    target.data.attributes &&
+    target.data.attributes.gender !== "family" &&
+    !target.data.attributes.is_spouse;
+  const parentIsFamily =
+    source.parent &&
+    source.parent.data &&
+    source.parent.data.attributes &&
+    source.parent.data.attributes.gender === "family";
+  const spouseCount = parentIsFamily
+    ? source.parent.data.attributes.spouse_count || 0
+    : 0;
+
+  if (isSpouseSource && isChildTarget && parentIsFamily && spouseCount === 1) {
+    // Find the partner (descendant) under the same family group
+    const partnerNode = source.parent.children?.find(
+      (c: any) => c.data?.attributes?.is_descendant === true
+    );
+    if (partnerNode) {
+      const midX = (source.x + partnerNode.x) / 2;
+      return drawStepPath({ x: midX, y: source.y }, target);
+    }
+  }
+
   // For all other standard links, use the step function
   return drawStepPath(source, target);
 };
@@ -744,9 +772,22 @@ const FamilyTreeComponent: React.FC = () => {
 
   // Apply dotted style for out-of-wedlock links
   const pathClassFunc = useCallback((linkDatum: any) => {
+    const sourceAttrs = linkDatum?.source?.data?.attributes;
     const targetAttrs = linkDatum?.target?.data?.attributes;
-    if (targetAttrs?.is_out_of_wedlock) {
-      return "ow-link";
+    // Apply dotted style only when the link originates from the correct parent for OW cases
+    if (
+      targetAttrs?.is_out_of_wedlock &&
+      targetAttrs?.ow_source &&
+      sourceAttrs
+    ) {
+      if (
+        (targetAttrs.ow_source === "father" &&
+          sourceAttrs?.gender?.toLowerCase() === "male") ||
+        (targetAttrs.ow_source === "mother" &&
+          sourceAttrs?.gender?.toLowerCase() === "female")
+      ) {
+        return "ow-link";
+      }
     }
     return "";
   }, []);
