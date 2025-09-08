@@ -207,6 +207,8 @@ const FamilyTreeUploadPage = () => {
     failed: number;
     errors: string[];
     failedRecords: FailedRecord[];
+    skippedExisting?: number;
+    skippedExistingIds?: string[];
     accountResults?: {
       success: number;
       failed: number;
@@ -409,13 +411,6 @@ const FamilyTreeUploadPage = () => {
     // Track duplicates within the uploaded file
     const seenIdsInUpload = new Map<string, number>();
 
-    // Track duplicates against existing database records
-    const existingIds = new Set(
-      (existingData || [])
-        .map((m) => (m.unique_id || "").trim())
-        .filter(Boolean)
-    );
-
     data.forEach((row, index) => {
       if (!row["Unique ID"]) {
         errors.push({
@@ -439,15 +434,6 @@ const FamilyTreeUploadPage = () => {
           });
         } else {
           seenIdsInUpload.set(currentId, index);
-        }
-
-        // Validate against existing database records
-        if (existingIds.has(currentId)) {
-          errors.push({
-            row: index + 1,
-            field: "Unique ID",
-            message: `Unique ID '${currentId}' already exists in database`,
-          });
         }
       }
 
@@ -554,6 +540,19 @@ const FamilyTreeUploadPage = () => {
     setIsLoading(true);
     const processedData = processDataForDatabase(excelData);
 
+    // Skip records that already exist in DB by Unique ID
+    const existingIds = new Set(
+      (existingData || [])
+        .map((m) => (m.unique_id || "").trim())
+        .filter(Boolean)
+    );
+    const toInsert = processedData.filter(
+      (m) => m.unique_id && !existingIds.has((m.unique_id || "").trim())
+    );
+    const skippedExistingRecords = processedData.filter((m) =>
+      existingIds.has((m.unique_id || "").trim())
+    );
+
     let successCount = 0;
     let failedCount = 0;
     const errors: string[] = [];
@@ -568,11 +567,18 @@ const FamilyTreeUploadPage = () => {
     try {
       // Phase 1: Upload family tree data
       const batchSize = 50;
-      const totalSteps = processedData.length;
+      const totalSteps = toInsert.length || 1;
       let currentStep = 0;
 
-      for (let i = 0; i < processedData.length; i += batchSize) {
-        const batch = processedData.slice(i, i + batchSize);
+      // Inform about skipped records due to existing IDs
+      if (skippedExistingRecords.length > 0) {
+        toast.info(
+          `Skipping ${skippedExistingRecords.length} record(s) with existing Unique IDs`
+        );
+      }
+
+      for (let i = 0; i < toInsert.length; i += batchSize) {
+        const batch = toInsert.slice(i, i + batchSize);
         setUploadProgress((currentStep / totalSteps) * 50); // First 50% for family data upload
 
         const { data, error } = await supabase
@@ -604,7 +610,7 @@ const FamilyTreeUploadPage = () => {
         toast.info("Family data uploaded! Now creating accounts...");
 
         // Filter members eligible for account creation
-        const eligibleMembers = processedData.filter(
+        const eligibleMembers = toInsert.filter(
           (member) =>
             member.life_status === "Alive" &&
             member.email_address &&
@@ -701,6 +707,8 @@ const FamilyTreeUploadPage = () => {
         failed: failedCount,
         errors,
         failedRecords,
+        skippedExisting: skippedExistingRecords.length,
+        skippedExistingIds: skippedExistingRecords.map((r) => r.unique_id),
         accountResults: {
           success: accountsCreated,
           failed: accountsFailed,
@@ -2978,6 +2986,14 @@ const FamilyTreeUploadPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <Alert>
+            <AlertDescription>
+              Records with a Unique ID that already exists in the database will
+              be
+              <span className="font-semibold"> skipped</span> during upload.
+              Only new, non-duplicate records will be inserted.
+            </AlertDescription>
+          </Alert>
           <div className="grid w-full items-center gap-2">
             <Label htmlFor="excel-file">Excel or CSV File</Label>
             <Input
@@ -3162,7 +3178,7 @@ const FamilyTreeUploadPage = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div className="p-4 border rounded-lg text-center">
                 <div className="text-2xl font-bold text-green-600">
                   {uploadResults.success}
@@ -3177,6 +3193,14 @@ const FamilyTreeUploadPage = () => {
                 </div>
                 <div className="text-sm text-muted-foreground">
                   Upload Failed
+                </div>
+              </div>
+              <div className="p-4 border rounded-lg text-center">
+                <div className="text-2xl font-bold text-yellow-600">
+                  {uploadResults.skippedExisting || 0}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Skipped (Already Exists)
                 </div>
               </div>
             </div>
@@ -3302,6 +3326,16 @@ const FamilyTreeUploadPage = () => {
                 )}
               </div>
             )}
+
+            {uploadResults.skippedExisting &&
+              uploadResults.skippedExisting > 0 && (
+                <div className="space-y-2">
+                  <h4 className="font-medium">Skipped Existing Unique IDs:</h4>
+                  <div className="text-xs text-muted-foreground break-words">
+                    {(uploadResults.skippedExistingIds || []).join(", ")}
+                  </div>
+                </div>
+              )}
 
             {uploadResults.errors.length > 0 && (
               <div className="space-y-2">
