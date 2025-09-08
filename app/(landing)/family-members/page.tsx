@@ -254,6 +254,7 @@ const FamilyMembersPage = () => {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             className="pl-10 pr-24 rounded-full"
+
           />
           <Button
             type="submit"
@@ -269,7 +270,7 @@ const FamilyMembersPage = () => {
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           {/* Filter Controls */}
           <div className="flex flex-wrap gap-2 items-center">
-            {user && !user.user_metadata?.is_admin && (
+            {user && (
               <Button
                 variant="default"
                 size="sm"

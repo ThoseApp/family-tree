@@ -48,7 +48,7 @@ const PageHeader = ({ title, description, searchBar }: PageHeaderProps) => {
             </div>
           </div>
 
-          {/* <Filter className="size-6" /> */}
+          <Filter className="size-6" />
         </div>
       )}
     </div>
