@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import EventCard from "@/components/cards/event-card";
 import FrameWrapper from "@/components/wrappers/frame-wrapper";
 import { Button } from "@/components/ui/button";
@@ -9,14 +9,15 @@ import { MoveRight } from "lucide-react";
 import { useLandingPageContent } from "@/hooks/use-landing-page-content";
 import { useEventsStore } from "@/stores/events-store";
 import { dummyProfileImage } from "@/lib/constants";
+import { Event } from "@/lib/types";
 
 const UpcomingEventsSection = () => {
   const { sections, loading: contentLoading, error } = useLandingPageContent();
   const eventsSection = sections.upcoming_events;
   const {
-    events,
     loading: eventsLoading,
     fetchUpcomingEvents,
+    events,
   } = useEventsStore();
 
   // Fallback content
@@ -93,9 +94,7 @@ const UpcomingEventsSection = () => {
   }, [events]);
 
   // Fallback to dummy data if no real events are available
-  const displayCategories = groupedEvents.some((cat) => cat.items.length > 0)
-    ? groupedEvents.filter((cat) => cat.items.length > 0)
-    : eventCategories;
+  const displayCategories = groupedEvents.filter((cat) => cat.items.length > 0);
 
   return (
     <FrameWrapper className="home-events-section py-8 lg:py-12 text-background relative">
