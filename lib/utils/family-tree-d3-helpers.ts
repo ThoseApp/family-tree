@@ -470,6 +470,7 @@ function buildSubTree(
         unique_id: `FAMILY_${member.unique_id}`,
         gender: "family",
         lineage_color: determineLineageColor(member, allMembers),
+        spouse_count: spouses.length,
       },
       children: [memberNode],
     };

@@ -406,6 +406,16 @@ const FamilyTreeUploadPage = () => {
   const validateExcelData = (data: FamilyMember[]): ValidationError[] => {
     const errors: ValidationError[] = [];
 
+    // Track duplicates within the uploaded file
+    const seenIdsInUpload = new Map<string, number>();
+
+    // Track duplicates against existing database records
+    const existingIds = new Set(
+      (existingData || [])
+        .map((m) => (m.unique_id || "").trim())
+        .filter(Boolean)
+    );
+
     data.forEach((row, index) => {
       if (!row["Unique ID"]) {
         errors.push({
@@ -413,6 +423,32 @@ const FamilyTreeUploadPage = () => {
           field: "Unique ID",
           message: "Unique ID is required",
         });
+      }
+
+      // Validate duplicate Unique IDs within the uploaded file
+      const currentId = (row["Unique ID"] || "").trim();
+      if (currentId) {
+        if (seenIdsInUpload.has(currentId)) {
+          const firstRow = seenIdsInUpload.get(currentId)!;
+          errors.push({
+            row: index + 1,
+            field: "Unique ID",
+            message: `Duplicate Unique ID in upload: '${currentId}' already used in row ${
+              firstRow + 1
+            }`,
+          });
+        } else {
+          seenIdsInUpload.set(currentId, index);
+        }
+
+        // Validate against existing database records
+        if (existingIds.has(currentId)) {
+          errors.push({
+            row: index + 1,
+            field: "Unique ID",
+            message: `Unique ID '${currentId}' already exists in database`,
+          });
+        }
       }
 
       if (row["Date of Birth"] && !isValidDate(row["Date of Birth"])) {
@@ -502,7 +538,15 @@ const FamilyTreeUploadPage = () => {
   };
 
   const uploadToSupabase = useCallback(async () => {
-    if (!excelData.length || validationErrors.length > 0) {
+    if (!excelData.length) {
+      toast.error("No data to upload");
+      return;
+    }
+
+    // Re-run validation at upload time to catch any duplicates or changes
+    const freshValidationErrors = validateExcelData(excelData);
+    if (freshValidationErrors.length > 0) {
+      setValidationErrors(freshValidationErrors);
       toast.error("Please fix validation errors before uploading");
       return;
     }
