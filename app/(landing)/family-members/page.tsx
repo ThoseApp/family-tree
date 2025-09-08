@@ -79,12 +79,17 @@ const FamilyMembersPage = () => {
   const [ageFilter, setAgeFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("name");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [appliedSearch, setAppliedSearch] = useState("");
 
   const handleRequestSuccess = () => {
     // Optionally, you might want to show a persistent success message
     // or update a list of user's pending requests.
     // For now, we just close the modal.
   };
+
+  const handleSearch = useCallback(() => {
+    setAppliedSearch(searchInput.trim());
+  }, [searchInput]);
 
   // // Debounce search input to avoid filtering on every keystroke
   // useEffect(() => {
@@ -115,9 +120,25 @@ const FamilyMembersPage = () => {
     // Start with a fresh copy of the array
     let filtered = [...familyMembers];
 
-    if (searchInput.trim()) {
+    if (appliedSearch.trim()) {
+      const query = normalizeText(appliedSearch);
+
       filtered = filtered.filter((member) => {
-        return member.name.toLowerCase().includes(searchInput.toLowerCase());
+        const fullName = member.name || "";
+        const normalizedFullName = normalizeText(fullName);
+
+        // Derive first and last from combined name for strict field matching
+        const [first = "", ...rest] = normalizedFullName
+          .split(" ")
+          .filter(Boolean);
+        const last = rest.join(" ");
+
+        // Match only against first_name, last_name, or the "first last" combination
+        return (
+          first.includes(query) ||
+          last.includes(query) ||
+          `${first} ${last}`.includes(query)
+        );
       });
     }
 
@@ -164,11 +185,12 @@ const FamilyMembersPage = () => {
     });
 
     return filtered;
-  }, [familyMembers, searchInput, genderFilter, ageFilter, sortBy]);
+  }, [familyMembers, appliedSearch, genderFilter, ageFilter, sortBy]);
 
   // Clear all filters
   const clearAllFilters = () => {
     setSearchInput("");
+    setAppliedSearch("");
     setGenderFilter("all");
     setAgeFilter("all");
     setSortBy("name");
@@ -176,14 +198,14 @@ const FamilyMembersPage = () => {
 
   // Check if any filters are active
   const hasActiveFilters =
-    searchInput.trim() ||
+    appliedSearch.trim() ||
     genderFilter !== "all" ||
     ageFilter !== "all" ||
     sortBy !== "name";
 
   // Count active filters
   const activeFiltersCount = [
-    searchInput.trim(),
+    appliedSearch.trim(),
     genderFilter !== "all" ? genderFilter : null,
     ageFilter !== "all" ? ageFilter : null,
     sortBy !== "name" ? sortBy : null,
@@ -219,15 +241,29 @@ const FamilyMembersPage = () => {
       {/* Search and Filter Section */}
       <div className="mb-8 space-y-4">
         {/* Search Bar */}
-        <div className="relative">
+        <form
+          className="relative"
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSearch();
+          }}
+        >
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder="Search family members..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="pl-10 pr-4 rounded-full"
+            className="pl-10 pr-24 rounded-full"
           />
-        </div>
+          <Button
+            type="submit"
+            size="sm"
+            className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full px-4"
+            aria-label="Search"
+          >
+            Search
+          </Button>
+        </form>
 
         {/* Filters and Stats Row */}
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -334,13 +370,14 @@ const FamilyMembersPage = () => {
             {/* Active Filters Display */}
             {hasActiveFilters && (
               <div className="flex flex-wrap gap-1">
-                {searchInput && (
+                {appliedSearch && (
                   <Badge variant="secondary" className="gap-1">
-                    Search: &quot;{searchInput}&quot;
+                    Search: &quot;{appliedSearch}&quot;
                     <X
                       className="h-3 w-3 cursor-pointer"
                       onClick={() => {
                         setSearchInput("");
+                        setAppliedSearch("");
                       }}
                     />
                   </Badge>

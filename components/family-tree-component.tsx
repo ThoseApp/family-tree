@@ -744,9 +744,22 @@ const FamilyTreeComponent: React.FC = () => {
 
   // Apply dotted style for out-of-wedlock links
   const pathClassFunc = useCallback((linkDatum: any) => {
+    const sourceAttrs = linkDatum?.source?.data?.attributes;
     const targetAttrs = linkDatum?.target?.data?.attributes;
-    if (targetAttrs?.is_out_of_wedlock) {
-      return "ow-link";
+    // Apply dotted style only when the link originates from the correct parent for OW cases
+    if (
+      targetAttrs?.is_out_of_wedlock &&
+      targetAttrs?.ow_source &&
+      sourceAttrs
+    ) {
+      if (
+        (targetAttrs.ow_source === "father" &&
+          sourceAttrs?.gender?.toLowerCase() === "male") ||
+        (targetAttrs.ow_source === "mother" &&
+          sourceAttrs?.gender?.toLowerCase() === "female")
+      ) {
+        return "ow-link";
+      }
     }
     return "";
   }, []);
