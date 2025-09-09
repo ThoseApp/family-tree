@@ -324,7 +324,7 @@ export function findChildren(
   );
 
   return uniqueChildren.sort(
-    (a, b) => (b.order_of_birth || 0) - (a.order_of_birth || 0)
+    (a, b) => (a.order_of_birth || 0) - (b.order_of_birth || 0)
   );
 }
 
@@ -445,9 +445,13 @@ function buildSubTree(
   parentSpouseContext?: string // Track which spouse pattern to follow down this branch
 ): TreeNode {
   // If this member's spouses are expanded and visible, create a family group.
-  const spouses = findSpouses(member, allMembers).filter((s) =>
-    state.visibleNodes.has(s.unique_id)
-  );
+  // Sort spouses by ascending order_of_marriage for consistent display.
+  const spouses = findSpouses(member, allMembers)
+    .filter((s) => state.visibleNodes.has(s.unique_id))
+    .sort(
+      (a, b) =>
+        (a.order_of_marriage ?? Infinity) - (b.order_of_marriage ?? Infinity)
+    );
   const shouldCreateFamilyGroup =
     state.expandedSpouses.has(member.unique_id) && spouses.length > 0;
 
@@ -457,7 +461,7 @@ function buildSubTree(
   // Find and build subtrees for visible children.
   const visibleChildren = findChildren(member, allMembers)
     .filter((child) => state.visibleNodes.has(child.unique_id))
-    .sort((a, b) => (b.order_of_birth || 0) - (a.order_of_birth || 0));
+    .sort((a, b) => (a.order_of_birth || 0) - (b.order_of_birth || 0));
 
   const childrenSubTrees = visibleChildren.map((child) =>
     buildSubTree(child, allMembers, state, parentSpouseContext)
@@ -646,7 +650,7 @@ export function buildTreeData(
 
   const directChildren = findChildren(laketu, allMembers)
     .filter((child) => state.visibleNodes.has(child.unique_id))
-    .sort((a, b) => (b.order_of_birth || 0) - (a.order_of_birth || 0));
+    .sort((a, b) => (a.order_of_birth || 0) - (b.order_of_birth || 0));
 
   // CONSISTENCY RULE: Children ALWAYS come from spouse (Princess), NEVER from descendant (Laketu)
   if (princess && state.visibleNodes.has(princess.unique_id)) {
