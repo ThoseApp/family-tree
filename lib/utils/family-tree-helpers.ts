@@ -28,6 +28,8 @@ export function processedMemberToFamilyMember(
     description: processed.marital_status || "Family member",
     imageSrc: processed.picture_link || placeholderImage, // fallback image
     birthDate: processed.date_of_birth || "",
+    lifeStatus: processed.life_status,
+    emailAddress: processed.email_address,
     fatherName:
       processed.fathers_first_name && processed.fathers_last_name
         ? `${processed.fathers_first_name} ${processed.fathers_last_name}`.trim()
@@ -110,6 +112,34 @@ export async function fetchFamilyMembers(): Promise<ProcessedMember[]> {
 
   console.log("processed members", data);
   return data as ProcessedMember[];
+}
+
+/**
+ * Search family members by first or last name using Supabase (server-side filtering)
+ */
+export async function searchFamilyMembersByName(
+  query: string
+): Promise<ProcessedMember[]> {
+  const normalized = (query || "").trim();
+  if (normalized.length === 0) {
+    return [];
+  }
+
+  // Escape % and _ for ilike pattern
+  const escaped = normalized.replace(/[\%_]/g, (ch) => `\\${ch}`);
+  const pattern = `%${escaped}%`;
+
+  const { data, error } = await supabase
+    .from("family-tree")
+    .select("*")
+    .or(`first_name.ilike.${pattern},last_name.ilike.${pattern}`)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(`Failed to search family members: ${error.message}`);
+  }
+
+  return (data || []) as ProcessedMember[];
 }
 
 /**

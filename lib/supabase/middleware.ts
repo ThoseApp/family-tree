@@ -92,6 +92,14 @@ export async function updateSession(request: NextRequest) {
     // Get the current path
     const path = request.nextUrl.pathname;
 
+    // Publicly accessible routes (no auth required and no redirects)
+    const publicRoutes = new Set<string>(["/family-tree"]);
+
+    if (publicRoutes.has(path)) {
+      // Allow public pages without any redirects or approval checks
+      return response;
+    }
+
     // Check if the route is private (dashboard, admin, or publisher)
     const isPrivateRoute =
       path.startsWith("/dashboard") ||
@@ -100,7 +108,6 @@ export async function updateSession(request: NextRequest) {
 
     // Check if the route is a protected landing page
     const protectedLandingPages = [
-      "/family-tree",
       "/family-members",
       "/events",
       "/gallery",
