@@ -113,6 +113,34 @@ export async function fetchFamilyMembers(): Promise<ProcessedMember[]> {
 }
 
 /**
+ * Search family members by first or last name using Supabase (server-side filtering)
+ */
+export async function searchFamilyMembersByName(
+  query: string
+): Promise<ProcessedMember[]> {
+  const normalized = (query || "").trim();
+  if (normalized.length === 0) {
+    return [];
+  }
+
+  // Escape % and _ for ilike pattern
+  const escaped = normalized.replace(/[\%_]/g, (ch) => `\\${ch}`);
+  const pattern = `%${escaped}%`;
+
+  const { data, error } = await supabase
+    .from("family-tree")
+    .select("*")
+    .or(`first_name.ilike.${pattern},last_name.ilike.${pattern}`)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(`Failed to search family members: ${error.message}`);
+  }
+
+  return (data || []) as ProcessedMember[];
+}
+
+/**
  * Add a new family member to the family-tree table
  */
 export async function addFamilyMember(

@@ -30,7 +30,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { toast } from "sonner";
-import { dummyProfileImage } from "@/lib/constants";
+import { processedMemberToFamilyMember } from "@/lib/utils/family-tree-helpers";
 
 // Utility functions
 const calculateAge = (birthDate?: string): number | null => {
@@ -80,6 +80,10 @@ const FamilyMembersPage = () => {
   const [sortBy, setSortBy] = useState<string>("name");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [appliedSearch, setAppliedSearch] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<FamilyMember[] | null>(
+    null
+  );
 
   const handleRequestSuccess = () => {
     // Optionally, you might want to show a persistent success message
@@ -87,8 +91,32 @@ const FamilyMembersPage = () => {
     // For now, we just close the modal.
   };
 
-  const handleSearch = useCallback(() => {
-    setAppliedSearch(searchInput.trim());
+  const handleSearch = useCallback(async () => {
+    const q = searchInput.trim();
+    setAppliedSearch(q);
+    if (!q) {
+      setSearchResults(null);
+      return;
+    }
+    try {
+      setIsSearching(true);
+      const res = await fetch(
+        `/api/family-members/search?q=${encodeURIComponent(q)}`
+      );
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || "Failed to search");
+      }
+      const json = await res.json();
+      const processed = (json.data || []) as any[];
+      const mapped = processed.map(processedMemberToFamilyMember);
+      setSearchResults(mapped);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to search members");
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
   }, [searchInput]);
 
   // // Debounce search input to avoid filtering on every keystroke
@@ -118,29 +146,8 @@ const FamilyMembersPage = () => {
     }
 
     // Start with a fresh copy of the array
-    let filtered = [...familyMembers];
-
-    if (appliedSearch.trim()) {
-      const query = normalizeText(appliedSearch);
-
-      filtered = filtered.filter((member) => {
-        const fullName = member.name || "";
-        const normalizedFullName = normalizeText(fullName);
-
-        // Derive first and last from combined name for strict field matching
-        const [first = "", ...rest] = normalizedFullName
-          .split(" ")
-          .filter(Boolean);
-        const last = rest.join(" ");
-
-        // Match only against first_name, last_name, or the "first last" combination
-        return (
-          first.includes(query) ||
-          last.includes(query) ||
-          `${first} ${last}`.includes(query)
-        );
-      });
-    }
+    let baseList: FamilyMember[] = searchResults ?? familyMembers;
+    let filtered = [...baseList];
 
     // Gender filter
     if (genderFilter !== "all") {
@@ -185,12 +192,13 @@ const FamilyMembersPage = () => {
     });
 
     return filtered;
-  }, [familyMembers, appliedSearch, genderFilter, ageFilter, sortBy]);
+  }, [familyMembers, searchResults, genderFilter, ageFilter, sortBy]);
 
   // Clear all filters
   const clearAllFilters = () => {
     setSearchInput("");
     setAppliedSearch("");
+    setSearchResults(null);
     setGenderFilter("all");
     setAgeFilter("all");
     setSortBy("name");
@@ -225,9 +233,9 @@ const FamilyMembersPage = () => {
       total,
       male,
       female,
-      totalAll: familyMembers.length,
+      totalAll: (searchResults ?? familyMembers).length,
     };
-  }, [filteredFamilyMembers, familyMembers]);
+  }, [filteredFamilyMembers, familyMembers, searchResults]);
 
   // Render list is driven by filteredFamilyMembers so UI matches stats
 
@@ -254,7 +262,6 @@ const FamilyMembersPage = () => {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             className="pl-10 pr-24 rounded-full"
-
           />
           <Button
             type="submit"
@@ -427,6 +434,13 @@ const FamilyMembersPage = () => {
         </div>
       )}
 
+      {/* Searching State (server-side search) */}
+      {isSearching && (
+        <div className="flex justify-center items-center py-20">
+          <LoadingIcon />
+        </div>
+      )}
+
       {/* Error State */}
       {error && (
         <Card className="border-destructive">
@@ -462,6 +476,7 @@ const FamilyMembersPage = () => {
 
       {/* No Results State */}
       {!isLoading &&
+        !isSearching &&
         !error &&
         familyMembers.length > 0 &&
         filteredFamilyMembers.length === 0 && (
@@ -482,13 +497,16 @@ const FamilyMembersPage = () => {
         )}
 
       {/* Family Members Grid */}
-      {!isLoading && !error && filteredFamilyMembers.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-8">
-          {[...filteredFamilyMembers].map((member) => (
-            <FamilyMemberCard key={member.id} member={member} />
-          ))}
-        </div>
-      )}
+      {!isLoading &&
+        !isSearching &&
+        !error &&
+        filteredFamilyMembers.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-8">
+            {[...filteredFamilyMembers].map((member) => (
+              <FamilyMemberCard key={member.id} member={member} />
+            ))}
+          </div>
+        )}
 
       <FamilyMemberRequestModal
         isOpen={isRequestModalOpen}
