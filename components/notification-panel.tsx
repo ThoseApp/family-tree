@@ -167,7 +167,7 @@ const NotificationPanel = () => {
                 placeholder="Search notifications by title, message, or type..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 rounded-full"
+                className="pl-10 pr-4"
               />
               {searchQuery && (
                 <Button

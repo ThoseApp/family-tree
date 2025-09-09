@@ -4,10 +4,8 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import Link from "next/link";
 import { Facebook, Instagram, Linkedin } from "lucide-react";
-import { useUserStore } from "@/stores/user-store";
 
 const Footer = () => {
-  const { user } = useUserStore();
   return (
     <footer className="">
       <FrameWrapper className="py-10 bg-[#3A3734]">
@@ -47,46 +45,42 @@ const Footer = () => {
           </div>
 
           {/* EXPLORE */}
-          {user && (
-            <div className="w-full">
-              <h5 className="text-sm md:text-base font-semibold mb-4">
-                EXPLORE
-              </h5>
+          <div className="w-full">
+            <h5 className="text-sm md:text-base font-semibold mb-4">EXPLORE</h5>
 
-              <div className="space-y-2 flex flex-col">
-                <Link
-                  href="/family-members"
-                  className="text-sm md:text-base text-background hover:text-primary"
-                >
-                  Family Members
-                </Link>
-                <Link
-                  href="/family-tree"
-                  className="text-sm md:text-base text-background hover:text-primary"
-                >
-                  Family Tree
-                </Link>
-                <Link
-                  href="/history"
-                  className="text-sm md:text-base text-background hover:text-primary"
-                >
-                  History
-                </Link>
-                <Link
-                  href="/events"
-                  className="text-sm md:text-base text-background hover:text-primary"
-                >
-                  Events
-                </Link>
-                <Link
-                  href="/gallery"
-                  className="text-sm md:text-base text-background hover:text-primary"
-                >
-                  Gallery
-                </Link>
-              </div>
+            <div className="space-y-2 flex flex-col">
+              <Link
+                href="/family-members"
+                className="text-sm md:text-base text-background hover:text-primary"
+              >
+                Family Members
+              </Link>
+              <Link
+                href="/family-tree"
+                className="text-sm md:text-base text-background hover:text-primary"
+              >
+                Family Tree
+              </Link>
+              <Link
+                href="/history"
+                className="text-sm md:text-base text-background hover:text-primary"
+              >
+                History
+              </Link>
+              <Link
+                href="/events"
+                className="text-sm md:text-base text-background hover:text-primary"
+              >
+                Events
+              </Link>
+              <Link
+                href="/gallery"
+                className="text-sm md:text-base text-background hover:text-primary"
+              >
+                Gallery
+              </Link>
             </div>
-          )}
+          </div>
 
           {/* SOCIAL MEDIA LINKS */}
           <div className="w-full">

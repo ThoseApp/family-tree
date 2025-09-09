@@ -118,7 +118,7 @@ const NoticeBoardSearchFilters: React.FC<NoticeBoardSearchFiltersProps> = ({
           placeholder="Search notices by title or description..."
           value={filters.searchTerm}
           onChange={(e) => handleSearchChange(e.target.value)}
-          className="pl-10 rounded-full"
+          className="pl-10"
         />
       </div>
 
