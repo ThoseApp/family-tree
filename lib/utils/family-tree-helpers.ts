@@ -28,6 +28,8 @@ export function processedMemberToFamilyMember(
     description: processed.marital_status || "Family member",
     imageSrc: processed.picture_link || placeholderImage, // fallback image
     birthDate: processed.date_of_birth || "",
+    lifeStatus: processed.life_status,
+    emailAddress: processed.email_address,
     fatherName:
       processed.fathers_first_name && processed.fathers_last_name
         ? `${processed.fathers_first_name} ${processed.fathers_last_name}`.trim()

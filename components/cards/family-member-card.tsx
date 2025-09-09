@@ -42,6 +42,12 @@ const FamilyMemberCard = ({ member }: FamilyMemberCardProps) => {
             {/* <div className="font-semibold">Born on dd-mm-yyyy</div> */}
 
             {/* <h3 className="pb-5">{description}</h3> */}
+            <div className="flex items-center gap-3 text-muted-foreground">
+              <span className="text-xs">ID: {member.unique_id}</span>
+              {member.lifeStatus && (
+                <span className="text-xs">Status: {member.lifeStatus}</span>
+              )}
+            </div>
           </div>
         </div>
       </CardContent>
