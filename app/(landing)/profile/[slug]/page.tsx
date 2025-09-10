@@ -33,32 +33,6 @@ const InfoRow = ({
   </div>
 );
 
-// Helper component for Family Links
-const FamilyMemberLink = ({
-  name,
-  imageUrl,
-}: {
-  name: string;
-  imageUrl: string;
-}) => (
-  <div className="flex items-center space-x-2">
-    <div className="size-10 relative rounded-full overflow-hidden">
-      <Image
-        src={imageUrl}
-        alt={name}
-        fill
-        className="rounded-full object-cover"
-        onError={(e) => {
-          const target = e.target as HTMLImageElement;
-          target.onerror = null;
-          target.src = dummyProfileImage;
-        }}
-      />
-    </div>
-    <span className="text-sm font-medium text-gray-800">{name}</span>
-  </div>
-);
-
 const ProfilePage = ({ params }: ProfilePageProps) => {
   const [profile, setProfile] = useState<ProcessedMember | UserProfile | null>(
     null

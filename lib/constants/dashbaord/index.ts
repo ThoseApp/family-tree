@@ -18,6 +18,7 @@ import {
   LogOutIcon,
   Mail,
   HomeIcon,
+  HelpCircle,
 } from "lucide-react";
 import { dummyProfileImage } from "..";
 
@@ -62,6 +63,11 @@ export const navLinksTopSection: NavLink[] = [
     label: "Gallery",
     href: "/dashboard/gallery",
     icon: ImageIcon,
+  },
+  {
+    label: "Help & Tips",
+    href: "/dashboard/help",
+    icon: HelpCircle,
   },
   {
     label: "Settings",
