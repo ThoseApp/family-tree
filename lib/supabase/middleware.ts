@@ -93,7 +93,7 @@ export async function updateSession(request: NextRequest) {
     const path = request.nextUrl.pathname;
 
     // Publicly accessible routes (no auth required and no redirects)
-    const publicRoutes = new Set<string>(["/family-tree"]);
+    const publicRoutes = new Set<string>([]);
 
     if (publicRoutes.has(path)) {
       // Allow public pages without any redirects or approval checks
@@ -108,6 +108,7 @@ export async function updateSession(request: NextRequest) {
 
     // Check if the route is a protected landing page
     const protectedLandingPages = [
+      "/family-tree",
       "/family-members",
       "/events",
       "/gallery",

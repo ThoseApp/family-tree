@@ -135,7 +135,7 @@ const PublisherSideBar = ({
             <div className="mt-auto px-3">
               <Tooltip delayDuration={0}>
                 <TooltipTrigger asChild>
-                  <div
+                  <button
                     className={cn(
                       "relative text-sm group p-3 flex w-full rounded-lg justify-start items-center cursor-pointer hover:bg-destructive/20 text-destructive transition",
                       isActuallyCollapsed && "justify-center"
@@ -149,7 +149,7 @@ const PublisherSideBar = ({
                       )}
                     />
                     {!isActuallyCollapsed && <span>Log out</span>}
-                  </div>
+                  </button>
                 </TooltipTrigger>
                 {isActuallyCollapsed && (
                   <TooltipContent side="right" className="ml-2">

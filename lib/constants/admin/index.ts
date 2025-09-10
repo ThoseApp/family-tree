@@ -25,6 +25,7 @@ import {
   Contact,
   ClipboardPenLine,
   ClipboardPlus,
+  HelpCircle,
 } from "lucide-react";
 import { dummyProfileImage } from "..";
 
@@ -109,6 +110,11 @@ export const navLinksTopSection: NavLink[] = [
     label: "Events",
     href: "/admin/events",
     icon: CalendarIcon,
+  },
+  {
+    label: "Help Center",
+    href: "/admin/help",
+    icon: HelpCircle,
   },
   {
     label: "Settings",

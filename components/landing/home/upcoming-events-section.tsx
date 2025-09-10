@@ -10,6 +10,7 @@ import { useLandingPageContent } from "@/hooks/use-landing-page-content";
 import { useEventsStore } from "@/stores/events-store";
 import { dummyProfileImage } from "@/lib/constants";
 import { Event } from "@/lib/types";
+import Link from "next/link";
 
 const UpcomingEventsSection = () => {
   const { sections, loading: contentLoading, error } = useLandingPageContent();
@@ -159,14 +160,14 @@ const UpcomingEventsSection = () => {
         )}
       </div>
 
-      <div className="flex justify-center relative z-10 mt-8">
+      <div className="flex justify-center w-full relative z-10 mt-8">
         <Button
           variant="alternative"
+          className="rounded-full"
           size="lg"
-          className="rounded-full items-center"
+          asChild
         >
-          View Details
-          <MoveRight className="size-5 ml-2" />
+          <Link href="/events">View More →</Link>
         </Button>
       </div>
     </FrameWrapper>

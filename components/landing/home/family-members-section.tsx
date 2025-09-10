@@ -7,6 +7,7 @@ import FrameWrapper from "@/components/wrappers/frame-wrapper";
 import { Button } from "@/components/ui/button";
 import { familyMembers } from "@/lib/constants/landing";
 import { useLandingPageContent } from "@/hooks/use-landing-page-content";
+import Link from "next/link";
 
 const FamilyMembersSection = () => {
   const { sections, loading, error } = useLandingPageContent();
@@ -32,8 +33,13 @@ const FamilyMembersSection = () => {
             ? "Meet the Family: The People Who Make Us Whole"
             : content.description}
         </h3>
-        <Button variant="alternative" className="rounded-full" size="lg">
-          View More →
+        <Button
+          variant="alternative"
+          className="rounded-full"
+          size="lg"
+          asChild
+        >
+          <Link href="/family-members">View More →</Link>
         </Button>
       </div>
 

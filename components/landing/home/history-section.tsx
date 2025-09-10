@@ -7,6 +7,7 @@ import ProfileHistoryCard from "@/components/cards/profile-history-card";
 import { historyCards } from "@/lib/constants/landing";
 import { Button } from "@/components/ui/button";
 import { useLandingPageContent } from "@/hooks/use-landing-page-content";
+import Link from "next/link";
 
 const HistorySection = () => {
   const { sections, loading, error } = useLandingPageContent();
@@ -70,21 +71,28 @@ const HistorySection = () => {
       {/* View History Button Section */}
       <div className="pt-8 md:pt-12">
         <div className="flex justify-center">
-          <Button variant="alternative" size="lg" className="rounded-full">
-            View History
-            <svg
-              className="size-5 ml-2 "
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
+          <Button
+            variant="alternative"
+            size="lg"
+            className="rounded-full"
+            asChild
+          >
+            <Link href="/history">
+              View History
+              <svg
+                className="size-5 ml-2 "
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </Link>
           </Button>
         </div>
       </div>
