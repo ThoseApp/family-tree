@@ -101,7 +101,7 @@ const HistoryPage = () => {
             </AccordionContent>
           </AccordionItem>
 
-          {/* PATRON'S MESSAGE SECTION */}
+          {/* PATRON&apos;S MESSAGE SECTION */}
           <AccordionItem
             value="patron-message"
             className="border rounded-lg px-4"
@@ -157,7 +157,7 @@ const HistoryPage = () => {
             </AccordionContent>
           </AccordionItem>
 
-          {/* PRESIDENT'S MESSAGE SECTION */}
+          {/* PRESIDENT&apos;S MESSAGE SECTION */}
           <AccordionItem
             value="president-message"
             className="border rounded-lg px-4"
@@ -223,24 +223,24 @@ const HistoryPage = () => {
                   above divinities are no longer worshipped but some e.g. Oro
                   and Agemo have stood the test of time and are still worshipped
                   annually. These divinities had specific times in the year when
-                  sacrifices were offered to them. This was their special
-                  &quot;odun&quot; hence there was Odun Sere for Sere, Odun Osu
-                  for Osu and so on. It is particularly significant to point out
-                  that all the divinities mentioned above centred around the
-                  Awujale, the King of Ijebuland. “Gbogbo odun lodun Oba”. The
-                  King is the chief celebrant of all festivals thus giving
-                  irrefutable credence to the fact that the Awujale as the
-                  political head, is also the spiritual head of the land. The
-                  Awujale is thus regarded as sacred. And the Awujales that have
-                  joined their ancestors are deified to be praised, worshipped
-                  and appeased during the Odun Osu. The Odun Osu was celebrated
-                  usually in the month of December. Pictures of the past
-                  Awujales who have joined their ancestors are displayed,
-                  prayers are offered for a prosperous year, for the fertility
-                  of the farms, for the protection of the community from
-                  diseases, for the happiness of the community and for the
-                  spirits of the dead. Pounded yam, Kolanuts and drinks are
-                  offered and dancing climax the rest of the Odun Osu festival.
+                  sacrifices were offered to them. This was their special ‘odun’
+                  hence there was Odun Sere for Sere, Odun Osu for Osu and so
+                  on. It is particularly significant to point out that all the
+                  divinities mentioned above centred around the Awujale, the
+                  King of Ijebuland. “Gbogbo odun lodun Oba”. The King is the
+                  chief celebrant of all festivals thus giving irrefutable
+                  credence to the fact that the Awujale as the political head,
+                  is also the spiritual head of the land. The Awujale is thus
+                  regarded as sacred. And the Awujales that have joined their
+                  ancestors are deified to be praised, worshipped and appeased
+                  during the Odun Osu. The Odun Osu was celebrated usually in
+                  the month of December. Pictures of the past Awujales who have
+                  joined their ancestors are displayed, prayers are offered for
+                  a prosperous year, for the fertility of the farms, for the
+                  protection of the community from diseases, for the happiness
+                  of the community and for the spirits of the dead. Pounded yam,
+                  Kolanuts and drinks are offered and dancing climax the rest of
+                  the Odun Osu festival.
                 </p>
 
                 <p>
@@ -288,33 +288,33 @@ const HistoryPage = () => {
                   feast them once they were around. This attribute that brought
                   others to him earned him the name Atotiletowa — implying that
                   he was respected and important enough for others to leave
-                  their houses for his. By Egundebi&apos;s hut was a tree. It
-                  was an osu tree. The tree and its surroundings came to
-                  represent a court yard. Anchored by good judgement, a
-                  traditional knowledge of what was wrong as against what was
-                  right and a knowledge of the regulations that govern the
-                  conduct of the people, Egundebi became widely respected as an
-                  impartial arbitrator. Even if the village was after your head
-                  and you ran to the osu tree, the symbol of justice, the
-                  pursuants would halt to allow Egundebi listen to the two
-                  parties. The act of running and holding to the osu tree gave
-                  birth to Mosuro — meaning to hold on to the osu tree in refuge
-                  for the intervention of Egundebi the arbitrator. This is how
-                  Egundebi Atotiletowa came to be called Mosuro. It must be
-                  remembered that the Yorubas had no surnames as we know it
-                  today prior to their contact with the Western world. Names
-                  belonged to the individuals. But individual names were not
-                  mere tags of identity or appellation that made good sounds.
-                  The individual names were real, alive and correlated to the
-                  circumstances of birth and extrapolated to what the future
-                  should bring or hold for the child. Though written literature
-                  may be lacking, encapsulated in our name and indeed every
-                  Yoruba name is a valid literature of the past. When the
-                  Western culture introduced hereditary surnames principally to
-                  establish proof in the transfer of land ownership, title and
-                  office to the next heir, it passed on to the Yorubas through
-                  the British. This is how Egundebi&apos;s children and children
-                  unborn came to acquire Mosuro as a surname.
+                  their houses for his. By Egundebi’s hut was a tree. It was an
+                  osu tree. The tree and its surroundings came to represent a
+                  court yard. Anchored by good judgement, a traditional
+                  knowledge of what was wrong as against what was right and a
+                  knowledge of the regulations that govern the conduct of the
+                  people, Egundebi became widely respected as an impartial
+                  arbitrator. Even if the village was after your head and you
+                  ran to the osu tree, the symbol of justice, the pursuants
+                  would halt to allow Egundebi listen to the two parties. The
+                  act of running and holding to the osu tree gave birth to
+                  Mosuro — meaning to hold on to the osu tree in refuge for the
+                  intervention of Egundebi the arbitrator. This is how Egundebi
+                  Atotiletowa came to be called Mosuro. It must be remembered
+                  that the Yorubas had no surnames as we know it today prior to
+                  their contact with the Western world. Names belonged to the
+                  individuals. But individual names were not mere tags of
+                  identity or appellation that made good sounds. The individual
+                  names were real, alive and correlated to the circumstances of
+                  birth and extrapolated to what the future should bring or hold
+                  for the child. Though written literature may be lacking,
+                  encapsulated in our name and indeed every Yoruba name is a
+                  valid literature of the past. When the Western culture
+                  introduced hereditary surnames principally to establish proof
+                  in the transfer of land ownership, title and office to the
+                  next heir, it passed on to the Yorubas through the British.
+                  This is how Egundebi’s children and children unborn came to
+                  acquire Mosuro as a surname.
                 </p>
               </div>
 
@@ -384,8 +384,8 @@ const HistoryPage = () => {
                   time to understand the two homes to assure worthiness and
                   compatibility of families, there is also time for the man and
                   the woman to develop an affection for each other and finally
-                  the relationship is culminated by the parents blessings and
-                  consent. Egundebi&apos;s family got the consent of
+                  the relationship is culminated by the parents&apos; blessings
+                  and consent. Egundebi&apos;s family got the consent of
                   Okuewu&apos;s family and they both got married about 1875.
                   Egundebi was to marry five other wives making a total of seven
                   wives in his life time. Polygamy then was by and large
@@ -418,18 +418,17 @@ const HistoryPage = () => {
                   Gbokoyi. Adekogbe means the prince has rejected the wilderness
                   and Gbokoyi means the wilderness has refused to accept this
                   one. The names are in clear reference to the wilderness or
-                  bush where deceased babies were disposed off after death. The
+                  bush where deceased babies were disposed of after death. The
                   prince on the other hand is in reference to royal lineage both
                   with Ijebu—Ode and Ososa. Adekogbe&apos;s father, Egundebi was
                   born by Princess Olutoyese of Ijebu—Ode and his mother Okuewu
                   was a direct descendant of the Gbegande of Ososa. As fortune
                   would have it, Okuewu had two other surviving children after
                   Adekogbe. His immediate younger brother was named Banjoko,
-                  meaning literally &quot;sit down with me&quot;. The name
-                  Banjoko is an allusion to the past. It implies that this one
-                  is not going into the wilderness and that he is going to stay
-                  with his parents. The last born was a girl. She was named
-                  Okufowoke.
+                  meaning literally “sit down with me”. The name Banjoko is an
+                  allusion to the past. It implies that this one is not going
+                  into the wilderness and that he is going to stay with his
+                  parents. The last born was a girl. She was named Okufowoke.
                 </p>
               </div>
 
@@ -442,9 +441,9 @@ const HistoryPage = () => {
                   the Obaleye age group. They were called Obaleye in
                   commemoration of the very warm reception accorded Awujale
                   Fidipote when his body was brought back to Ijebu—Ode from Epe
-                  where he died in self exile. From childhood, Adekogbe&apos;s
-                  build was cut. He had a small frame. A frame that in the
-                  future would support an eminent stature. He had a handsome and
+                  where he died in self exile. From childhood, Adekogbe’s build
+                  was cut. He had a small frame. A frame that in the future
+                  would support an eminent stature. He had a handsome and
                   luxuriant dark skin with a face showing slightly high cheek
                   bones. Distinctive on the cheeks were three perpendicular
                   facial marks on each cheek, each stroke about one and a half
@@ -457,32 +456,31 @@ const HistoryPage = () => {
                   was with his father. It was of course farming. But this was
                   short lived. With his mother, he had been introduced into the
                   intricacies of trading. In his youth, he along with Awawu,
-                  Okuewu&apos;s maid would cart goods on their heads and follow
+                  Okuewu’s maid would cart goods on their heads and follow
                   Okuewu to Ejimrin to purchase goods and then to Ososa to sell
                   the goods. It was a training Banjoko and Okufowoke would
                   equally undergo. Much later when they graduated from such
-                  chores, it was Adekogbe&apos;s, Banjoko&apos;s and
-                  Okufowoke&apos;s first children that undertook the
-                  assignments. Contrary to expectations, the British troops did
-                  not level Ijebu—Ode when they took over the city. A Briton was
-                  installed as district head, commerce within the hinterland was
-                  no longer restricted to the border posts and the city
-                  benefited from increased trade. Christianity which was the
-                  conqueror&apos;s religion gained easier access and protective
-                  support.
+                  chores, it was Adekogbe’s, Banjoko’s and Okufowoke’s first
+                  children that undertook the assignments. Contrary to
+                  expectations, the British troops did not level Ijebu—Ode when
+                  they took over the city. A Briton was installed as district
+                  head, commerce within the hinterland was no longer restricted
+                  to the border posts and the city benefited from increased
+                  trade. Christianity which was the conqueror’s religion gained
+                  easier access and protective support.
                 </p>
 
                 <p>
                   Because he successfully settled at Itele, Egundebi now had two
-                  homes. His family quarter at Ita Niebo in Ijebu—Ode and his
+                  homes. His family quarter at Ita Ntebo in Ijebu—Ode and his
                   farm settlement at Itele. He commuted between both as the
                   situation demanded, while Okuewu and her children returned to
-                  his bungalow house at Ita Niebo. By the time they returned to
+                  his bungalow house at Ita Ntebo. By the time they returned to
                   Ijebu—Ode, Islam which had been lurking in the background up
                   until about 1890 began to gain major converts. Awujale Tunwase
                   gave the religion recognition and support. Mosques sprang up
                   in the different quarters of the city. Affiliated to many of
-                  the growing mosques were arabic schools (Ile Kewu) where
+                  the growing mosques were Arabic schools (Ile Kewu) where
                   students were tutored in Arabic and the Islamic Faith.
                   Adekogbe was enrolled at the Arabic school in Ikanigbo Mosque
                   under the tutorship of Alfa Abdul Qadir. Among his colleagues
@@ -490,25 +488,25 @@ const HistoryPage = () => {
                   It was at this point that Adekogbe became a Muslim. He took a
                   full bath of cleansing into the new religion and took a muslim
                   name. In order to preserve his initials A.G, he dropped
-                  Adekogbe for Abdul—Kareem. Ironically, one of
-                  Abdul—Kareem&apos;s children became a christian. To preserve
-                  his own initials F.A. (Fasasi Adewumi), Fasasi was changed to
-                  Francis. In a similar conversion exercise, Okuewu took up
-                  Awawu as an additional name, while Banjoko added Rufai to his
-                  and Okufowoke added Jeminatu to hers. Egundebi on the other
-                  hand remained Egundebi, but two acts of his are worthy of
-                  mention. One, he like the rest of the Mafowoku age group
-                  joined and participated in a conversion ceremony with Balogun
-                  Kuku when he opened his &quot;Olorunsogo&quot; new house and
-                  mosque at Niebo Street, in 1902. It was an occasion in which
-                  several dignitaries in Ijebu—Ode declared for Islam. Second,
-                  it was Egundebi who offered the Ita Niebo community a piece of
-                  his land on which the Ita Niebo mosque abutting our family
-                  house stands. The mosque was initially built about 1903.
-                  Between the Arabic school and helping Okuewu, Abdul—Kareem
-                  became a tailor. He would sew caps known as Etu while Rufai
-                  Banjoko, his younger brother would market them to as far as
-                  Egba province. He possessed such skill that he sewed and
+                  Adekogbe for Abdul—Kareem. Ironically, one of Abdul—Kareem’s
+                  children became a christian. To preserve his own initials F.A.
+                  (Fasasi Adewumi), Fasasi was changed to Francis. In a similar
+                  conversion exercise, Okuewu took up Awawu as an additional
+                  name, while Banjoko added Rufai to his and Okufowoke added
+                  Jeminatu to hers. Egundebi on the other hand remained
+                  Egundebi, but two acts of his are worthy of mention. One, he
+                  like the rest of the Mafowoku age group joined and
+                  participated in a conversion ceremony with Balogun Kuku when
+                  he opened his “Olorunsogo” new house and mosque at Ntebo
+                  Street, in 1902. It was an occasion in which several
+                  dignitaries in Ijebu—Ode declared for Islam. Second, it was
+                  Egundebi who offered the Ita Ntebo community a piece of his
+                  land on which the Ita Ntebo mosque abutting our family house
+                  stands. The mosque was initially built about 1903. Between the
+                  Arabic school and helping Okuewu, Abdul—Kareem became a
+                  tailor. He would sew caps known as Etu while Rufai Banjoko,
+                  his younger brother would market them to as far as Egba
+                  province. He possessed such skill that he sewed and
                   embroidered Agbada by hand. For his skill, he was awarded a
                   government sewing assignment. He sewed the uniform of prison
                   officials. For the city at large, members of the Obaleye group
@@ -548,19 +546,19 @@ const HistoryPage = () => {
                   Lagos and ordered for it. It was an engine which when attached
                   to the canoe eliminated the services of the oarsmen and
                   propelled the canoe faster. The journey from Ejimrin to Lagos
-                  and backbecameshorter but nevertheless hazardous. There was
+                  and back became shorter but nevertheless hazardous. There were
                   several stores to purchase textile and other goods from. The
                   party would spend about four days in Lagos combing separately
                   around for the best deals. However, PZ and John Holt Stores
-                  were Abdul–Kareem&apos;s favourites. They offered the widest
-                  and latest collection from U.K. and their prices made the risk
+                  were Abdul–Kareem’s favourites. They offered the widest and
+                  latest collection from U.K. and their prices made the risk
                   worth the venture. Besides, PZ officials were particularly
                   receptive to him. They allowed him the use of their warehouse
                   to sack his goods for his return journey to Ejimrin. Because
                   goods followed them back to Ejimrin, the return trip to
-                  Ijebu-ode was modified. Abdul–Kareem would transfer at Ejimrin
+                  Ijebu–ode was modified. Abdul–Kareem would transfer at Ejimrin
                   to smaller canoes for Ebute Eriwe. It was from here porters
-                  would cart the goods to Ijebu-Ode. Lagos was more than a
+                  would cart the goods to Ijebu–Ode. Lagos was more than a
                   commercial centre. There was a lot to observe in it. Fashion
                   took its root from Lagos before spreading to the interior.
                   Lagos had intercoursed with the world and acquired
@@ -597,13 +595,14 @@ const HistoryPage = () => {
                   name. By about the age of twenty in 1910, Anjuwon Okufowoke
                   was married to Kadri Onanuga. The future was bright and her
                   family hopes were high. Nature however dealt a blow on her
-                  when she lost a first child in infacy. A second birth survived
-                  and she was named Saratu Kokumo Malomo Onanuga. She lived as
-                  the only surviving offspring of Okufowoke. Saratu took after
-                  her mother and became a perfect mould of good naturedness and
-                  a woman whose natural grace endeared her to all who come into
-                  contact with her. She is today known and recognised far and
-                  beyond as Mama Sunmoya or Mama Oke—Ola Alaso Oke.
+                  when she lost a first child in infancy. A second birth
+                  survived and she was named Saratu Kokumo Malomo Onanuga. She
+                  lived as the only surviving offspring of Okufowoke. Saratu
+                  took after her mother and became a perfect mould of good
+                  naturedness and a woman whose natural grace endeared her to
+                  all who come into contact with her. She is today known and
+                  recognised far and beyond as Mama Sunmoya or Mama Oke—Ola
+                  Alaso Oke.
                 </p>
               </div>
 
@@ -615,9 +614,9 @@ const HistoryPage = () => {
                   Egundebi was at Itele when Adelaja died. This was about 1910.
                   Egundebi himself was by then very frail. He was borne after
                   the burial of Adelaja in a makeshift carriage by his workers
-                  to his Ita Niebo residence at Ijebu—Ode. In 1912 Egundebi died
+                  to his Ita Ntebo residence at Ijebu—Ode. In 1912 Egundebi died
                   and his body like his son&apos;s was interned at his home in
-                  Ita Niebo. It was the custom before cemeteries came about in
+                  Ita Ntebo. It was the custom before cemeteries came about in
                   Ijebu—Ode to bury princes and princesses in their homes. Six
                   feet under, in what is now Desalu Mosuro&apos;s room lies the
                   remains of Egundebi. Similarly, the remains of Adelaja is
@@ -665,7 +664,7 @@ const HistoryPage = () => {
                   to outlive their parents is a human desire, unfortunately
                   death will come when it will without heed to societal norms or
                   wishes. The solace to Okufowoke&apos;s death was that she left
-                  a daughter, Saratu behind. To Saratu, Okuewu (Iya Italupe)
+                  a daughter, Saratu, behind. To Saratu, Okuewu (Iya Italupe)
                   vowed to herself that she would not be denied any motherly
                   care and affection. It was a commitment Okuewu took up. Saratu
                   came into her ward and she lavished on her love, care and
@@ -732,7 +731,7 @@ const HistoryPage = () => {
                   was the calibre of men that led the Kila societies in the
                   various Yoruba cities. Giwa Kila Mosuro was born to his role.
                   He was magnetic and genuinely merry. Everything about Giwa
-                  Kila was fanfare. He was a hedonist as a well as a disciplined
+                  Kila was fanfare. He was a hedonist as well as a disciplined
                   and organized businessman. He had a natural feel for
                   entertainment and fair for clothes. He is perhaps the most
                   vivacious Mosuro that has ever been. In his time, there was no
@@ -766,9 +765,9 @@ const HistoryPage = () => {
                   for lack of judgement on the Abadatu affair. They gathered
                   together and burnt Giwa&apos;s effigy in front of his house.
                   They also went about the city derisively referring to Giwa
-                  Kila as a &quot;short devil&quot; and a man not worthy of the
+                  Kila as a “short devil” and a man not worthy of the
                   city&apos;s respect. Giwa Kila did not buckle under
-                  Obabeko&apos;s denoumciation, instead he rallied his peers,
+                  Obabeko&apos;s denounciation, instead he rallied his peers,
                   his family and his supporters and with the accompaniment of
                   drums danced round the city refuting all allegations against
                   him. Giwa Kila used fanfare to turn a bad case to his
@@ -878,7 +877,7 @@ const HistoryPage = () => {
                   ceremony and savoured every detail of it. He had a dream that
                   if he worked hard and the future paved well for him, he would
                   erect a house that would draw all to see. His dream house
-                  would not only be symbolic it would be functional. The house
+                  would not only be symbolic, it would be functional. The house
                   would make provision for his children to bring in their wives
                   and children. It would garrison all his family and his
                   children&apos;s family together and it would rise to the sky.
@@ -893,63 +892,64 @@ const HistoryPage = () => {
                   province. The thought struck him after the many foot and
                   bicycle trips to Ejinrin that if he provided a motor vehicle
                   that would cart goods and people back and forth from Ejirin
-                  and Ijebu-Ode, the traders’ burden will be eased and gains
-                  would also accrue him. That was R. B. A shrewd and imaginative
-                  businessman who was able to see the future and carve it up. In
-                  his vision he had calculated a service that would endear him,
-                  at a price. Through the assistance and connection of Giwa
-                  Kila, R.B. obtained his first Reo lorry assigned to convey
-                  passengers and goods to and from Oyingbo and Ejinrin markets.
-                  It was a successful venture that transformed him into a
-                  transportation magnate thus towering him above many other
-                  businessmen in the city. By about <strong>1920</strong> R.B.
-                  now had his own retail store at the family bungalow house at
-                  Ita Ntebo where he sold caps and textile. Giwa Kila’s shop on
-                  the other hand was at Italupẹ. Giwa Kila’s store carried
-                  textile along with provisions. Both of them were now
-                  financially successful. With financial success, R.B.’s family
-                  grew. Polygamy set in and his children increased in number.
-                  His passion for religion passed on compulsorily to the
-                  children. Arabic and Islamic education began for all at youth
-                  at the arabic schools affiliated with the many mosques. In
-                  1926 an Islamic religious record was set in Ijebu-Ode. Two men
-                  from Ijebu-Ode set out on pilgrimage to Mecca. Another
-                  followed in 1928. From 1927, R.B. nursed a desire to go to
-                  Mecca and prepared towards it. There was some mystique about
-                  going to Mecca. Primarily, it was rigidly religious. You
-                  qualified to go having fulfilled in letter and in spirit the
-                  other required tene ts of the Islamic faith. Mecca was the
-                  ultimate. There was also the glamour of this war is referred
-                  to as Obayori. Mecca was the ultimate. There was also the
-                  glamour of this war is referred to as Obayori. But by and
-                  large it was a religious affair. And overseas adventure and
-                  intercourse. You were observed differently once you returned
-                  from Mecca, you returned clean. You were expected to live up
-                  to the expectation and perception of the general public. They
-                  expected of you nothing short of religious ascetism. The early
-                  pilgrims lived up to the expectation and perception of the
-                  general public. R.B. Mosuro could aspire to religious piety as
-                  Islam was the bedrock of his personal and public life. On 1st
-                  of March, 1929, R.B. Mosuro and Kadiri Borokini a friend who
-                  lived directly opposite the Mosuro Ita Ntebo house, set out on
-                  a pilgrimage to Mecca. Other pilgrims from Ijebu-Ode before
-                  them went to Mecca the long and arduous way. They went by road
-                  on a journey that included trekking. R.B. Mosuro and Kadiri
-                  Borokini were trail blazers for they went by sea. R.B. and
-                  Kadiri Borokini were bound together beyond being neighbours.
-                  They both with a minority group stood firmly in support of
-                  Awujale Daniel Adesanya in 1942 when attempts were being made
-                  to abdicate him. It was a just and principled stance that cost
-                  Kadiri Borokini for about ten years, the office of Ijebu-Ode’s
+                  and Ijebu-Ode, the traders&apos; burden will be eased and
+                  gains would also accrue him. That was R. B. A shrewd and
+                  imaginative businessman who was able to see the future and
+                  carve it up. In his vision he had calculated a service that
+                  would endear him, at a price. Through the assistance and
+                  connection of Giwa Kila, R.B. obtained his first Reo lorry
+                  assigned to convey passengers and goods to and from Oyingbo
+                  and Ejinrin markets. It was a successful venture that
+                  transformed him into a transportation magnate thus towering
+                  him above many other businessmen in the city. By about{" "}
+                  <strong>1920</strong> R.B. now had his own retail store at the
+                  family bungalow house at Ita Ntebo where he sold caps and
+                  textile. Giwa Kila&apos;s shop on the other hand was at
+                  Italupẹ. Giwa Kila&apos;s store carried textile along with
+                  provisions. Both of them were now financially successful. With
+                  financial success, R.B.&apos;s family grew. Polygamy set in
+                  and his children increased in number. His passion for religion
+                  passed on compulsorily to the children. Arabic and Islamic
+                  education began for all at youth at the arabic schools
+                  affiliated with the many mosques. In 1926 an Islamic religious
+                  record was set in Ijebu-Ode. Two men from Ijebu-Ode set out on
+                  pilgrimage to Mecca. Another followed in 1928. From 1927, R.B.
+                  nursed a desire to go to Mecca and prepared towards it. There
+                  was some mystique about going to Mecca. Primarily, it was
+                  rigidly religious. You qualified to go having fulfilled in
+                  letter and in spirit the other required tene ts of the Islamic
+                  faith. Mecca was the ultimate. There was also the glamour of
+                  this war is referred to as Obayori. Mecca was the ultimate.
+                  There was also the glamour of this war is referred to as
+                  Obayori. But by and large it was a religious affair. And
+                  overseas adventure and intercourse. You were observed
+                  differently once you returned from Mecca, you returned clean.
+                  You were expected to live up to the expectation and perception
+                  of the general public. They expected of you nothing short of
+                  religious ascetism. The early pilgrims lived up to the
+                  expectation and perception of the general public. R.B. Mosuro
+                  could aspire to religious piety as Islam was the bedrock of
+                  his personal and public life. On 1st of March, 1929, R.B.
+                  Mosuro and Kadiri Borokini a friend who lived directly
+                  opposite the Mosuro Ita Ntebo house, set out on a pilgrimage
+                  to Mecca. Other pilgrims from Ijebu-Ode before them went to
+                  Mecca the long and arduous way. They went by road on a journey
+                  that included trekking. R.B. Mosuro and Kadiri Borokini were
+                  trail blazers for they went by sea. R.B. and Kadiri Borokini
+                  were bound together beyond being neighbours. They both with a
+                  minority group stood firmly in support of Awujale Daniel
+                  Adesanya in 1942 when attempts were being made to abdicate
+                  him. It was a just and principled stance that cost Kadiri
+                  Borokini for about ten years, the office of Ijebu-Ode&apos;s
                   chief Imam. Following a court injunction and the intervention
                   of Hadji Abbas and others, the matter was amicably resolved
                   and Hadji Kadiri Borokini became the chief Imam of Ijebu-Ode
                   in 1953. Before then something stronger held R.B. and Borokini
                   together. R. B. took Adaiwyat as his last wife, Adaiwyat being
-                  the daughter too Hadji Borokini. While away to Mecca, R.B.’s
-                  business was fully established enough to maintain smooth
-                  operation without him, although Giwa Kila was close by to
-                  oversee it all. The pilgrimage to Mecca took close to nine
+                  the daughter too Hadji Borokini. While away to Mecca,
+                  R.B.&apos;s business was fully established enough to maintain
+                  smooth operation without him, although Giwa Kila was close by
+                  to oversee it all. The pilgrimage to Mecca took close to nine
                   months. When he returned to Lagos, advance notice of his
                   arrival in Ijebu-Ode was sent to Giwa Kila. An elaborate
                   arrangement in which the family, relations, friends and his
@@ -979,107 +979,108 @@ const HistoryPage = () => {
                   produce. The size and the success of his produce business is
                   evident from the two warehouses, abutting one another, which
                   he built at Folagbade Street in Ijebu-Ode. At the time of Giwa
-                  Kila’s death, he had eleven male children viz Amusa, Muyibi,
-                  Tijani, Gaffari, Sule, Yinusa, Fasasi, Liadi, Ganiyu, Muritala
-                  and Lamidi who came under the custody of Hadji R.B. At that
-                  period, there was less emphasis on the educational training of
-                  female children. Women were enrolled to a trade and married to
-                  a selected male at maturity. A common custom at that time was
-                  for widows in this case Giwa Kila’s wives, to be maintained by
-                  the brother of the deceased as well as to raise progeny. This
-                  was a blend of culture and religion. Religion, in the sense
-                  that a muslim male could take more than one wife if he wished
-                  and if he had the means to maintain them. Culture, in the
-                  sense that traditionally marriage is not regarded dissolved by
-                  death. However, Hadji R.B. did not raise any progeny with Giwa
-                  Kila’s surviving widows. One of Giwa Kila’s widows was Sefi
-                  Mosuro, a woman of great pride. In 1929 her father Ogunnaike
-                  was crowned Awujale of Ijebu-Ode and she took excessive pride
-                  in being a princess. After her father became King, she spent
-                  more time at the Apebi palace than at Giwa Kila’s. With the
-                  passing of Giwa Kila and to meet her needs, her father gave
-                  her a piece of land at Obalende where she built her own house.
-                  Sefi Mosuro had the most surviving children for Giwa Kila —
-                  four males and two Females. By the time her children were
-                  married, a fairly big Mosuro family had built up strongly
-                  around her but quartered at Obalende. Her grand children knew
-                  little about the larger Mosuro family at Ita Ntebo. Likewise,
-                  many Hadji R.B’s grand children little intermingled with
-                  Obalende or thought them to be related to Ntebo. Such was the
-                  insulation and attachment each branch had to its nuclear head,
-                  the result of which an artificial and temporary gulf was
-                  created within the family. Happily the gulf has been bridged.
-                  However, Hadji R. B. has been criticised particularly by the
-                  female children of Giwa Kila for not showing enough attention
-                  and affection for their families after marriage. The criticism
-                  may have its own justification. However, one needs to examine
-                  the size of Giwa Kila’s family that Hadji R. B. inherited and
-                  the size of Hadji R.B’s family along with the volume of
-                  business and other activities that he was engaged in to
-                  understand there was a limit to the amount of individual
-                  attention he could render to all. When Hadji R.B. entered into
-                  produce, he acquired immense wealth. Now that the money was
-                  there he set about his dream to build a family house. All the
-                  while he had been resident at the family bungalow house at Ita
-                  Ntebo. The ownership of the piece of land on which the
-                  bungalow was situated had gone through hands. It had been
-                  transferred from Egundebi to Adelaja, who in turn transferred
-                  it to Giwa Kila and who finally gave it to Hadji R.B. Hadji R.
-                  B&apos;s plan was to demolish the bungalow and erect a taller
-                  and more modern building on it. But first he needed a place
-                  for his family to stay while the house was under construction.
-                  Hadji R. B. bought from the Laketu family a piece of land
-                  behind the bungalow that was going to be demolished and
-                  erected a new bungalow to house his family while the main
-                  building was under construction. The new storey building was
-                  very detailed and needed the best craftsmen for execution.
-                  Hadji R. B. knew exactly what he wanted. A glorious two storey
-                  building with designed accomodation for him, his children and
-                  his children&apos;s family. The chief mason, Captain Karimu,
-                  was invited from Lagos to handle the project. He was ably
-                  assisted by Kasummu Eleshin Balogun and other local
-                  bricklayers. Captain Karimu had earlier distinguished himself
-                  by the quality brick house he built at Odegbo. Another major
-                  party to the building project was Mr. Jones, the U.A.C.
-                  Manager. Hadji R. B. had taste and had money to satisfy his
-                  desires. He had travelled outside of Nigeria to Mecca and he
-                  knew what luxury was about. With the assistance of the U.A.C.
-                  Manager, his major finishing materials were imported from U.K.
-                  Pitch Pine ceiling was imported from U.K. A leisure rolling
-                  chair which enabled him to move on wheels around his floor
-                  came from U.K. Gold plated bed designed with a crown over it
-                  came from U. K. Furniture upholstered in red velvet came from
-                  U.K. And so on and so forth. When Balogun Kuku opened his
-                  Olorunsogo house in 1902, some Alladin lamps were presented to
-                  him as gifts from Egypt. The lamps were novelty at that time
-                  but they offered limited illumination. Hadji R. B. had bigger
-                  ideas for his house under construction. With Mr. Jones again,
-                  he imported from U. K. a generating plant powered by battery
-                  with enough power to illuminate the new two storey house, the
-                  bungalow house he temporarily resided in and the community
-                  mosque that abuts the house. When the building was completed
-                  in 1932 it was the first &quot;skyscraper&quot; in the city.
-                  Spectators came and sought opportunity to go to the top floor
-                  to observe the whole city from a vantage point. It was the
-                  first house in Ijebu province with electricity. Spectators
-                  trooped in at night, mouth agape while they saw night turned
-                  to day by the power of the generating plant. The community
-                  mosque abutting the house multiplied its membership at evening
-                  prayers because Hadji R. B. kindly extended electricity from
-                  his generating set to the mosque. For those that were close
-                  enough or had any business with Hadji R. B. every effort was
-                  made to see and sit in the palatial sitting room. The slogan
-                  was, sit on the red velvet sofa and be happy. For the children
-                  of Hadji R. B., they walked the city shoulder high. Their
-                  father&apos;s achievement gave them excessive pride. By
-                  extension, the achievement was also theirs. When Hadji R. B.
-                  went fully into produce he put his son Mumuni Foluso (M.F.) in
-                  charge of the 22 Ita Netbo retail shop. He was not the first
-                  child, Abibatt, was but she was a girl. M.F. was the first son
-                  and thus the sire. Being the heir to the family fortunes, he
-                  had an aura of power about him while his younger brothers and
-                  sisters looked up to him. His life plan was well designed. He
-                  was first to establish himself in business and thus ensure the
+                  Kila&apos;s death, he had eleven male children viz Amusa,
+                  Muyibi, Tijani, Gaffari, Sule, Yinusa, Fasasi, Liadi, Ganiyu,
+                  Muritala and Lamidi who came under the custody of Hadji R.B.
+                  At that period, there was less emphasis on the educational
+                  training of female children. Women were enrolled to a trade
+                  and married to a selected male at maturity. A common custom at
+                  that time was for widows in this case Giwa Kila&apos;s wives,
+                  to be maintained by the brother of the deceased as well as to
+                  raise progeny. This was a blend of culture and religion.
+                  Religion, in the sense that a muslim male could take more than
+                  one wife if he wished and if he had the means to maintain
+                  them. Culture, in the sense that traditionally marriage is not
+                  regarded dissolved by death. However, Hadji R.B. did not raise
+                  any progeny with Giwa Kila&apos;s surviving widows. One of
+                  Giwa Kila&apos;s widows was Sefi Mosuro, a woman of great
+                  pride. In 1929 her father Ogunnaike was crowned Awujale of
+                  Ijebu-Ode and she took excessive pride in being a princess.
+                  After her father became King, she spent more time at the Apebi
+                  palace than at Giwa Kila&apos;s. With the passing of Giwa Kila
+                  and to meet her needs, her father gave her a piece of land at
+                  Obalende where she built her own house. Sefi Mosuro had the
+                  most surviving children for Giwa Kila — four males and two
+                  Females. By the time her children were married, a fairly big
+                  Mosuro family had built up strongly around her but quartered
+                  at Obalende. Her grand children knew little about the larger
+                  Mosuro family at Ita Ntebo. Likewise, many Hadji R.B.&apos;s
+                  grand children little intermingled with Obalende or thought
+                  them to be related to Ntebo. Such was the insulation and
+                  attachment each branch had to its nuclear head, the result of
+                  which an artificial and temporary gulf was created within the
+                  family. Happily the gulf has been bridged. However, Hadji R.
+                  B. has been criticised particularly by the female children of
+                  Giwa Kila for not showing enough attention and affection for
+                  their families after marriage. The criticism may have its own
+                  justification. However, one needs to examine the size of Giwa
+                  Kila&apos;s family that Hadji R. B. inherited and the size of
+                  Hadji R.B.&apos;s family along with the volume of business and
+                  other activities that he was engaged in to understand there
+                  was a limit to the amount of individual attention he could
+                  render to all. When Hadji R.B. entered into produce, he
+                  acquired immense wealth. Now that the money was there he set
+                  about his dream to build a family house. All the while he had
+                  been resident at the family bungalow house at Ita Ntebo. The
+                  ownership of the piece of land on which the bungalow was
+                  situated had gone through hands. It had been transferred from
+                  Egundebi to Adelaja, who in turn transferred it to Giwa Kila
+                  and who finally gave it to Hadji R.B. Hadji R. B&apos;s plan
+                  was to demolish the bungalow and erect a taller and more
+                  modern building on it. But first he needed a place for his
+                  family to stay while the house was under construction. Hadji
+                  R. B. bought from the Laketu family a piece of land behind the
+                  bungalow that was going to be demolished and erected a new
+                  bungalow to house his family while the main building was under
+                  construction. The new storey building was very detailed and
+                  needed the best craftsmen for execution. Hadji R. B. knew
+                  exactly what he wanted. A glorious two storey building with
+                  designed accomodation for him, his children and his
+                  children&apos;s family. The chief mason, Captain Karimu, was
+                  invited from Lagos to handle the project. He was ably assisted
+                  by Kasummu Eleshin Balogun and other local bricklayers.
+                  Captain Karimu had earlier distinguished himself by the
+                  quality brick house he built at Odegbo. Another major party to
+                  the building project was Mr. Jones, the U.A.C. Manager. Hadji
+                  R. B. had taste and had money to satisfy his desires. He had
+                  travelled outside of Nigeria to Mecca and he knew what luxury
+                  was about. With the assistance of the U.A.C. Manager, his
+                  major finishing materials were imported from U.K. Pitch Pine
+                  ceiling was imported from U.K. A leisure rolling chair which
+                  enabled him to move on wheels around his floor came from U.K.
+                  Gold plated bed designed with a crown over it came from U. K.
+                  Furniture upholstered in red velvet came from U.K. And so on
+                  and so forth. When Balogun Kuku opened his Olorunsogo house in
+                  1902, some Alladin lamps were presented to him as gifts from
+                  Egypt. The lamps were novelty at that time but they offered
+                  limited illumination. Hadji R. B. had bigger ideas for his
+                  house under construction. With Mr. Jones again, he imported
+                  from U. K. a generating plant powered by battery with enough
+                  power to illuminate the new two storey house, the bungalow
+                  house he temporarily resided in and the community mosque that
+                  abuts the house. When the building was completed in 1932 it
+                  was the first &quot;skyscraper&quot; in the city. Spectators
+                  came and sought opportunity to go to the top floor to observe
+                  the whole city from a vantage point. It was the first house in
+                  Ijebu province with electricity. Spectators trooped in at
+                  night, mouth agape while they saw night turned to day by the
+                  power of the generating plant. The community mosque abutting
+                  the house multiplied its membership at evening prayers because
+                  Hadji R. B. kindly extended electricity from his generating
+                  set to the mosque. For those that were close enough or had any
+                  business with Hadji R. B. every effort was made to see and sit
+                  in the palatial sitting room. The slogan was, sit on the red
+                  velvet sofa and be happy. For the children of Hadji R. B.,
+                  they walked the city shoulder high. Their father&apos;s
+                  achievement gave them excessive pride. By extension, the
+                  achievement was also theirs. When Hadji R. B. went fully into
+                  produce he put his son Mumuni Foluso (M.F.) in charge of the
+                  22 Ita Netbo retail shop. He was not the first child, Abibatt,
+                  was but she was a girl. M.F. was the first son and thus the
+                  sire. Being the heir to the family fortunes, he had an aura of
+                  power about him while his younger brothers and sisters looked
+                  up to him. His life plan was well designed. He was first to
+                  establish himself in business and thus ensure the
                   establishment of his younger ones. That was business. He was
                   also to mould the family ethos and thus make them act as one
                   unit. While M.F. ran the retail shop, Hadji R.B. ran the
@@ -1093,59 +1094,59 @@ const HistoryPage = () => {
                   Hadji R. B. enhanced his wealth. When the timber business was
                   firmly entrenched, M.F. was seconded from the retail shop to
                   head the timber business. The timber business on the field was
-                  a risky and gruelling business. One of M.F’s brothers who had
-                  a go at it vowed never to return to it. Other brothers dodged
-                  it from tales of morbidity and mortality arising from tree
-                  felling and transportation. Perhaps M. F. did not like the
-                  rough and risky activities of timber business. We will never
-                  know. He however forged on at it gaining determination from
-                  the pressures that underlay the prerogatives of being the heir
-                  to the family fortunes. While the timber business progressed,
-                  Hadji R. B. found yet another challenge to direct his energy.
-                  Up until 1930 there were no Muslim schools in Ijebu-Ode that
-                  offered western education. Although there were more mosques
-                  across the city than churches, the Muslims lagged behind in
-                  the drive towards western education, offering instead Arabic
-                  and Islamic education at the numerous Ile Kewu. The Christians
-                  on the other hand had mission schools that offered western
-                  education. The result was that many Muslim children attended
-                  Christian mission schools, got converted into Christianity in
-                  the process, much to the chagrin of the Muslim parents. Mr. B.
-                  Daramola of the Education office advised Hadji R. B. to pool
-                  together the other Muslim notables in the city with the aim
-                  of, among other things, setting up in Ijebu-Ode a Muslim
-                  school. On the strength of this advice, Hadji R. B. along with
-                  A. G. Mebude, A. O. Ashiru, Hadji M. O. Abasas Odunsi and
-                  others formed a committee and started the first Muslim primary
-                  school at the Central Mosque Oyingbo in January 30, 1930. It
-                  was called Muslim school and the first headmaster was D. O.
-                  Eweoso. To the committee that was largely responsible for the
-                  founding of the Muslim school, Hadji R. B. was made the
-                  treasurer. The reasons were obvious. He had demonstrated
-                  through the success of his businesses the management of money.
-                  He was held in trust as an honest man and one who the lure of
-                  collective collection could not seduce. Hadji R. B. managed
-                  the finance and signed the cheques. There is some intrigue
-                  about Hadji R. B. signing cheques. He was thoroughly versed in
-                  Arabic but not learned in western education to read or write
-                  in English or Yoruba. But in the produce business he had two
-                  clerks:- Messrs Aderibigbe and Ayanbadejo, graduates of
-                  Western primary and semi-secondary education under him. They
-                  kept the written record and the written communication. They
-                  had another assignment. During slack periods of the business,
-                  Hadji R. B. made them teach him during office hours to read
-                  and write in Yoruba and to sign his name. It had an impact on
-                  him. Before the commencement of the Muslim school, western
-                  education was compulsory for his children particularly the
-                  males. Now with the Muslim school, education was doubly
-                  compulsory for the growing children. Being able to sign his
-                  cheque he became the custodian of his own money. The Moslem
-                  primary school moved to its permanent site at Isoku in 1936
-                  after the Central mosque Oyingbo became dilapidated in 1934.
-                  It was co-educational but in 1943 another school{" "}
-                  <i>Moslem Girls Impe</i> was started to make a second muslim
-                  primary school in Ijebu-Ode. On and on the list grew. It
-                  followed that once there were muslim primary schools, a
+                  a risky and gruelling business. One of M.F.&apos;s brothers
+                  who had a go at it vowed never to return to it. Other brothers
+                  dodged it from tales of morbidity and mortality arising from
+                  tree felling and transportation. Perhaps M. F. did not like
+                  the rough and risky activities of timber business. We will
+                  never know. He however forged on at it gaining determination
+                  from the pressures that underlay the prerogatives of being the
+                  heir to the family fortunes. While the timber business
+                  progressed, Hadji R. B. found yet another challenge to direct
+                  his energy. Up until 1930 there were no Muslim schools in
+                  Ijebu-Ode that offered western education. Although there were
+                  more mosques across the city than churches, the Muslims lagged
+                  behind in the drive towards western education, offering
+                  instead Arabic and Islamic education at the numerous Ile Kewu.
+                  The Christians on the other hand had mission schools that
+                  offered western education. The result was that many Muslim
+                  children attended Christian mission schools, got converted
+                  into Christianity in the process, much to the chagrin of the
+                  Muslim parents. Mr. B. Daramola of the Education office
+                  advised Hadji R. B. to pool together the other Muslim notables
+                  in the city with the aim of, among other things, setting up in
+                  Ijebu-Ode a Muslim school. On the strength of this advice,
+                  Hadji R. B. along with A. G. Mebude, A. O. Ashiru, Hadji M. O.
+                  Abasas Odunsi and others formed a committee and started the
+                  first Muslim primary school at the Central Mosque Oyingbo in
+                  January 30, 1930. It was called Muslim school and the first
+                  headmaster was D. O. Eweoso. To the committee that was largely
+                  responsible for the founding of the Muslim school, Hadji R. B.
+                  was made the treasurer. The reasons were obvious. He had
+                  demonstrated through the success of his businesses the
+                  management of money. He was held in trust as an honest man and
+                  one who the lure of collective collection could not seduce.
+                  Hadji R. B. managed the finance and signed the cheques. There
+                  is some intrigue about Hadji R. B. signing cheques. He was
+                  thoroughly versed in Arabic but not learned in western
+                  education to read or write in English or Yoruba. But in the
+                  produce business he had two clerks:- Messrs Aderibigbe and
+                  Ayanbadejo, graduates of Western primary and semi-secondary
+                  education under him. They kept the written record and the
+                  written communication. They had another assignment. During
+                  slack periods of the business, Hadji R. B. made them teach him
+                  during office hours to read and write in Yoruba and to sign
+                  his name. It had an impact on him. Before the commencement of
+                  the Muslim school, western education was compulsory for his
+                  children particularly the males. Now with the Muslim school,
+                  education was doubly compulsory for the growing children.
+                  Being able to sign his cheque he became the custodian of his
+                  own money. The Moslem primary school moved to its permanent
+                  site at Isoku in 1936 after the Central mosque Oyingbo became
+                  dilapidated in 1934. It was co-educational but in 1943 another
+                  school <i>Moslem Girls Impe</i> was started to make a second
+                  muslim primary school in Ijebu-Ode. On and on the list grew.
+                  It followed that once there were muslim primary schools, a
                   thought would be given to founding a muslim secondary school
                   which was the next stage of education. The arrangement for
                   setting up a secondary school began in 1946 and spear heading
