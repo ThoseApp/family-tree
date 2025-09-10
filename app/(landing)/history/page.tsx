@@ -57,7 +57,7 @@ const HistoryPage = () => {
                 meaningful information.
                 <p>
                   A detailed family history relies to a large extent on the
-                  information that exist. We had no specific written record
+                  information that exists. We had no specific written record
                   about Mosuro to fall back on. This did not dim our enthusiasm
                   to dig on. After thorough and persistent search, we found some
                   fragmentary literature we could glean from. In time, we found
@@ -84,14 +84,14 @@ const HistoryPage = () => {
                 Directory. We have left some blank pages in the book for
                 subsequent additions to the directory and amplification of the
                 pedigree. We have adhered strictly, for the purpose of writing
-                this book to the use of <strong>forenames</strong> in addressing
-                our parents, grand-parents, great grandparents etc. We beg their
-                indulgence. We did so with utmost respect for them. However,
-                forenames allow for uniformity of identity and a grasp of who is
-                who. Besides, the forenames in themselves are part of the
-                history that this book sets out to reveal. It is hoped that this
-                book would educate us all, would have helped us all in getting
-                to our roots and further wield us closer.
+                this book to the use of forenames in addressing our parents,
+                grand-parents, great grandparents etc. We beg their indulgence.
+                We did so with utmost respect for them. However, forenames allow
+                for uniformity of identity and a grasp of who is who. Besides,
+                the forenames in themselves are part of the history that this
+                book sets out to reveal. It is hoped that this book would
+                educate us all, would have helped us all in getting to our roots
+                and further wield us closer.
                 <p className="flex flex-col mt-4">
                   <i>Ayodeji Mosuro</i>
                   <i>Kolade Mosuro</i>
@@ -125,9 +125,7 @@ const HistoryPage = () => {
                 possible by the different roles played by each one of you.
                 Hardly do you find a house in Ijebu-Ode that has not a souvenir
                 of the Ankara prints made for the occasion. That day and the
-                memory of our forebears will always remain in everybody&apos;s
-                mind. ory of our forebears will always remain in
-                everybody&apos;s mind.
+                memory of our forebears will always remain in everybody’s mind.
               </p>
               <p>
                 We thank God Almighty that our good and respected name has been
@@ -218,64 +216,62 @@ const HistoryPage = () => {
                   traditional beliefs and the roles they played in the society
                   are vaguely understood today and have suffered pejorative
                   labelling. Many are now referred to and looked down upon as
-                  &quot;primitive&quot;, &quot;heathenism&quot; or
-                  &quot;paganism&quot;. The traditional divinities worshipped
-                  and celebrated in Ijebu-Ode include Sere, Obelu, Imuni-si-Ona,
-                  Igbe, Irawo, Osu, IgbesuOsu, Erinna, Irole Oropo, Eibi, Ijasa,
-                  Oro, Agemo. Many of the above divinities are no longer
-                  worshipped but some e.g. Oro and Agemo have stood the test of
-                  time and are still worshipped annually. These divinities had
-                  specific times in the year when sacrifices were offered to
-                  them. This was their special &apos;odun&apos; hence there was
-                  Odun Sere for Sere, Odun Osu for Osu and so on. It is
-                  particularly significant to point out that all the divinities
-                  mentioned above centred around the Awujale, the King of
-                  Ijebuland. &quot;Gbogbo odun lodun Oba&quot;. The King is the
-                  chief celebrant of all festivals thus giving irrefutable
-                  credence to the fact that the Awujale as the political head,
-                  is also the spiritual head of the land. The Awujale is thus
-                  regarded as sacred. And the Awujales that have joined their
-                  ancestors are deified to be praised, worshipped and appeased
-                  during the Odun Osu. The Odun Osu was celebrated usually in
-                  the month of December. Pictures of the past Awujales who have
-                  joined their ancestors are displayed, prayers are offered for
-                  a prosperous year, for the fertility of the farms, for the
-                  protection of the community from diseases, for the happiness
-                  of the community and for the spirits of the dead. Pounded yam,
-                  Kolanuts and drinks are offered and dancing climax the rest of
-                  the Odun Osu festival.
+                  “primitive”, “heathenism” or “paganism”. The traditional
+                  divinities worshipped and celebrated in Ijebu-Ode include
+                  Sere, Obelu, Imuni-si-Ona, Igbe, Irawo, Osu, IgbesuOsu,
+                  Erinna, Irole Oropo, Eibi, Ijasa, Oro, Agemo. Many of the
+                  above divinities are no longer worshipped but some e.g. Oro
+                  and Agemo have stood the test of time and are still worshipped
+                  annually. These divinities had specific times in the year when
+                  sacrifices were offered to them. This was their special
+                  &quot;odun&quot; hence there was Odun Sere for Sere, Odun Osu
+                  for Osu and so on. It is particularly significant to point out
+                  that all the divinities mentioned above centred around the
+                  Awujale, the King of Ijebuland. “Gbogbo odun lodun Oba”. The
+                  King is the chief celebrant of all festivals thus giving
+                  irrefutable credence to the fact that the Awujale as the
+                  political head, is also the spiritual head of the land. The
+                  Awujale is thus regarded as sacred. And the Awujales that have
+                  joined their ancestors are deified to be praised, worshipped
+                  and appeased during the Odun Osu. The Odun Osu was celebrated
+                  usually in the month of December. Pictures of the past
+                  Awujales who have joined their ancestors are displayed,
+                  prayers are offered for a prosperous year, for the fertility
+                  of the farms, for the protection of the community from
+                  diseases, for the happiness of the community and for the
+                  spirits of the dead. Pounded yam, Kolanuts and drinks are
+                  offered and dancing climax the rest of the Odun Osu festival.
                 </p>
 
                 <p>
-                  he root of our name M osu ro is &quot;osu&quot;. We have not
-                  been able to absolutely establish the link between the Osu
-                  festival and the osu in our name. There is no written record
-                  in our family of the 19th century and beyond. This is to be
-                  expected. It was strictly an era of oral passage. We however
-                  do know from interviews with some of the aged in Ijebu-Ode and
-                  our family that we worshipped osu and perhaps, featured more
-                  prominently in it than the other divinities worshipped up on
-                  to late 19th century. This leads us to conclude that if there
-                  is an association between Mosuro and Odun Osu, the most
-                  plausible explanation we can offer is that Mosuro refers
-                  perhaps to the priest or one of the officials charged with the
-                  annual conduct of the festival. &quot;Eniyan ti o mu osu ro
-                  (One who ensures the Odun osu holds). This may have been
-                  contracted for ease of call into the name Mosuro. This is but
-                  one explanation of the meaning of Mosuro. Another version of
-                  the meaning of Mosuro is this: On the 20th of May 1892,
-                  British troops led by Colonel Francis C. Scott entered a
-                  deserted Ijebu-Ode. Amongst the people of Ijebu-Ode who were
-                  on their heels was Egundebi, son of Laketu and Princess
-                  Olutoyese. In circulation in Ijebu-Ode prior to the British
-                  expedition was the terrifying information about the British
-                  superior firepower and that they were going to level the city
-                  once it was captured. Egundebi had a lot at stake. He had a
-                  youthful family and had wealth and he was not going to lose
-                  both to a war. He rallied his family and gathered his wealth
-                  and fled to Itele 20 kilometres south east of Ijebu-Ode. Among
-                  the children he took to Itele were Adelaja, Adekogbe, Banjoko
-                  and Okufowoke.
+                  The root of our name M osu ro is “osu”. We have not been able
+                  to absolutely establish the link between the Osu festival and
+                  the osu in our name. There is no written record in our family
+                  of the 19th century and beyond. This is to be expected. It was
+                  strictly an era of oral passage. We however do know from
+                  interviews with some of the aged in Ijebu-Ode and our family
+                  that we worshipped osu and perhaps, featured more prominently
+                  in it than the other divinities worshipped up on to late 19th
+                  century. This leads us to conclude that if there is an
+                  association between Mosuro and Odun Osu, the most plausible
+                  explanation we can offer is that Mosuro refers perhaps to the
+                  priest or one of the officials charged with the annual conduct
+                  of the festival. “Eniyan ti o mu osu ro (One who ensures the
+                  Odun osu holds). This may have been contracted for ease of
+                  call into the name Mosuro. This is but one explanation of the
+                  meaning of Mosuro. Another version of the meaning of Mosuro is
+                  this: On the 20th of May 1892, British troops led by Colonel
+                  Francis C. Scott entered a deserted Ijebu-Ode. Amongst the
+                  people of Ijebu-Ode who were on their heels was Egundebi, son
+                  of Laketu and Princess Olutoyese. In circulation in Ijebu-Ode
+                  prior to the British expedition was the terrifying information
+                  about the British superior firepower and that they were going
+                  to level the city once it was captured. Egundebi had a lot at
+                  stake. He had a youthful family and had wealth and he was not
+                  going to lose both to a war. He rallied his family and
+                  gathered his wealth and fled to Itele 20 kilometres south east
+                  of Ijebu-Ode. Among the children he took to Itele were
+                  Adelaja, Adekogbe, Banjoko and Okufowoke.
                 </p>
 
                 <p>
@@ -354,7 +350,6 @@ const HistoryPage = () => {
                 </p>
               </div>
 
-              {/* Continue with other subsections... I'll include key ones for brevity */}
               <div className="space-y-4">
                 <h3 className="text-xl md:text-2xl font-bold">Okuewu Mosuro</h3>
                 <p>
