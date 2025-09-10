@@ -33,32 +33,12 @@ import {
 import { EnhancedCalendar } from "@/components/ui/enhanced-calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-
-// Simple component for linked family members
-const FamilyMember = ({
-  name,
-  imageUrl,
-}: {
-  name: string;
-  imageUrl: string;
-}) => (
-  <div className="flex items-center space-x-2 mr-4 mb-2">
-    <div className="relative w-10 h-10">
-      <Image
-        src={imageUrl}
-        alt={name}
-        fill
-        className="rounded-full object-cover"
-      />
-    </div>
-    <span>{name}</span>
-  </div>
-);
+import { GalleryStatusEnum } from "@/lib/constants/enums";
 
 const ProfileComponent = () => {
   const { user, getUserProfile } = useUserStore();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const { fetchUserGallery, userGallery } = useGalleryStore();
+  const { fetchUserGalleryByStatus, userGallery } = useGalleryStore();
   const {
     lifeEvents,
     loading: lifeEventsLoading,
@@ -67,9 +47,6 @@ const ProfileComponent = () => {
     updateLifeEvent,
     deleteLifeEvent,
   } = useLifeEventsStore();
-
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   // Life events dialog states
   const [isLifeEventDialogOpen, setIsLifeEventDialogOpen] = useState(false);
@@ -92,12 +69,12 @@ const ProfileComponent = () => {
     }
 
     (async () => {
-      fetchUserGallery(user.id);
+      fetchUserGalleryByStatus(user.id, GalleryStatusEnum.approved);
       const profile = await getUserProfile();
       setUserProfile(profile);
       await fetchUserLifeEvents(user.id);
     })();
-  }, [user, fetchUserGallery, getUserProfile, fetchUserLifeEvents]);
+  }, [user, fetchUserGalleryByStatus, getUserProfile, fetchUserLifeEvents]);
 
   const placeholderImage =
     userProfile?.gender?.toLowerCase() === "female"
