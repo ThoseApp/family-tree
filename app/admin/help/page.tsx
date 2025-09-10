@@ -187,14 +187,6 @@ export default function AdminHelpPage() {
               <li>• Monitor gallery uploads for appropriateness</li>
             </ul>
           </div>
-          <div>
-            <h3 className="font-medium mb-2">📊 Best Practices</h3>
-            <ul className="text-sm text-muted-foreground space-y-1">
-              <li>• Process requests within 24-48 hours</li>
-              <li>• Keep the family tree data up to date</li>
-              <li>• Encourage user engagement and participation</li>
-            </ul>
-          </div>
         </div>
       </div>
 
