@@ -51,40 +51,29 @@ const AuthWrapper = ({
             )}
           >
             <h2 className="text-white text-3xl font-semibold">
-              {pathname === "/sign-in" ||
-              pathname === "/forgot-password" ||
+              {pathname === "/forgot-password" ||
               pathname === "/reset-password" ||
               pathname === "/otp-verification"
                 ? "Don’t Have an Account Already?"
                 : pathname === "/sign-up"
                 ? "Already Signed Up?"
-                : "Forgot Password?"}
+                : ""}
             </h2>
             <div className="text-white text-sm">
-              {pathname === "/sign-in" ||
-              pathname === "/forgot-password" ||
-              pathname === "/reset-password" ||
-              pathname === "/otp-verification"
-                ? "Create an account to keep using this website page"
-                : pathname === "/sign-up"
-                ? "Log in to your account so you can continue using this website page"
-                : "Already Signed Up?"}
+              {pathname !== "/sign-in" && "Already Have an Account?"}
             </div>
-            <Button
-              variant="outline"
-              size="lg"
-              className="rounded-full mt-2 min-w-40 bg-transparent text-background"
-              asChild
-            >
-              <Link href={pathname === "/sign-in" ? "/sign-up" : "/sign-in"}>
-                {pathname === "/sign-in" ||
-                pathname === "/forgot-password" ||
-                pathname === "/reset-password" ||
-                pathname === "/otp-verification"
-                  ? "Sign Up"
-                  : "Sign In"}
-              </Link>
-            </Button>
+            {pathname !== "/sign-in" && (
+              <Button
+                variant="outline"
+                size="lg"
+                className="rounded-full mt-2 min-w-40 bg-transparent text-background"
+                asChild
+              >
+                <Link href={"/sign-in"}>
+                  {pathname !== "/sign-in" && "Sign In"}
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       </div>

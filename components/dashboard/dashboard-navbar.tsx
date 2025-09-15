@@ -256,7 +256,7 @@ const DashboardNavbar = () => {
 
       <div className="w-full flex items-center justify-between gap-8">
         {/* SEARCH BAR */}
-        <div className=" flex-1 2xl:max-w-xl flex items-center gap-2">
+        <div className=" flex-1  flex items-center gap-2">
           <div className="flex-1 w-full  flex items-center justify-center">
             <div
               className="relative max-w-full w-full"
@@ -274,9 +274,9 @@ const DashboardNavbar = () => {
             </div>
           </div>
 
-          <div className="rounded-full cursor-pointer p-2 hover:bg-border/50 hover:text-accent-foreground transition">
+          {/* <div className="rounded-full cursor-pointer p-2 hover:bg-border/50 hover:text-accent-foreground transition">
             <Mic className="size-5" />
-          </div>
+          </div> */}
         </div>
 
         {/* SEARCH MODAL */}

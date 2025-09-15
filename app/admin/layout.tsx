@@ -20,7 +20,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
       {/* SIDE BAR */}
       <div
         className={cn(
-          "hidden h-full md:flex md:flex-col md:fixed md:inset-y-0 transition-all duration-300",
+          "hidden h-full md:flex md:flex-col md:fixed md:inset-y-0 transition-all duration-300 ",
           isCollapsed ? "md:w-16" : "md:w-72"
         )}
       >
@@ -36,7 +36,9 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
           <DashboardNavbar />
         </div>
 
-        <div className="p-6 bg-border/30 min-h-screen">{children}</div>
+        <div className="p-6 bg-border/30 min-h-screen overflow-y-scroll">
+          {children}
+        </div>
       </section>
     </div>
   );

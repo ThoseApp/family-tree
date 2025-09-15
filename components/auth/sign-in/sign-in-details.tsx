@@ -255,7 +255,7 @@ const SignInDetails = () => {
             </Button>
           </div>
 
-          <div className="text-center mt-8">
+          {/* <div className="text-center mt-8">
             <p className="text-sm">
               Don&apos;t have an account?{" "}
               <Button
@@ -266,7 +266,7 @@ const SignInDetails = () => {
                 Sign up
               </Button>
             </p>
-          </div>
+          </div> */}
 
           <p className="text-center text-xs font-medium mt-4">
             By signing in, I accept Company&apos;s Terms of Use and Privacy
