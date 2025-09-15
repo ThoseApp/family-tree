@@ -57,7 +57,6 @@ const GalleryRequestsPage = () => {
           filter: `status=eq.${GalleryStatusEnum.pending}`,
         },
         (payload) => {
-          console.log("New gallery request received:", payload);
           const newGallery = payload.new as GalleryType;
           setPendingGalleries((prev) => [newGallery, ...prev]);
           toast.info(
@@ -73,7 +72,6 @@ const GalleryRequestsPage = () => {
           table: "galleries",
         },
         (payload) => {
-          console.log("Gallery updated:", payload);
           const updatedGallery = payload.new as GalleryType;
 
           // Remove from pending if status changed from pending
