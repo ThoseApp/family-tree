@@ -236,8 +236,7 @@ async function sendInvitationEmail(
       },
       body: JSON.stringify({
         from: "Mosuro Family Tree <onboarding@resend.dev>", // Use your verified domain
-        // to: credentials.email,
-        to: "those.dev@gmail.com",
+        to: credentials.email,
         subject: "Welcome to Mosuro Family Tree - Your Account Details",
         html: emailHtml,
       }),
@@ -278,6 +277,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    console.log("Creating family member account", body);
     const {
       familyMemberId,
       firstName,
@@ -287,11 +287,10 @@ export async function POST(request: NextRequest) {
       dateOfBirth,
     } = body;
 
-    if (!familyMemberId || !firstName || !lastName || !email) {
+    if (!familyMemberId || !firstName || !email) {
       return NextResponse.json(
         {
-          error:
-            "Missing required fields: familyMemberId, firstName, lastName, email",
+          error: "Missing required fields: familyMemberId, firstName, email",
         },
         { status: 400 }
       );
