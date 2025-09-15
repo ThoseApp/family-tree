@@ -325,7 +325,6 @@ const FamilyTreeComponent: React.FC = () => {
       // Validate color inheritance consistency in development
       if (process.env.NODE_ENV === "development") {
         const colorMap = validateColorInheritance(members);
-        console.log("Color inheritance validation completed:", colorMap);
       }
 
       // Create initial tree state

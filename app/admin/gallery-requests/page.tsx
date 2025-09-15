@@ -90,7 +90,6 @@ const GalleryRequestsPage = () => {
           table: "galleries",
         },
         (payload) => {
-          console.log("Gallery deleted:", payload);
           const deletedGallery = payload.old as GalleryType;
           setPendingGalleries((prev) =>
             prev.filter((g) => g.id !== deletedGallery.id)
@@ -178,8 +177,6 @@ const GalleryRequestsPage = () => {
         .eq("id", galleryId)
         .single();
 
-      console.log("Test fetch result:", { testData, testError });
-
       if (testError) {
         console.error("Cannot fetch gallery for decline:", testError);
         return false;
@@ -203,8 +200,6 @@ const GalleryRequestsPage = () => {
     setProcessingItems((prev) => new Set(prev).add(galleryId));
 
     try {
-      console.log("Starting decline process for gallery ID:", galleryId);
-
       // Test database connectivity first
       const canProceed = await testDeclineOperation(galleryId);
       if (!canProceed) {
@@ -217,8 +212,6 @@ const GalleryRequestsPage = () => {
       if (!declinedGallery) {
         throw new Error("Gallery not found in pending list");
       }
-
-      console.log("Found gallery to decline:", declinedGallery);
 
       // Step 1: Try to update status to rejected first
       let statusUpdateFailed = false;
@@ -235,7 +228,6 @@ const GalleryRequestsPage = () => {
           console.error("Error updating gallery status:", updateError);
           statusUpdateFailed = true;
         } else {
-          console.log("Gallery status updated to rejected");
         }
       } catch (updateErr) {
         console.error("Failed to update status:", updateErr);
@@ -244,8 +236,6 @@ const GalleryRequestsPage = () => {
 
       // If status update failed, try direct deletion as fallback
       if (statusUpdateFailed) {
-        console.log("Status update failed, trying direct deletion...");
-
         const { error: deleteError } = await supabase
           .from("galleries")
           .delete()
@@ -255,8 +245,6 @@ const GalleryRequestsPage = () => {
           console.error("Error deleting gallery:", deleteError);
           throw deleteError;
         }
-
-        console.log("Gallery deleted successfully");
       }
 
       // Step 2: Create notification for the user
@@ -281,7 +269,6 @@ const GalleryRequestsPage = () => {
           console.warn("Failed to create notification:", notificationError);
           // Don't fail the whole operation if notification fails
         } else {
-          console.log("Notification created successfully");
         }
       } catch (notificationErr) {
         console.warn("Notification creation failed:", notificationErr);
@@ -290,10 +277,6 @@ const GalleryRequestsPage = () => {
       // Step 3: Delete from storage (uncommented - should work now)
       if (declinedGallery.file_name) {
         try {
-          console.log(
-            "Attempting to delete file from storage:",
-            declinedGallery.file_name
-          );
           const { error: storageError } = await supabase.storage
             .from(BUCKET_NAME)
             .remove([declinedGallery.file_name]);
@@ -302,7 +285,6 @@ const GalleryRequestsPage = () => {
             console.warn("Failed to delete file from storage:", storageError);
             // Don't fail the whole operation if storage deletion fails
           } else {
-            console.log("File deleted from storage successfully");
           }
         } catch (storageErr) {
           console.warn("Storage deletion failed:", storageErr);
@@ -313,8 +295,6 @@ const GalleryRequestsPage = () => {
       // Remove from pending list (since it's no longer pending)
       setPendingGalleries((prev) => prev.filter((g) => g.id !== galleryId));
       toast.success("Gallery request declined successfully");
-
-      console.log("Decline process completed successfully");
     } catch (err: any) {
       console.error("Error declining gallery:", err);
       toast.error(`Failed to decline gallery request: ${err.message}`);

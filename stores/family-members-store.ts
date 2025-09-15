@@ -215,7 +215,6 @@ export const useFamilyMembersStore = create(
 
         try {
           localStorage.removeItem("family-members-storage");
-          console.log("Cleared family members storage");
         } catch (error) {
           console.warn("Failed to clear storage:", error);
         }

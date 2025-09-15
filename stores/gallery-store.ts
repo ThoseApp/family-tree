@@ -215,8 +215,6 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
 
         if (insertError) throw insertError;
 
-        console.log("[ADMIN_ID]", ADMIN_ID);
-
         if (userId !== ADMIN_ID) {
           // Create notification for admin about the gallery request using secure function
           try {
@@ -230,8 +228,6 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
               p_resource_id: newImage.id,
               p_image: imageUrl,
             });
-
-            console.log("Notification created for admin about gallery request");
           } catch (notificationErr) {
             console.error("Failed to create notification:", notificationErr);
             // Don't throw here as the main gallery upload was successful
@@ -270,8 +266,6 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
           blob = await response.blob();
           contentType = response.headers.get("content-type") || "";
         } catch (corsError) {
-          console.log("Direct fetch failed, trying canvas method:", corsError);
-
           // If CORS fails, try using canvas method
           blob = await new Promise<Blob>((resolve, reject) => {
             const img = new Image();
@@ -366,13 +360,6 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
         const file = new File([blob], fileName, {
           type: mimeType,
           lastModified: Date.now(),
-        });
-
-        console.log("Created file:", {
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          originalUrl: imageUrl,
         });
 
         // Use the existing uploadToGallery function
