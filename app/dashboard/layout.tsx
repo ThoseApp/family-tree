@@ -37,7 +37,9 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
           <DashboardNavbar />
         </div>
 
-        <div className="p-6 bg-border/30 min-h-screen">{children}</div>
+        <div className="p-6 bg-border/30 min-h-screen overflow-y-scroll">
+          {children}
+        </div>
       </section>
     </div>
   );
