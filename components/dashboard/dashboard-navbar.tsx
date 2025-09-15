@@ -54,6 +54,7 @@ import { useNoticeBoardStore } from "@/stores/notice-board-store";
 import { useGalleryStore } from "@/stores/gallery-store";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { UserProfile } from "@/lib/types";
 
 // Define search result types
 interface SearchResult {
@@ -69,7 +70,8 @@ interface SearchResult {
 const DashboardNavbar = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logout } = useUserStore();
+  const { user, logout, getUserProfile } = useUserStore();
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const { memberRequests, fetchMemberRequests } = useMemberRequestsStore();
   const { notifications, fetchNotifications } = useNotificationsStore();
   const { familyMembers, fetchFamilyMembers } = useFamilyMembersStore();
@@ -89,6 +91,14 @@ const DashboardNavbar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const profile = await getUserProfile();
+      setUserProfile(profile);
+    };
+    fetchProfile();
+  }, [getUserProfile]);
 
   useEffect(() => {
     if (user?.id) {
@@ -446,12 +456,12 @@ const DashboardNavbar = () => {
               >
                 <Avatar className="size-10">
                   <AvatarImage
-                    src={user?.user_metadata?.avatar_url}
+                    src={userProfile?.image}
                     className="object-cover"
                   />
                   <AvatarFallback className="bg-muted-foreground/10">
-                    {user?.user_metadata?.first_name?.charAt(0)}
-                    {user?.user_metadata?.last_name?.charAt(0)}
+                    {userProfile?.first_name?.charAt(0)}
+                    {userProfile?.last_name?.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
               </Button>
