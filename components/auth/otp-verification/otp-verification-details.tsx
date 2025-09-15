@@ -48,10 +48,10 @@ const OtpVerificationDetails = () => {
     if (emailFromQuery) {
       setTargetEmail(emailFromQuery);
     } else {
-      toast.error("Email address is missing. Redirecting to sign up page.");
-      setTimeout(() => {
-        router.push("/sign-up");
-      }, 2000);
+      // toast.error("Email address is missing. Redirecting to sign up page.");
+      // setTimeout(() => {
+      //   router.push("/sign-up");
+      // }, 2000);
     }
   }, [emailFromQuery, router]);
 

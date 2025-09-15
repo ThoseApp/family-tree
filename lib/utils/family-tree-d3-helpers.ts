@@ -552,11 +552,10 @@ function buildSubTree(
     }
 
     // Attach OUT-OF-WEDLOCK children to the correct parent node with dotted links.
-    // Gated by spouse expansion to keep progressive disclosure consistent.
-    const anySpouseChildrenExpanded = spouseNodes.some((s) =>
-      state.expandedChildren.has(s.attributes!.unique_id)
-    );
-    if (anySpouseChildrenExpanded) {
+    // Make them visible whenever the spouse group is expanded (family group open),
+    // not only when a particular spouse's children are expanded. This ensures OW
+    // children are discoverable even if a spouse has no regular children.
+    if (shouldCreateFamilyGroup) {
       // Father-known, mother-missing → attach under father (this member if male descendant)
       if (owChildrenFather.length > 0) {
         const owChildrenForFather = owChildrenFather.map((child) =>
@@ -567,17 +566,30 @@ function buildSubTree(
           ...owChildrenForFather,
         ];
       }
-      // Mother-known, father-missing → attach under the mother if she is among spouse nodes
+      // Mother-known, father-missing → attach under the correct mother spouse node
       if (owChildrenMother.length > 0 && spouseNodes.length > 0) {
-        spouseNodes.forEach((spNode) => {
-          // spNode is female spouse. Attach mother-known out-of-wedlock children under her
-          const owChildrenForMother = owChildrenMother.map((child) =>
-            buildSubTree(child, allMembers, state, undefined)
+        // Group children by mothers_uid to attach to the right spouse node
+        const byMother: Record<string, ProcessedMember[]> = {};
+        owChildrenMother.forEach((child) => {
+          const mid = child.mothers_uid || "";
+          if (!byMother[mid]) byMother[mid] = [];
+          byMother[mid].push(child);
+        });
+
+        Object.entries(byMother).forEach(([motherUid, childrenList]) => {
+          if (!motherUid) return;
+          const targetMotherNode = spouseNodes.find(
+            (sp) => sp.attributes!.unique_id === motherUid
           );
-          spNode.children = [
-            ...(spNode.children || []),
-            ...owChildrenForMother,
-          ];
+          if (targetMotherNode) {
+            const built = childrenList.map((child) =>
+              buildSubTree(child, allMembers, state, undefined)
+            );
+            targetMotherNode.children = [
+              ...(targetMotherNode.children || []),
+              ...built,
+            ];
+          }
         });
       }
     }

@@ -120,7 +120,7 @@ export async function updateSession(request: NextRequest) {
     // Check if the route is an auth route
     const isAuthRoute =
       path === "/sign-in" ||
-      path === "/sign-up" ||
+      // path === "/sign-up" ||
       path === "/forgot-password" ||
       path === "/reset-password" ||
       path === "/otp-verification" ||

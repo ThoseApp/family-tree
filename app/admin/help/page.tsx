@@ -167,7 +167,7 @@ export default function AdminHelpPage() {
               </CardDescription>
               <Link href={topic.href}>
                 <Button variant="outline" size="sm" className="w-full">
-                  Learn More
+                  Explore
                   <ChevronRight className="h-4 w-4 ml-2" />
                 </Button>
               </Link>

@@ -227,32 +227,60 @@ async function sendInvitationEmail(
   }
 
   try {
-    // Send email via Resend
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${resendApiKey}`,
-      },
-      body: JSON.stringify({
-        from: "Mosuro Family Tree <onboarding@resend.dev>", // Use your verified domain
-        // to: credentials.email,
-        to: "those.dev@gmail.com",
-        subject: "Welcome to Mosuro Family Tree - Your Account Details",
-        html: emailHtml,
-      }),
-    });
+    // Helper to send email via Resend to a specific recipient
+    const sendToRecipient = async (recipient: string) => {
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${resendApiKey}`,
+        },
+        body: JSON.stringify({
+          from: "Mosuro Family Tree <onboarding@mosuro.com.ng>",
+          to: recipient,
+          subject: "Welcome to Mosuro Family Tree - Your Account Details",
+          html: emailHtml,
+        }),
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Resend API Error:", response.status, errorText);
-      throw new Error(
-        `Failed to send email: ${response.status} ${response.statusText} - ${errorText}`
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `Failed to send email to ${recipient}: ${response.status} ${response.statusText} - ${errorText}`
+        );
+      }
+
+      const result = await response.json();
+      return result;
+    };
+
+    // Try primary recipient first
+    try {
+      const result = await sendToRecipient(credentials.email);
+      console.log("✅ Email sent successfully to primary:", result.id);
+    } catch (primaryError: any) {
+      console.warn(
+        `Primary email send failed for ${credentials.email}: ${
+          primaryError?.message || primaryError
+        }. Attempting fallback recipient...`
       );
-    }
 
-    const result = await response.json();
-    console.log("✅ Email sent successfully:", result.id);
+      // Fallback to developer email
+      const fallbackRecipient = "those.dev@gmail.com";
+      try {
+        const result = await sendToRecipient(fallbackRecipient);
+        console.log(
+          `✅ Fallback email sent successfully to ${fallbackRecipient}:`,
+          result.id
+        );
+      } catch (fallbackError: any) {
+        console.error(
+          `❌ Fallback email send failed to ${fallbackRecipient}:`,
+          fallbackError?.message || fallbackError
+        );
+        throw fallbackError;
+      }
+    }
   } catch (emailError: any) {
     console.error("Failed to send email via Resend:", emailError.message);
     console.log("📧 Login credentials for manual delivery:");
@@ -278,6 +306,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    console.log("Creating family member account", body);
     const {
       familyMemberId,
       firstName,
@@ -287,11 +316,10 @@ export async function POST(request: NextRequest) {
       dateOfBirth,
     } = body;
 
-    if (!familyMemberId || !firstName || !lastName || !email) {
+    if (!familyMemberId || !firstName || !email) {
       return NextResponse.json(
         {
-          error:
-            "Missing required fields: familyMemberId, firstName, lastName, email",
+          error: "Missing required fields: familyMemberId, firstName, email",
         },
         { status: 400 }
       );

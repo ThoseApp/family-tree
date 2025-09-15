@@ -49,11 +49,11 @@ const AdminSideBar = ({ forceMobileExpanded = false }: AdminSideBarProps) => {
     <TooltipProvider>
       <div
         className={cn(
-          "space-y-4 py-4 flex flex-col h-full bg-background border-r transition-all duration-300",
+          "space-y-4 py-4 flex flex-col h-full bg-background border-r transition-all duration-300 ",
           isActuallyCollapsed ? "w-16" : "w-72"
         )}
       >
-        <div className="pb-2 flex-1">
+        <div className="pb-2 flex-1 h-full">
           {/* Header with Logo and Toggle */}
           <div className="flex items-center justify-between px-3 mb-6">
             {!isActuallyCollapsed && <Logo />}
@@ -85,8 +85,8 @@ const AdminSideBar = ({ forceMobileExpanded = false }: AdminSideBarProps) => {
             )}
           </div>
 
-          <div className="flex flex-col gap-5 h-full">
-            <div className="space-y-1 px-3">
+          <div className="flex flex-col gap-5 h-full overflow-y-scroll">
+            <div className="space-y-1 px-3 ">
               {navLinksTopSection.map((route) => (
                 <Tooltip key={route.href} delayDuration={0}>
                   <TooltipTrigger asChild>

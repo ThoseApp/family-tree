@@ -131,7 +131,7 @@ const LandingNav = () => {
                 <Link href="/sign-in">Sign In</Link>
               </Button>
 
-              <Button
+              {/* <Button
                 asChild
                 variant={shouldUseTransparentBg ? "secondary" : "default"}
                 size="sm"
@@ -142,7 +142,7 @@ const LandingNav = () => {
                 )}
               >
                 <Link href="/sign-up">Sign Up</Link>
-              </Button>
+              </Button> */}
             </>
           )}
         </div>
