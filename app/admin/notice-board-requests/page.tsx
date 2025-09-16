@@ -56,7 +56,6 @@ const NoticeBoardRequestsPage = () => {
           filter: `status=eq.${NoticeBoardStatusEnum.pending}`,
         },
         (payload) => {
-          console.log("New notice board request received:", payload);
           const newNoticeBoard = payload.new as NoticeBoard;
           setPendingNoticeBoards((prev) => [newNoticeBoard, ...prev]);
           toast.info(`New notice board request: "${newNoticeBoard.title}"`);
@@ -70,7 +69,6 @@ const NoticeBoardRequestsPage = () => {
           table: "notice_boards",
         },
         (payload) => {
-          console.log("Notice board updated:", payload);
           const updatedNoticeBoard = payload.new as NoticeBoard;
 
           // Remove from pending if status changed from pending
@@ -89,7 +87,6 @@ const NoticeBoardRequestsPage = () => {
           table: "notice_boards",
         },
         (payload) => {
-          console.log("Notice board deleted:", payload);
           const deletedNoticeBoard = payload.old as NoticeBoard;
           setPendingNoticeBoards((prev) =>
             prev.filter((nb) => nb.id !== deletedNoticeBoard.id)
@@ -180,11 +177,6 @@ const NoticeBoardRequestsPage = () => {
     setProcessingItems((prev) => new Set(prev).add(noticeBoardId));
 
     try {
-      console.log(
-        "Starting decline process for notice board ID:",
-        noticeBoardId
-      );
-
       // Find the notice board to get user info for notification
       const declinedNoticeBoard = pendingNoticeBoards.find(
         (nb) => nb.id === noticeBoardId
@@ -193,8 +185,6 @@ const NoticeBoardRequestsPage = () => {
       if (!declinedNoticeBoard) {
         throw new Error("Notice board not found in pending list");
       }
-
-      console.log("Found notice board to decline:", declinedNoticeBoard);
 
       // Update status to rejected
       const { error: updateError } = await supabase
@@ -209,8 +199,6 @@ const NoticeBoardRequestsPage = () => {
         console.error("Error updating notice board status:", updateError);
         throw updateError;
       }
-
-      console.log("Notice board status updated to rejected");
 
       // Create notification for the user
       if (declinedNoticeBoard.user_id) {
@@ -233,7 +221,6 @@ const NoticeBoardRequestsPage = () => {
             console.warn("Failed to create notification:", notificationError);
             // Don't fail the whole operation if notification fails
           } else {
-            console.log("Notification created successfully");
           }
         } catch (notificationErr) {
           console.warn("Notification creation failed:", notificationErr);
@@ -245,8 +232,6 @@ const NoticeBoardRequestsPage = () => {
         prev.filter((nb) => nb.id !== noticeBoardId)
       );
       toast.success("Notice board declined successfully");
-
-      console.log("Decline process completed successfully");
     } catch (err: any) {
       console.error("Error declining notice board:", err);
       toast.error(`Failed to decline notice board request: ${err.message}`);
@@ -263,7 +248,6 @@ const NoticeBoardRequestsPage = () => {
   // Handle preview notice board
   const handlePreviewNoticeBoard = (noticeBoard: NoticeBoard) => {
     // For now, just log the notice board details
-    console.log("Preview notice board:", noticeBoard);
     // You could implement a modal or navigation to a preview page here
   };
 

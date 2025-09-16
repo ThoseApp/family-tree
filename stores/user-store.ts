@@ -346,8 +346,6 @@ export const useUserStore = create(
 
         set({ loading: true, error: null });
 
-        console.log("get profile with id", user.id);
-
         try {
           const { data, error } = await supabase
             .from("profiles")
@@ -355,11 +353,7 @@ export const useUserStore = create(
             .eq("user_id", user.id)
             .single();
 
-          console.log("[getUserProfile] data", data);
-
           if (error) throw error;
-
-          console.log("[getUserProfile] data", data);
 
           return data;
         } catch (error: any) {

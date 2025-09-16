@@ -185,10 +185,6 @@ export const useNoticeBoardStore = create<NoticeBoardState>((set, get) => ({
             p_resource_id: newNoticeBoard.id,
             p_image: noticeBoard.image,
           });
-
-          console.log(
-            "Notification created for admin about notice board request"
-          );
         } catch (notificationErr) {
           console.error("Failed to create notification:", notificationErr);
           // Don't throw here as the main notice creation was successful
@@ -333,10 +329,6 @@ export const useNoticeBoardStore = create<NoticeBoardState>((set, get) => ({
             p_resource_id: id,
             p_image: noticeBoard.image,
           });
-
-          console.log(
-            "Notification created for user about notice board approval"
-          );
         } catch (notificationErr) {
           console.error("Failed to create notification:", notificationErr);
           // Don't throw here as the main approval was successful
@@ -397,10 +389,6 @@ export const useNoticeBoardStore = create<NoticeBoardState>((set, get) => ({
             p_resource_id: id,
             p_image: noticeBoard.image,
           });
-
-          console.log(
-            "Notification created for user about notice board decline"
-          );
         } catch (notificationErr) {
           console.error("Failed to create notification:", notificationErr);
           // Don't throw here as the main rejection was successful

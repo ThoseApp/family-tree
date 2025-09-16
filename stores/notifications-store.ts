@@ -178,7 +178,6 @@ export const useNotificationsStore = create(
               filter: `user_id=eq.${userId}`,
             },
             (payload) => {
-              console.log("New notification received:", payload);
               const newNotification = payload.new as Notification;
 
               // Add to local state
@@ -216,7 +215,6 @@ export const useNotificationsStore = create(
               filter: `user_id=eq.${userId}`,
             },
             (payload) => {
-              console.log("Notification updated:", payload);
               const updatedNotification = payload.new as Notification;
 
               // Update local state
@@ -238,7 +236,6 @@ export const useNotificationsStore = create(
               filter: `user_id=eq.${userId}`,
             },
             (payload) => {
-              console.log("Notification deleted:", payload);
               const deletedNotification = payload.old as Notification;
 
               // Remove from local state

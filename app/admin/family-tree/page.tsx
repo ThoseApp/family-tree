@@ -63,7 +63,6 @@ const loadFamilyChart = async (retryCount = 0): Promise<any> => {
       ])) as any;
 
       f3 = familyChartModule.default || familyChartModule;
-      console.log("Family-chart loaded successfully:", f3);
       return f3;
     }
   } catch (error) {
@@ -75,7 +74,6 @@ const loadFamilyChart = async (retryCount = 0): Promise<any> => {
     // Retry up to 2 times with exponential backoff
     if (retryCount < 2) {
       const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s
-      console.log(`Retrying in ${delay}ms...`);
       await new Promise((resolve) => setTimeout(resolve, delay));
       return loadFamilyChart(retryCount + 1);
     }
@@ -615,10 +613,6 @@ const FamilyTreeUploadPage = () => {
             member.life_status === "Alive" &&
             member.email_address &&
             member.email_address.trim() !== ""
-        );
-
-        console.log(
-          `Found ${eligibleMembers.length} eligible members for account creation`
         );
 
         for (let i = 0; i < eligibleMembers.length; i++) {

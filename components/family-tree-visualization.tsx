@@ -296,8 +296,6 @@ const FamilyTreeVisualization = () => {
   // Convert ProcessedMember data to FamilyChart format
   const convertToFamilyChartFormat = useCallback(
     (members: ProcessedMember[]): FamilyChartMember[] => {
-      console.log("Converting family data - total members:", members.length);
-
       // Create a lookup map for faster searching
       const memberMap = new Map<string, ProcessedMember>();
       const nameMap = new Map<string, ProcessedMember>();
