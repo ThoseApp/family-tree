@@ -198,8 +198,6 @@ export const useEventsStore = create<EventsState>((set, get) => ({
             p_resource_id: newEvent.id,
             p_image: newEvent.image,
           });
-
-          console.log("Notification created for admin about event request");
         } catch (notificationErr) {
           console.error("Failed to create notification:", notificationErr);
         }
@@ -311,8 +309,6 @@ export const useEventsStore = create<EventsState>((set, get) => ({
             p_resource_id: id,
             p_image: event.image,
           });
-
-          console.log("Notification created for user about event approval");
         } catch (notificationErr) {
           console.error("Failed to create notification:", notificationErr);
         }
@@ -373,8 +369,6 @@ export const useEventsStore = create<EventsState>((set, get) => ({
             p_resource_id: id,
             p_image: event.image,
           });
-
-          console.log("Notification created for user about event decline");
         } catch (notificationErr) {
           console.error("Failed to create notification:", notificationErr);
         }

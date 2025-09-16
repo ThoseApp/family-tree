@@ -470,7 +470,6 @@ const FamilyMembersPage = () => {
 
   const handleMemberClick = (member: FamilyMember) => {
     // Handle member click - could navigate to detail page
-    console.log("Member clicked:", member);
   };
 
   // Improved filter clearing with proper accessibility

@@ -255,10 +255,6 @@ const Page = () => {
 
     const file = files[0];
 
-    console.log("[ADMIN_ID]", process.env.NEXT_PUBLIC_ADMIN_ID);
-
-    console.log(file);
-
     // Basic validation
     if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
       toast.error("Please select an image or video file");
@@ -443,7 +439,6 @@ const Page = () => {
 
   const handleAlbumClick = (album: any) => {
     // Navigate to album view - you can implement this based on your routing needs
-    console.log("Album clicked:", album);
     // For now, switch to grid view filtered by this album
     setViewMode("grid");
     // You might want to add album filtering logic here

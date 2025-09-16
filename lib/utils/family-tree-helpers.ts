@@ -110,7 +110,6 @@ export async function fetchFamilyMembers(): Promise<ProcessedMember[]> {
     throw new Error(`Failed to fetch family members: ${error.message}`);
   }
 
-  console.log("processed members", data);
   return data as ProcessedMember[];
 }
 

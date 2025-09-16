@@ -160,12 +160,6 @@ export const useEventInvitationsStore = create<EventInvitationsState>(
       set({ loading: true, error: null });
 
       try {
-        console.log("=== Starting sendInvitations ===");
-        console.log("Event ID:", eventId);
-        console.log("Inviter User ID:", inviterUserId);
-        console.log("Invitee User IDs:", inviteeUserIds);
-        console.log("Message:", message);
-
         // Check if all required parameters are present
         if (
           !eventId ||
@@ -248,8 +242,6 @@ export const useEventInvitationsStore = create<EventInvitationsState>(
           image: eventData?.image,
         }));
 
-        console.log("Creating notifications:", notificationsToCreate);
-
         try {
           const { data: createdCount, error: notificationError } =
             await supabase.rpc("create_system_notifications", {
@@ -266,8 +258,6 @@ export const useEventInvitationsStore = create<EventInvitationsState>(
             });
             toast.error("Invitations sent but notifications failed to send");
           } else {
-            console.log("Notifications created successfully");
-            console.log("Created notification count:", createdCount || 0);
           }
         } catch (notificationErr) {
           console.error("Error creating notifications:", notificationErr);
@@ -279,7 +269,6 @@ export const useEventInvitationsStore = create<EventInvitationsState>(
           data: { user: currentUser },
           error: userError,
         } = await supabase.auth.getUser();
-        console.log("Current authenticated user:", currentUser?.id);
         if (userError) {
           console.error("User authentication error:", userError);
         }
@@ -494,8 +483,6 @@ export const useEventInvitationsStore = create<EventInvitationsState>(
           updated_at: new Date().toISOString(),
         };
 
-        console.log("Creating test notification:", testNotification);
-
         const { data, error } = await supabase
           .from("notifications")
           .insert(testNotification)
@@ -506,7 +493,6 @@ export const useEventInvitationsStore = create<EventInvitationsState>(
           toast.error(`Test notification failed: ${error.message}`);
           return false;
         } else {
-          console.log("Test notification created successfully:", data);
           toast.success("Test notification created successfully!");
           return true;
         }
