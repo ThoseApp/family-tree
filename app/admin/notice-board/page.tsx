@@ -221,7 +221,7 @@ const AdminNoticeBoardPage = () => {
       <div className={cn("", newNotice && "flex items-start gap-4 w-full")}>
         <div
           className={cn(
-            displayMode === "grid"
+            displayMode === "grid" && noticeBoards.length > 0
               ? "grid grid-cols-1 lg:grid-cols-2 gap-4"
               : "w-full",
             newNotice && "lg:grid-cols-1 w-1/2"

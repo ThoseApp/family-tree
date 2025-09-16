@@ -4,7 +4,7 @@ import { fetchMemberProfile } from "@/lib/utils/family-tree-helpers";
 import { ProcessedMember, UserProfile } from "@/lib/types";
 import { useEffect, useState } from "react";
 import PageHeader from "@/components/page-header";
-import { dummyProfileImage } from "@/lib/constants";
+import { dummyProfileImage, dummyFemaleProfileImage } from "@/lib/constants";
 import Image from "next/image";
 import { GalleryType } from "@/components/gallery";
 
@@ -96,7 +96,9 @@ const ProfilePage = ({ params }: ProfilePageProps) => {
   const imageUrl =
     ("picture_link" in profile && profile.picture_link) ||
     ("image" in profile && profile.image) ||
-    dummyProfileImage;
+    (profile.gender?.toLowerCase() === "female"
+      ? dummyFemaleProfileImage
+      : dummyProfileImage);
 
   return (
     <div className="pb-20">
