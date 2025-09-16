@@ -226,14 +226,14 @@ const SignInDetails = () => {
           </div>
 
           {/* OR WITH GOOGLE/FACEBOOK */}
-          <div className="w-full  py-4  text-center text-black/70 items-center flex space-x-4 md:space-x-0">
+          {/* <div className="w-full  py-4  text-center text-black/70 items-center flex space-x-4 md:space-x-0">
             <Separator className="w-1/3" />
             <div className="text-sm w-1/3">Or continue with</div>
             <Separator className="w-1/3" />
-          </div>
+          </div> */}
 
           {/* GOOGLE AND FACEBOOK BUTTONS */}
-          <div className="flex w-full flex-col items-center space-y-4 ">
+          {/* <div className="flex w-full flex-col items-center space-y-4 ">
             <Button
               onClick={handleGoogleSignIn}
               variant="outline"
@@ -253,7 +253,7 @@ const SignInDetails = () => {
               )}
               <span className="text-sm font-normal ">Continue with Google</span>
             </Button>
-          </div>
+          </div> */}
 
           {/* <div className="text-center mt-8">
             <p className="text-sm">

@@ -70,7 +70,7 @@ const Hero = () => {
               </motion.p>
             )}
 
-            <motion.div
+            {/* <motion.div
               className="flex md:items-center md:justify-center flex-row flex-wrap gap-2 md:gap-4"
               variants={fadeInUp}
             >
@@ -82,7 +82,7 @@ const Hero = () => {
               >
                 <Link href="/history">Read History</Link>
               </Button>
-            </motion.div>
+            </motion.div> */}
           </div>
         </motion.div>
       </div>
