@@ -61,7 +61,7 @@ const LandingNav = () => {
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "relative px-4 py-2 text-sm font-medium transition-colors duration-200",
+                  "relative px-4 py-2 text-sm md:text-base font-medium transition-colors duration-200",
                   shouldUseTransparentBg &&
                     "hover:bg-primary/40 hover:text-foreground",
                   // Active state
@@ -119,12 +119,12 @@ const LandingNav = () => {
             <>
               <Button
                 asChild
-                variant="ghost"
+                // variant="ghost"
                 size="sm"
                 className={cn(
-                  "text-sm font-medium transition-colors duration-200",
+                  "text-sm md:text-base font-medium transition-colors duration-200 hover:opacity-80",
                   shouldUseTransparentBg
-                    ? "text-white hover:text-white/80"
+                    ? ""
                     : "text-foreground/70 hover:text-foreground"
                 )}
               >

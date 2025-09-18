@@ -199,6 +199,13 @@ async function sendInvitationEmail(
         
         <p style="margin-top: 30px;">Yours,</p>
         <p><strong>Mosuro Family Tree</strong></p>
+        <p>
+          <strong>
+            <a href="https://mosuro.com.ng" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: underline;">
+              https://mosuro.com.ng
+            </a>
+          </strong>
+        </p>
         
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
         <p style="font-size: 12px; color: #6b7280;">This email was sent automatically. Please do not reply to this email.</p>

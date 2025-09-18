@@ -44,9 +44,10 @@ const FamilyMemberCard = ({ member }: FamilyMemberCardProps) => {
             {/* <h3 className="pb-5">{description}</h3> */}
             <div className="flex items-center gap-3 text-muted-foreground">
               <span className="text-xs">ID: {member.unique_id}</span>
-              {member.lifeStatus && (
-                <span className="text-xs">Status: {member.lifeStatus}</span>
-              )}
+              {member.lifeStatus &&
+                member.lifeStatus.toLowerCase() !== "alive" && (
+                  <span className="text-xs">Status: {member.lifeStatus}</span>
+                )}
             </div>
           </div>
         </div>
