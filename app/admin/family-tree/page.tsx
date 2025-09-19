@@ -634,11 +634,21 @@ const FamilyTreeUploadPage = () => {
               continue;
             }
 
-            // Call the existing create-family-accounts API
+            // Get current user session for admin authentication
+            const {
+              data: { session },
+            } = await supabase.auth.getSession();
+
+            if (!session?.access_token) {
+              throw new Error("No valid admin session");
+            }
+
+            // Call the existing create-family-accounts API with proper authentication
             const response = await fetch("/api/admin/create-family-accounts", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
+                Authorization: `Bearer ${session.access_token}`,
               },
               body: JSON.stringify({
                 familyMemberId: member.unique_id,
@@ -659,8 +669,8 @@ const FamilyTreeUploadPage = () => {
                 lastName: member.last_name,
                 email: member.email_address,
                 status: "created",
-                userId: result.userId,
-                password: result.password,
+                userId: result.data?.userId,
+                password: "Generated password sent via email", // Don't expose actual password in UI
               });
               accountsCreated++;
             } else {
@@ -670,7 +680,8 @@ const FamilyTreeUploadPage = () => {
                 lastName: member.last_name,
                 email: member.email_address,
                 status: "failed",
-                error: result.message || "Account creation failed",
+                error:
+                  result.error || result.message || "Account creation failed",
               });
               accountsFailed++;
             }

@@ -49,6 +49,7 @@ import { uploadImage } from "@/lib/file-upload";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { EnhancedCalendar } from "@/components/ui/enhanced-calendar";
+import { syncProfileImageToFamilyTree } from "@/lib/utils/profile-sync-helpers";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -82,6 +83,7 @@ const passwordSchema = z
 const SettingsPage = () => {
   const {
     user,
+    userProfile,
     loading: storeLoading,
     updateProfile,
     updatePassword,
@@ -123,34 +125,28 @@ const SettingsPage = () => {
       return;
     }
 
-    const fetchProfile = async () => {
-      setLoading(true);
-      try {
-        const profile = await getUserProfile();
+    // Fetch profile if not already loaded
+    if (!userProfile) {
+      getUserProfile();
+    }
+  }, [user, userProfile, getUserProfile, router]);
 
-        if (profile) {
-          profileForm.reset({
-            firstName: profile.first_name || "",
-            lastName: profile.last_name || "",
-            dateOfBirth: profile.date_of_birth || "",
-            phoneNumber: profile.phone_number || "",
-            bio: profile.bio || "",
-          });
+  // Update form data when userProfile changes
+  useEffect(() => {
+    if (userProfile) {
+      profileForm.reset({
+        firstName: userProfile.first_name || "",
+        lastName: userProfile.last_name || "",
+        dateOfBirth: userProfile.date_of_birth || "",
+        phoneNumber: userProfile.phone_number || "",
+        bio: userProfile.bio || "",
+      });
 
-          if (profile.image) {
-            setAvatarUrl(profile.image);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-        toast.error("Failed to load profile data");
-      } finally {
-        setLoading(false);
+      if (userProfile.image) {
+        setAvatarUrl(userProfile.image);
       }
-    };
-
-    fetchProfile();
-  }, [user, getUserProfile, profileForm, router]);
+    }
+  }, [userProfile, profileForm]);
 
   const handleProfileSubmit = async (values: z.infer<typeof profileSchema>) => {
     setLoading(true);
@@ -208,13 +204,15 @@ const SettingsPage = () => {
       }
 
       // Update profile with new avatar URL
-
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ image: avatarUrl })
         .eq("user_id", user.id);
 
       if (updateError) throw updateError;
+
+      // Sync profile image with family-tree table if linked and refresh profile
+      await syncProfileImageToFamilyTree(user.id, avatarUrl, getUserProfile);
 
       setAvatarUrl(avatarUrl);
       toast.success("Profile photo updated successfully");

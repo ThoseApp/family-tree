@@ -70,8 +70,7 @@ interface SearchResult {
 const DashboardNavbar = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logout, getUserProfile } = useUserStore();
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const { user, userProfile, logout, getUserProfile } = useUserStore();
   const { memberRequests, fetchMemberRequests } = useMemberRequestsStore();
   const { notifications, fetchNotifications } = useNotificationsStore();
   const { familyMembers, fetchFamilyMembers } = useFamilyMembersStore();
@@ -93,12 +92,10 @@ const DashboardNavbar = () => {
   const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      const profile = await getUserProfile();
-      setUserProfile(profile);
-    };
-    fetchProfile();
-  }, [getUserProfile]);
+    if (user?.id && !userProfile) {
+      getUserProfile();
+    }
+  }, [user?.id, userProfile, getUserProfile]);
 
   useEffect(() => {
     if (user?.id) {

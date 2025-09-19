@@ -543,12 +543,24 @@ function buildSubTree(
         !outOfWedlockChildren.some((ow) => ow.unique_id === child.unique_id)
     );
 
-    // Attach regular children only to the selected spouse (maintain original behavior)
+    // Attach regular children based on family type
     if (targetSpouseNode) {
       const regularChildrenWithContext = regularChildren.map((child) =>
         buildSubTree(child, allMembers, state, selectedSpouseId || undefined)
       );
-      targetSpouseNode.children = regularChildrenWithContext;
+
+      // For monogamous families, attach children to the descendant for proper lineage visualization
+      if (spouses.length === 1) {
+        memberNode.children = [
+          ...(memberNode.children || []),
+          ...regularChildrenWithContext,
+        ];
+        // Keep spouse node without children for monogamous families
+        targetSpouseNode.children = [];
+      } else {
+        // For polygamous families, maintain original behavior (children from spouse)
+        targetSpouseNode.children = regularChildrenWithContext;
+      }
     }
 
     // Attach OUT-OF-WEDLOCK children to the correct parent node with dotted links.
@@ -664,19 +676,19 @@ export function buildTreeData(
     .filter((child) => state.visibleNodes.has(child.unique_id))
     .sort((a, b) => (a.order_of_birth || 0) - (b.order_of_birth || 0));
 
-  // CONSISTENCY RULE: Children ALWAYS come from spouse (Princess), NEVER from descendant (Laketu)
+  // CONSISTENCY RULE: For origin couple (monogamous), children come from descendant (Laketu)
+  // This matches the behavior of other monogamous families in the tree
   if (princess && state.visibleNodes.has(princess.unique_id)) {
-    const princessNode = originCoupleNode.children!.find(
-      (node) => node.attributes!.unique_id === "S00Z00001"
+    const laketuNode = originCoupleNode.children!.find(
+      (node) => node.attributes!.unique_id === "D00Z00001"
     );
-    if (princessNode) {
-      princessNode.children = directChildren.map(
-        (child) => buildSubTree(child, allMembers, state, "S00Z00001") // Princess is the source spouse for origin children
+    if (laketuNode) {
+      laketuNode.children = directChildren.map(
+        (child) => buildSubTree(child, allMembers, state, "S00Z00001") // Princess context for consistency
       );
     }
   }
-  // If Princess is not visible, children are NOT shown - maintains spouse-first branching consistency
-  // This forces the proper flow: reveal Princess first, then children come from her
+  // If Princess is not visible, children are NOT shown - maintains progressive disclosure
 
   return treeRoot;
 }

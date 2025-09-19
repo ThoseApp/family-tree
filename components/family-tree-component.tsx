@@ -65,9 +65,10 @@ const customPathFunc = (
     }
   }
 
-  // For monogamous families (exactly one spouse), route child links from midpoint between parents
-  // to visually indicate linkage to both parents.
+  // For monogamous families (exactly one spouse), route child links from the descendant
+  // instead of from between parents or from the spouse.
   const isSpouseSource = sourceAttrs?.is_spouse === true;
+  const isDescendantSource = sourceAttrs?.is_descendant === true;
   const isChildTarget =
     target.data &&
     target.data.attributes &&
@@ -82,15 +83,20 @@ const customPathFunc = (
     ? source.parent.data.attributes.spouse_count || 0
     : 0;
 
-  if (isSpouseSource && isChildTarget && parentIsFamily && spouseCount === 1) {
-    // Find the partner (descendant) under the same family group
-    const partnerNode = source.parent.children?.find(
-      (c: any) => c.data?.attributes?.is_descendant === true
-    );
-    if (partnerNode) {
-      const midX = (source.x + partnerNode.x) / 2;
-      return drawStepPath({ x: midX, y: source.y }, target);
-    }
+  // For monogamous families, children are now directly attached to descendant in tree structure
+  // So we only need to handle the standard descendant-to-child connections
+  if (
+    isDescendantSource &&
+    isChildTarget &&
+    parentIsFamily &&
+    spouseCount === 1
+  ) {
+    return drawStepPath(source, target);
+  }
+
+  // For polygamous families, maintain the original logic where children come from spouses
+  if (isSpouseSource && isChildTarget && parentIsFamily && spouseCount > 1) {
+    return drawStepPath(source, target);
   }
 
   // For all other standard links, use the step function
@@ -418,9 +424,16 @@ const FamilyTreeComponent: React.FC = () => {
       if (uid === "D00Z00001") {
         // Click on Laketu (origin male)
         if (!newState.visibleNodes.has("S00Z00001")) {
-          // EXPAND: Princess not visible → reveal Princess
+          // EXPAND: Princess not visible → reveal Princess AND first child (like monogamous behavior)
           newState.visibleNodes.add("S00Z00001");
           newState.expandedSpouses.add("D00Z00001");
+
+          // Also reveal first child (Egundebi) to match monogamous descendant behavior
+          const egundebi = allMembers.find((m) => m.unique_id === "D01Z00002");
+          if (egundebi) {
+            newState.visibleNodes.add("D01Z00002");
+            newState.currentGeneration = 2;
+          }
         } else {
           // COLLAPSE: Princess is visible → hide Princess and ALL descendants
           newState.visibleNodes.delete("S00Z00001");
@@ -469,36 +482,21 @@ const FamilyTreeComponent: React.FC = () => {
       }
 
       if (uid === "S00Z00001") {
-        // Click on Princess (origin female)
+        // Click on Princess (origin female) - since Laketu now handles initial expansion,
+        // Princess click only handles collapse if Egundebi is already visible
         const egundebi = allMembers.find((m) => m.unique_id === "D01Z00002");
-        if (egundebi && !newState.visibleNodes.has("D01Z00002")) {
-          // EXPAND: First child not visible → reveal first child + spouses
-          newState.visibleNodes.add("D01Z00002");
-
-          // Track spouse assignment: Princess (S00Z00001) is responsible for Laketu's children
-          newState.spouseAssignments.set("D00Z00001", "S00Z00001");
-
-          // Also reveal Egundebi's spouses
-          const egundebiSpouses = findSpouses(egundebi, allMembers);
-          egundebiSpouses.forEach((spouse) => {
-            newState.visibleNodes.add(spouse.unique_id);
-          });
-
-          if (egundebiSpouses.length > 0) {
-            newState.expandedSpouses.add("D01Z00002");
-          }
-
-          newState.currentGeneration = 2;
-        } else if (egundebi && newState.visibleNodes.has("D01Z00002")) {
+        if (egundebi && newState.visibleNodes.has("D01Z00002")) {
           // COLLAPSE: First child is visible → hide first child and ALL descendants
           newState.visibleNodes.delete("D01Z00002");
           collapseDescendantsRecursively("D01Z00002", newState);
 
-          // Remove Egundebi's spouses and their descendants
+          // Remove Egundebi's spouses and their descendants (if any were revealed)
           const egundebiSpouses = findSpouses(egundebi, allMembers);
           egundebiSpouses.forEach((spouse) => {
-            newState.visibleNodes.delete(spouse.unique_id);
-            collapseDescendantsRecursively(spouse.unique_id, newState);
+            if (newState.visibleNodes.has(spouse.unique_id)) {
+              newState.visibleNodes.delete(spouse.unique_id);
+              collapseDescendantsRecursively(spouse.unique_id, newState);
+            }
           });
 
           // Clean up tracking
@@ -555,14 +553,34 @@ const FamilyTreeComponent: React.FC = () => {
 
       let generationChanged = false;
 
-      // Rule: Male descendants (D IDs) can ONLY reveal/collapse spouses, never children directly
+      // Rule: Male descendants (D IDs) behavior - for monogamous, show spouse + children together
       if (isDescendantNode && spouses.length > 0) {
+        const isMonogamous = spouses.length === 1;
+
         if (!newState.expandedSpouses.has(uid)) {
           // EXPAND: Reveal spouses if not already visible
           spouses.forEach((spouse) => {
             newState.visibleNodes.add(spouse.unique_id);
           });
           newState.expandedSpouses.add(uid);
+
+          // For monogamous descendants, also reveal children immediately
+          if (isMonogamous && children.length > 0) {
+            children.forEach((child) => {
+              newState.visibleNodes.add(child.unique_id);
+            });
+            // Mark the spouse as having expanded children since children are shown
+            newState.expandedChildren.add(spouses[0].unique_id);
+
+            // Track spouse assignment: Record that this spouse is responsible for these children
+            newState.spouseAssignments.set(uid, spouses[0].unique_id);
+
+            // Don't automatically reveal spouses - let them be revealed progressively by clicking each child
+
+            // Advance the generation when children are revealed
+            newState.currentGeneration += 1;
+            generationChanged = true;
+          }
         } else {
           // COLLAPSE: Spouses are visible, so collapse them and ALL their descendants
           spouses.forEach((spouse) => {
@@ -577,8 +595,18 @@ const FamilyTreeComponent: React.FC = () => {
             newState.expandedChildren.delete(spouse.unique_id);
           });
 
+          // For monogamous descendants, also collapse children
+          if (isMonogamous && children.length > 0) {
+            children.forEach((child) => {
+              newState.visibleNodes.delete(child.unique_id);
+              collapseDescendantsRecursively(child.unique_id, newState);
+            });
+          }
+
           // Remove the male descendant from expanded spouses tracking
           newState.expandedSpouses.delete(uid);
+          // Remove spouse assignments
+          newState.spouseAssignments.delete(uid);
 
           // Recalculate generation counter by finding the maximum visible generation
           let maxGeneration = 1;
@@ -621,10 +649,31 @@ const FamilyTreeComponent: React.FC = () => {
           newState.currentGeneration = maxGeneration;
           generationChanged = true;
         }
-        // Male descendants stop here - they cannot expand children directly
+        // For monogamous descendants, we handle children here, so we can return early
+        if (isMonogamous) {
+          // Skip the spouse-only children expansion logic below
+        }
       }
       // Rule: Only spouses (S IDs) can expand/collapse children
+      // But skip if this is a monogamous spouse whose descendant partner already handled children
       else if (!isDescendantNode && children.length > 0) {
+        // Check if this spouse's descendant partner is monogamous and already expanded
+        const descendantPartner = allMembers.find((m) => {
+          const memberSpouses = findSpouses(m, allMembers);
+          return (
+            memberSpouses.some((spouse) => spouse.unique_id === uid) &&
+            memberSpouses.length === 1
+          ); // monogamous
+        });
+
+        // Skip spouse click if monogamous descendant already handled children
+        if (
+          descendantPartner &&
+          newState.expandedSpouses.has(descendantPartner.unique_id)
+        ) {
+          // Don't process spouse clicks for monogamous families where descendant already expanded
+          return;
+        }
         const areChildrenVisible = children.every((child) =>
           newState.visibleNodes.has(child.unique_id)
         );
@@ -707,18 +756,7 @@ const FamilyTreeComponent: React.FC = () => {
             }
           }
 
-          // If we just revealed Gen 3, also reveal their spouses automatically
-          if (isGen2FamilyClick) {
-            children.forEach((child) => {
-              const childSpouses = findSpouses(child, allMembers);
-              if (childSpouses.length > 0) {
-                newState.expandedSpouses.add(child.unique_id);
-                childSpouses.forEach((spouse) => {
-                  newState.visibleNodes.add(spouse.unique_id);
-                });
-              }
-            });
-          }
+          // Don't automatically reveal spouses - let them be revealed progressively by clicking each child
 
           // Advance the generation when children are revealed
           newState.currentGeneration += 1;
@@ -857,8 +895,9 @@ const FamilyTreeComponent: React.FC = () => {
           </div>
         </div>
         <p className="text-sm text-muted-foreground">
-          Click males (squares) to toggle spouses, click spouses (circles) to
-          expand/collapse children
+          Progressive disclosure: Click males (squares) to reveal spouses. For
+          monogamous males, spouse and children appear together. For polygamous
+          families, click spouses (circles) to expand children.
         </p>
       </CardHeader>
       <CardContent>
@@ -881,55 +920,6 @@ const FamilyTreeComponent: React.FC = () => {
             enableLegacyTransitions={true}
             shouldCollapseNeighborNodes={false}
           />
-        </div>
-
-        {/* Legend */}
-        <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-          <h4 className="text-sm font-medium mb-2">Color Legend</h4>
-          <div className="flex flex-wrap gap-3 text-xs">
-            <div className="flex items-center space-x-1">
-              <div
-                className="w-4 h-4 rounded"
-                style={{ backgroundColor: LINEAGE_COLORS.origin }}
-              />
-              <span>Origin Couple</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <div
-                className="w-4 h-4 rounded"
-                style={{ backgroundColor: LINEAGE_COLORS.red }}
-              />
-              <span>First Descendant</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <div
-                className="w-4 h-4 rounded"
-                style={{ backgroundColor: LINEAGE_COLORS.green }}
-              />
-              <span>First Male Child</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <div
-                className="w-4 h-4 rounded"
-                style={{ backgroundColor: LINEAGE_COLORS.blue }}
-              />
-              <span>Second Male Child</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <div
-                className="w-4 h-4 rounded"
-                style={{ backgroundColor: LINEAGE_COLORS.purple }}
-              />
-              <span>Third Male Child</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <div
-                className="w-4 h-4 rounded"
-                style={{ backgroundColor: LINEAGE_COLORS.neutral }}
-              />
-              <span>Spouses & Females</span>
-            </div>
-          </div>
         </div>
       </CardContent>
     </Card>

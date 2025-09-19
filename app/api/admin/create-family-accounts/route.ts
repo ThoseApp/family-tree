@@ -103,6 +103,7 @@ async function createFamilyMemberAccount(
           is_publisher: false,
           created_by_admin: true,
           family_tree_uid: accountData.familyMemberId,
+          requires_password_change: true, // Flag for forced password change
         },
       });
 
@@ -197,8 +198,20 @@ async function sendInvitationEmail(
           <p style="margin: 0;"><strong>Unique ID:</strong> ${credentials.familyMemberId}</p>
         </div>
         
+        <div style="background-color: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+          <p style="margin: 0; color: #92400e;"><strong>⚠️ Important Security Notice:</strong></p>
+          <p style="margin: 10px 0 0 0; color: #92400e;">For your account security, please change your password immediately after logging in for the first time. You will be prompted to create a new, secure password upon your first login.</p>
+        </div>
+        
         <p style="margin-top: 30px;">Yours,</p>
         <p><strong>Mosuro Family Tree</strong></p>
+        <p>
+          <strong>
+            <a href="https://mosuro.com.ng/sign-in" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: underline;">
+              https://mosuro.com.ng
+            </a>
+          </strong>
+        </p>
         
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
         <p style="font-size: 12px; color: #6b7280;">This email was sent automatically. Please do not reply to this email.</p>
