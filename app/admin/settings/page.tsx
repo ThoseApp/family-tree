@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/popover";
 import { EnhancedCalendar } from "@/components/ui/enhanced-calendar";
 import { format } from "date-fns";
+import { syncProfileImageToFamilyTree } from "@/lib/utils/profile-sync-helpers";
 
 // Profile image size limit (smaller than general images for better UX)
 const PROFILE_IMAGE_SIZE_MB = 5;
@@ -42,6 +43,7 @@ const PROFILE_IMAGE_SIZE_MB = 5;
 const SettingsPage = () => {
   const {
     user,
+    userProfile,
     loading: storeLoading,
     updateProfile,
     updatePassword,
@@ -76,40 +78,34 @@ const SettingsPage = () => {
       return;
     }
 
-    const fetchProfile = async () => {
-      setLoading(true);
-      try {
-        const profile = await getUserProfile();
+    // Fetch profile if not already loaded
+    if (!userProfile) {
+      getUserProfile();
+    }
+  }, [user, userProfile, getUserProfile, router]);
 
-        if (profile) {
-          const fullName = `${profile.first_name || ""} ${
-            profile.last_name || ""
-          }`.trim();
-          setFormData({
-            fullName,
-            firstName: profile.first_name || "",
-            lastName: profile.last_name || "",
-            dateOfBirth: profile.date_of_birth || "",
-            phoneNumber: profile.phone_number || "",
-            bio: profile.bio || "",
-            password: "",
-            confirmPassword: "",
-          });
+  // Update form data when userProfile changes
+  useEffect(() => {
+    if (userProfile) {
+      const fullName = `${userProfile.first_name || ""} ${
+        userProfile.last_name || ""
+      }`.trim();
+      setFormData({
+        fullName,
+        firstName: userProfile.first_name || "",
+        lastName: userProfile.last_name || "",
+        dateOfBirth: userProfile.date_of_birth || "",
+        phoneNumber: userProfile.phone_number || "",
+        bio: userProfile.bio || "",
+        password: "",
+        confirmPassword: "",
+      });
 
-          if (profile.image) {
-            setProfileImagePreview(profile.image);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-        toast.error("Failed to load profile data");
-      } finally {
-        setLoading(false);
+      if (userProfile.image) {
+        setProfileImagePreview(userProfile.image);
       }
-    };
-
-    fetchProfile();
-  }, [user, getUserProfile, router]);
+    }
+  }, [userProfile]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
@@ -173,6 +169,9 @@ const SettingsPage = () => {
         .eq("user_id", user.id);
 
       if (updateError) throw updateError;
+
+      // Sync profile image with family-tree table if linked and refresh profile
+      await syncProfileImageToFamilyTree(user.id, imageUrl, getUserProfile);
 
       setProfileImagePreview(imageUrl);
       toast.success("Profile image uploaded successfully!");

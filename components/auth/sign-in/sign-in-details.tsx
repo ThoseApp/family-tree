@@ -31,12 +31,20 @@ import PasswordInput from "@/components/ui/password-input";
 import AuthWrapper from "@/components/wrappers/auth-wrapper";
 import { LoadingIcon } from "@/components/loading-icon";
 import { Separator } from "@/components/ui/separator";
+import ForcedPasswordChangeModal from "@/components/modals/forced-password-change-modal";
 
 const SignInDetails = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   // const isMounted = useMountedState();
-  const { login, loginWithGoogle, loading, user } = useUserStore();
+  const {
+    login,
+    loginWithGoogle,
+    loading,
+    user,
+    showPasswordChangeModal,
+    handlePasswordChangeSuccess,
+  } = useUserStore();
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [remember, setRemember] = useState<string>("off");
   const [displayRouteMessage, setDisplayRouteMessage] = useState<boolean>(true);
@@ -72,8 +80,12 @@ const SignInDetails = () => {
       const loggedIn = await login(values.email, values.password, next || "");
 
       if (loggedIn && loggedIn.data) {
-        // Successfully logged in, redirect user to home page
-        router.push(loggedIn.path || "/");
+        // Check if user requires password change
+        if (!loggedIn.requiresPasswordChange) {
+          // Successfully logged in, redirect user to home page
+          router.push(loggedIn.path || "/");
+        }
+        // If password change is required, the modal state is already set in the store
       }
     } catch (error: any) {
       toast.error("Something went wrong");
@@ -274,6 +286,12 @@ const SignInDetails = () => {
           </p>
         </div>
       </AuthWrapper>
+
+      {/* Forced Password Change Modal */}
+      <ForcedPasswordChangeModal
+        isOpen={showPasswordChangeModal}
+        onSuccess={handlePasswordChangeSuccess}
+      />
     </>
   );
 };
