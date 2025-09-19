@@ -3,12 +3,16 @@ import { createJSONStorage, persist, StorageValue } from "zustand/middleware";
 import { User } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase/client";
+import { syncProfileNameToFamilyTree } from "@/lib/utils/profile-sync-helpers";
 
 interface UserStore {
   user: User | null;
+  userProfile: any | null;
   loading: boolean;
   success: boolean | null;
   error: string | null;
+  showPasswordChangeModal: boolean;
+  passwordChangeRedirectPath: string;
 
   signUp: (userData: {
     email: string;
@@ -38,13 +42,18 @@ interface UserStore {
   updatePassword: (password: string) => Promise<any>;
   getUserProfile: () => Promise<any>;
   resetPasswordWithToken: (token: string, password: string) => Promise<any>;
+  setPasswordChangeModal: (show: boolean, redirectPath?: string) => void;
+  handlePasswordChangeSuccess: () => void;
 }
 
 const initialState = {
   user: null,
+  userProfile: null,
   loading: false,
   success: false,
   error: null,
+  showPasswordChangeModal: false,
+  passwordChangeRedirectPath: "/",
   passwordReset: async (email: string) => {},
   emailVerification: async (email: string) => {},
   verifyOtp: async (email: string, code: string) => {},
@@ -53,6 +62,8 @@ const initialState = {
   getUserProfile: async () => {},
   resetPasswordWithToken: async (token: string, password: string) => {},
   loginWithGoogle: async (redirectTo?: string) => {},
+  setPasswordChangeModal: () => {},
+  handlePasswordChangeSuccess: () => {},
 };
 
 export const useUserStore = create(
@@ -97,15 +108,28 @@ export const useUserStore = create(
             );
           }
 
+          // Check if user requires password change
+          const requiresPasswordChange =
+            data.user.user_metadata?.requires_password_change === true;
+
           set({ user: data.user, success: true, loading: false });
           toast.success("Login successful");
 
           // Route all users to home page after login
-          let redirectPath = "/";
+          let redirectPath = (nextRoute && nextRoute.trim()) || "/";
+
+          // If password change is required, set modal state
+          if (requiresPasswordChange) {
+            set({
+              showPasswordChangeModal: true,
+              passwordChangeRedirectPath: redirectPath,
+            });
+          }
 
           return {
             data,
-            path: (nextRoute && nextRoute.trim()) || redirectPath,
+            path: redirectPath,
+            requiresPasswordChange,
           };
         } catch (error: any) {
           const errorMessage = error?.message || "Login failed";
@@ -274,6 +298,10 @@ export const useUserStore = create(
           // We just need to call updateUser with the new password
           const { error } = await supabase.auth.updateUser({
             password: password,
+            data: {
+              requires_password_change: false,
+              password_changed_at: new Date().toISOString(),
+            },
           });
 
           if (error) throw error;
@@ -355,10 +383,12 @@ export const useUserStore = create(
 
           if (error) throw error;
 
+          // Update the store with the fetched profile
+          set({ userProfile: data, loading: false });
           return data;
         } catch (error: any) {
           const errorMessage = error?.message || "Failed to fetch user profile";
-          set({ error: errorMessage });
+          set({ error: errorMessage, userProfile: null });
           return null;
         } finally {
           set({ loading: false });
@@ -385,7 +415,11 @@ export const useUserStore = create(
                   ? `${profileData.firstName} ${profileData.lastName}`
                   : undefined,
               phone_number: profileData.phoneNumber,
-              date_of_birth: profileData.dateOfBirth,
+              date_of_birth:
+                !profileData.dateOfBirth ||
+                profileData.dateOfBirth.trim() === ""
+                  ? null
+                  : profileData.dateOfBirth,
             },
           });
 
@@ -398,13 +432,29 @@ export const useUserStore = create(
               first_name: profileData.firstName,
               last_name: profileData.lastName,
               phone_number: profileData.phoneNumber,
-              date_of_birth: profileData.dateOfBirth,
+              date_of_birth:
+                !profileData.dateOfBirth ||
+                profileData.dateOfBirth.trim() === ""
+                  ? null
+                  : profileData.dateOfBirth,
               bio: profileData.bio,
               updated_at: new Date().toISOString(),
             })
             .eq("user_id", user.id);
 
           if (profileError) throw profileError;
+
+          // Sync profile changes with family-tree table if linked
+          await syncProfileNameToFamilyTree(
+            user.id,
+            profileData.firstName,
+            profileData.lastName,
+            profileData.dateOfBirth
+          );
+
+          // Refresh the user profile in the store to update UI immediately
+          const { getUserProfile } = get();
+          await getUserProfile();
 
           set({ success: true, loading: false });
           toast.success("Profile updated successfully");
@@ -431,6 +481,10 @@ export const useUserStore = create(
         try {
           const { error } = await supabase.auth.updateUser({
             password,
+            data: {
+              requires_password_change: false,
+              password_changed_at: new Date().toISOString(),
+            },
           });
 
           if (error) throw error;
@@ -447,15 +501,47 @@ export const useUserStore = create(
           set({ loading: false });
         }
       },
+
+      setPasswordChangeModal: (show: boolean, redirectPath?: string) => {
+        set({
+          showPasswordChangeModal: show,
+          passwordChangeRedirectPath: redirectPath || "/",
+        });
+      },
+
+      handlePasswordChangeSuccess: () => {
+        const { passwordChangeRedirectPath } = get();
+        set({
+          showPasswordChangeModal: false,
+          passwordChangeRedirectPath: "/",
+        });
+
+        toast.success("Password changed successfully! Redirecting...");
+
+        // Navigate to the redirect path after a short delay
+        if (typeof window !== "undefined") {
+          setTimeout(() => {
+            window.location.href = passwordChangeRedirectPath;
+          }, 1000);
+        }
+      },
     }),
     {
       name: "user-store",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => {
-        const { user } = state;
+        const {
+          user,
+          userProfile,
+          showPasswordChangeModal,
+          passwordChangeRedirectPath,
+        } = state;
         return {
           ...initialState,
           user,
+          userProfile,
+          showPasswordChangeModal,
+          passwordChangeRedirectPath,
           login: () => Promise.resolve(),
           signUp: () => Promise.resolve(),
           logout: () => Promise.resolve(),
