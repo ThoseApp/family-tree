@@ -61,7 +61,7 @@ const LandingNav = () => {
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "relative px-4 py-2 text-sm md:text-base font-medium transition-colors duration-200",
+                  "relative px-4 py-2 text-sm md:text-base  3xl:text-4xl font-medium transition-colors duration-200",
                   shouldUseTransparentBg &&
                     "hover:bg-primary/40 hover:text-foreground",
                   // Active state
@@ -98,7 +98,7 @@ const LandingNav = () => {
               variant={shouldUseTransparentBg ? "secondary" : "default"}
               size="sm"
               className={cn(
-                "rounded-full px-6 transition-all duration-200",
+                "rounded-full px-6 transition-all text-sm md:text-base  3xl:text-4xl duration-200",
                 shouldUseTransparentBg &&
                   "bg-white text-foreground hover:bg-white/90"
               )}
@@ -122,7 +122,7 @@ const LandingNav = () => {
                 // variant="ghost"
                 size="sm"
                 className={cn(
-                  "text-sm md:text-base font-medium transition-colors duration-200 hover:opacity-80",
+                  "text-sm md:text-base  3xl:text-2xl font-medium transition-colors duration-200 hover:opacity-80",
                   shouldUseTransparentBg
                     ? ""
                     : "text-foreground/70 hover:text-foreground"
