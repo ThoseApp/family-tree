@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { FamilyMemberRequest } from "@/lib/types";
 import { format } from "date-fns";
+import { LifeStatusEnum } from "@/lib/constants/enums";
 
 const MemberRequestsPage = () => {
   const { requests, isLoading, fetchRequests, approveRequest, rejectRequest } =
@@ -55,9 +56,14 @@ const MemberRequestsPage = () => {
     const pending = requests.filter((r) => r.status === "pending").length;
     const approved = requests.filter((r) => r.status === "approved").length;
     const rejected = requests.filter((r) => r.status === "rejected").length;
-    const alive = requests.filter((r) => r.life_status === "Alive").length;
+    const accountEligible = requests.filter(
+      (r) => r.life_status === LifeStatusEnum.accountEligible
+    ).length;
     const deceased = requests.filter(
-      (r) => r.life_status === "Deceased"
+      (r) => r.life_status === LifeStatusEnum.deceased
+    ).length;
+    const children = requests.filter(
+      (r) => r.life_status === LifeStatusEnum.child
     ).length;
     const withEmail = requests.filter(
       (r) => r.email_address && r.email_address.trim() !== ""
@@ -75,8 +81,9 @@ const MemberRequestsPage = () => {
       pending,
       approved,
       rejected,
-      alive,
+      accountEligible,
       deceased,
+      children,
       withEmail,
       recentRequests,
       pendingPercentage: total > 0 ? Math.round((pending / total) * 100) : 0,
@@ -378,8 +385,13 @@ const MemberRequestsPage = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Life Statuses</SelectItem>
-                  <SelectItem value="Alive">Alive</SelectItem>
-                  <SelectItem value="Deceased">Deceased</SelectItem>
+                  <SelectItem value={LifeStatusEnum.accountEligible}>
+                    Account Eligible
+                  </SelectItem>
+                  <SelectItem value={LifeStatusEnum.deceased}>
+                    Deceased
+                  </SelectItem>
+                  <SelectItem value={LifeStatusEnum.child}>Child</SelectItem>
                 </SelectContent>
               </Select>
             </div>

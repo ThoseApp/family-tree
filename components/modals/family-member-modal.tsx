@@ -34,7 +34,7 @@ import { FamilyMember } from "@/lib/types";
 import Image from "next/image";
 import { toast } from "sonner";
 import { uploadImage } from "@/lib/file-upload";
-import { BucketFolderEnum } from "@/lib/constants/enums";
+import { BucketFolderEnum, LifeStatusEnum } from "@/lib/constants/enums";
 import { EnhancedCalendar } from "../ui/enhanced-calendar";
 import { useFamilyMemberDropdowns } from "@/hooks/use-family-member-dropdowns";
 import { generateUniqueId } from "@/lib/utils/unique-id-generator";
@@ -91,7 +91,7 @@ export const FamilyMemberModal = ({
     gender: "",
     orderOfBirth: 1,
     orderOfMarriage: 1,
-    lifeStatus: "Alive",
+    lifeStatus: LifeStatusEnum.accountEligible,
     emailAddress: "",
     fathers_uid: undefined,
     mothers_uid: undefined,
@@ -131,7 +131,7 @@ export const FamilyMemberModal = ({
       orderOfBirth: 1,
       spouseName: "",
       orderOfMarriage: 1,
-      lifeStatus: "Alive",
+      lifeStatus: LifeStatusEnum.accountEligible,
       emailAddress: "",
       fathers_uid: undefined,
       mothers_uid: undefined,
@@ -160,7 +160,7 @@ export const FamilyMemberModal = ({
         orderOfBirth: editData.orderOfBirth || 1,
         spouseName: editData.spouseName || "",
         orderOfMarriage: editData.orderOfMarriage || 1,
-        lifeStatus: editData.lifeStatus || "Alive",
+        lifeStatus: editData.lifeStatus || LifeStatusEnum.accountEligible,
         emailAddress: editData.emailAddress || "",
         fathers_uid: editData.fathers_uid || undefined,
         mothers_uid: editData.mothers_uid || undefined,
@@ -418,7 +418,7 @@ export const FamilyMemberModal = ({
         gender: formData.gender || undefined,
         orderOfBirth,
         orderOfMarriage,
-        lifeStatus: formData.lifeStatus || "Alive",
+        lifeStatus: formData.lifeStatus || LifeStatusEnum.accountEligible,
         emailAddress: email || undefined,
         unique_id: uniqueId,
         // Ensure imageSrc is either a valid string or empty string
@@ -571,10 +571,7 @@ export const FamilyMemberModal = ({
               <Select
                 value={formData.lifeStatus}
                 onValueChange={(value) =>
-                  handleSelectChange(
-                    "lifeStatus",
-                    value as "Alive" | "Deceased"
-                  )
+                  handleSelectChange("lifeStatus", value as LifeStatusEnum)
                 }
                 disabled={isLoading || dropdownsLoading}
               >
@@ -582,8 +579,15 @@ export const FamilyMemberModal = ({
                   <SelectValue placeholder="Select life status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Alive">Alive</SelectItem>
-                  <SelectItem value="Deceased">Deceased</SelectItem>
+                  <SelectItem value={LifeStatusEnum.deceased}>
+                    {LifeStatusEnum.deceased}
+                  </SelectItem>
+                  <SelectItem value={LifeStatusEnum.accountEligible}>
+                    {LifeStatusEnum.accountEligible}
+                  </SelectItem>
+                  <SelectItem value={LifeStatusEnum.child}>
+                    {LifeStatusEnum.child}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

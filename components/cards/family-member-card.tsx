@@ -45,7 +45,7 @@ const FamilyMemberCard = ({ member }: FamilyMemberCardProps) => {
             <div className="flex items-center gap-3 text-muted-foreground">
               <span className="text-xs">ID: {member.unique_id}</span>
               {member.lifeStatus &&
-                member.lifeStatus.toLowerCase() !== "alive" && (
+                member.lifeStatus.toLowerCase() === "deceased" && (
                   <span className="text-xs">Status: {member.lifeStatus}</span>
                 )}
             </div>

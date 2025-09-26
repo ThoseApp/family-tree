@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { FamilyMemberRequest } from "@/lib/types";
 import { format } from "date-fns";
+import { LifeStatusEnum } from "@/lib/constants/enums";
 import Image from "next/image";
 
 interface FamilyMemberRequestDetailsModalProps {
@@ -56,12 +57,14 @@ export const FamilyMemberRequestDetailsModal: React.FC<
 
   const getLifeStatusColor = (status?: string) => {
     switch (status) {
-      case "Alive":
+      case LifeStatusEnum.accountEligible:
         return "bg-green-100 text-green-800 border-green-200";
-      case "Deceased":
+      case LifeStatusEnum.deceased:
         return "bg-gray-100 text-gray-800 border-gray-200";
-      default:
+      case LifeStatusEnum.child:
         return "bg-blue-100 text-blue-800 border-blue-200";
+      default:
+        return "bg-slate-100 text-slate-800 border-slate-200";
     }
   };
 

@@ -7,6 +7,7 @@ import {
   BulkAccountCreationResult,
 } from "@/lib/types";
 import { generateSecurePassword } from "@/lib/utils/password-helpers";
+import { LifeStatusEnum } from "@/lib/constants/enums";
 
 // Create admin client with service role key
 const createAdminClient = () => {
@@ -59,16 +60,23 @@ async function createFamilyMemberAccount(
   adminClient: any
 ): Promise<AccountCreationResult> {
   try {
-    // Check if family member exists in family-tree table
+    // Check if family member exists in family-tree table and is Account Eligible
     const { data: familyMember, error: familyError } = await adminClient
       .from("family-tree")
-      .select("unique_id, first_name, last_name, date_of_birth")
+      .select("unique_id, first_name, last_name, date_of_birth, life_status")
       .eq("unique_id", accountData.familyMemberId)
       .single();
 
     if (familyError || !familyMember) {
       throw new Error(
         `Family member with ID ${accountData.familyMemberId} not found`
+      );
+    }
+
+    // Check if family member is eligible for account creation
+    if (familyMember.life_status !== LifeStatusEnum.accountEligible) {
+      throw new Error(
+        `Cannot create account for family member with life status: ${familyMember.life_status}. Only "Account Eligible" members can have accounts created.`
       );
     }
 
