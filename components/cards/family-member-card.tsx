@@ -46,7 +46,7 @@ const FamilyMemberCard = ({ member }: FamilyMemberCardProps) => {
               <span className="text-xs">ID: {member.unique_id}</span>
               {member.lifeStatus &&
                 member.lifeStatus.toLowerCase() === "deceased" && (
-                  <span className="text-xs">Status: {member.lifeStatus}</span>
+                  <span className="text-xs">Status: Dec</span>
                 )}
             </div>
           </div>
