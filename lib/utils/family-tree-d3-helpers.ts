@@ -543,7 +543,15 @@ function buildSubTree(
         !outOfWedlockChildren.some((ow) => ow.unique_id === child.unique_id)
     );
 
-    // Attach regular children based on family type
+    // Get visible out-of-wedlock children and sort them by birth order
+    const visibleOwChildrenFather = owChildrenFather.filter((child) =>
+      state.visibleNodes.has(child.unique_id)
+    );
+    const visibleOwChildrenMother = owChildrenMother.filter((child) =>
+      state.visibleNodes.has(child.unique_id)
+    );
+
+    // Attach children based on family type, maintaining birth order for all children
     if (targetSpouseNode) {
       const regularChildrenWithContext = regularChildren.map((child) =>
         buildSubTree(child, allMembers, state, selectedSpouseId || undefined)
@@ -551,9 +559,36 @@ function buildSubTree(
 
       // For monogamous families, attach children to the descendant for proper lineage visualization
       if (spouses.length === 1) {
+        // Combine regular children and father-known OW children, sort by birth order
+        const fatherOwChildrenWithContext = visibleOwChildrenFather.map(
+          (child) => buildSubTree(child, allMembers, state, undefined)
+        );
+
+        // Combine and sort all children that should be attached to the descendant
+        const allDescendantChildren = [
+          ...regularChildren,
+          ...visibleOwChildrenFather,
+        ];
+        const sortedDescendantChildren = allDescendantChildren
+          .sort((a, b) => (a.order_of_birth || 0) - (b.order_of_birth || 0))
+          .map((child) => {
+            // Check if this child is out-of-wedlock
+            const isOw = visibleOwChildrenFather.some(
+              (ow) => ow.unique_id === child.unique_id
+            );
+            return isOw
+              ? buildSubTree(child, allMembers, state, undefined)
+              : buildSubTree(
+                  child,
+                  allMembers,
+                  state,
+                  selectedSpouseId || undefined
+                );
+          });
+
         memberNode.children = [
           ...(memberNode.children || []),
-          ...regularChildrenWithContext,
+          ...sortedDescendantChildren,
         ];
         // Keep spouse node without children for monogamous families
         targetSpouseNode.children = [];
@@ -568,9 +603,9 @@ function buildSubTree(
     // not only when a particular spouse's children are expanded. This ensures OW
     // children are discoverable even if a spouse has no regular children.
     if (shouldCreateFamilyGroup) {
-      // Father-known, mother-missing → attach under father (this member if male descendant)
-      if (owChildrenFather.length > 0) {
-        const owChildrenForFather = owChildrenFather.map((child) =>
+      // For polygamous families, father-known OW children still need to be attached to father
+      if (spouses.length > 1 && visibleOwChildrenFather.length > 0) {
+        const owChildrenForFather = visibleOwChildrenFather.map((child) =>
           buildSubTree(child, allMembers, state, undefined)
         );
         memberNode.children = [
@@ -578,11 +613,12 @@ function buildSubTree(
           ...owChildrenForFather,
         ];
       }
+
       // Mother-known, father-missing → attach under the correct mother spouse node
-      if (owChildrenMother.length > 0 && spouseNodes.length > 0) {
+      if (visibleOwChildrenMother.length > 0 && spouseNodes.length > 0) {
         // Group children by mothers_uid to attach to the right spouse node
         const byMother: Record<string, ProcessedMember[]> = {};
-        owChildrenMother.forEach((child) => {
+        visibleOwChildrenMother.forEach((child) => {
           const mid = child.mothers_uid || "";
           if (!byMother[mid]) byMother[mid] = [];
           byMother[mid].push(child);
@@ -594,13 +630,39 @@ function buildSubTree(
             (sp) => sp.attributes!.unique_id === motherUid
           );
           if (targetMotherNode) {
-            const built = childrenList.map((child) =>
+            // Get existing regular children for this spouse (if any)
+            const existingChildren = targetMotherNode.children || [];
+
+            // Build OW children
+            const owChildrenBuilt = childrenList.map((child) =>
               buildSubTree(child, allMembers, state, undefined)
             );
-            targetMotherNode.children = [
-              ...(targetMotherNode.children || []),
-              ...built,
-            ];
+
+            // Combine existing regular children with OW children and sort by birth order
+            const allSpouseChildren = [
+              ...regularChildren.filter((child) => {
+                // Find regular children that belong to this spouse
+                return child.mothers_uid === motherUid;
+              }),
+              ...childrenList,
+            ].sort((a, b) => (a.order_of_birth || 0) - (b.order_of_birth || 0));
+
+            // Rebuild all children for this spouse in correct order
+            const sortedSpouseChildren = allSpouseChildren.map((child) => {
+              const isOw = childrenList.some(
+                (ow) => ow.unique_id === child.unique_id
+              );
+              return isOw
+                ? buildSubTree(child, allMembers, state, undefined)
+                : buildSubTree(
+                    child,
+                    allMembers,
+                    state,
+                    selectedSpouseId || undefined
+                  );
+            });
+
+            targetMotherNode.children = sortedSpouseChildren;
           }
         });
       }

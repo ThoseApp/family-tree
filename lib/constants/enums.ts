@@ -5,6 +5,7 @@ export enum BucketFolderEnum {
   avatars = "avatars",
   EVENT_IMAGES = "event_images",
   landing_page = "landing_page",
+  cdn = "cdn",
 
   // TODO: ADD MORE FOLDER NAMES
 }
@@ -52,4 +53,10 @@ export enum UserStatusEnum {
   pending = "pending",
   approved = "approved",
   rejected = "rejected",
+}
+
+export enum LifeStatusEnum {
+  deceased = "Deceased",
+  accountEligible = "Account Eligible",
+  child = "Child",
 }

@@ -7,6 +7,7 @@ import {
   BulkAccountCreationResult,
 } from "@/lib/types";
 import { generateSecurePassword } from "@/lib/utils/password-helpers";
+import { LifeStatusEnum } from "@/lib/constants/enums";
 
 // Create admin client with service role key
 const createAdminClient = () => {
@@ -59,16 +60,23 @@ async function createFamilyMemberAccount(
   adminClient: any
 ): Promise<AccountCreationResult> {
   try {
-    // Check if family member exists in family-tree table
+    // Check if family member exists in family-tree table and is Account Eligible
     const { data: familyMember, error: familyError } = await adminClient
       .from("family-tree")
-      .select("unique_id, first_name, last_name, date_of_birth")
+      .select("unique_id, first_name, last_name, date_of_birth, life_status")
       .eq("unique_id", accountData.familyMemberId)
       .single();
 
     if (familyError || !familyMember) {
       throw new Error(
         `Family member with ID ${accountData.familyMemberId} not found`
+      );
+    }
+
+    // Check if family member is eligible for account creation
+    if (familyMember.life_status !== LifeStatusEnum.accountEligible) {
+      throw new Error(
+        `Cannot create account for family member with life status: ${familyMember.life_status}. Only "Account Eligible" members can have accounts created.`
       );
     }
 
@@ -198,6 +206,8 @@ async function sendInvitationEmail(
           <p style="margin: 0;"><strong>Unique ID:</strong> ${credentials.familyMemberId}</p>
         </div>
         
+        <p><strong>To access your account, please log in here:</strong> <a href="https://mosuro.com.ng/sign-in" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: underline;">https://mosuro.com.ng/sign-in</a></p>
+        
         <div style="background-color: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
           <p style="margin: 0; color: #92400e;"><strong>⚠️ Important Security Notice:</strong></p>
           <p style="margin: 10px 0 0 0; color: #92400e;">For your account security, please change your password immediately after logging in for the first time. You will be prompted to create a new, secure password upon your first login.</p>
@@ -205,13 +215,6 @@ async function sendInvitationEmail(
         
         <p style="margin-top: 30px;">Yours,</p>
         <p><strong>Mosuro Family Tree</strong></p>
-        <p>
-          <strong>
-            <a href="https://mosuro.com.ng/sign-in" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: underline;">
-              https://mosuro.com.ng
-            </a>
-          </strong>
-        </p>
         
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
         <p style="font-size: 12px; color: #6b7280;">This email was sent automatically. Please do not reply to this email.</p>

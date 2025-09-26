@@ -3,6 +3,7 @@ import {
   NotificationTypeEnum,
   GalleryStatusEnum,
   UserStatusEnum,
+  LifeStatusEnum,
 } from "../constants/enums";
 
 export type NavLink = {
@@ -88,7 +89,7 @@ export interface FamilyMember {
   spouseName?: string;
   spouse_uid?: string;
   orderOfMarriage?: number;
-  lifeStatus?: "Alive" | "Deceased";
+  lifeStatus?: LifeStatusEnum;
   emailAddress?: string;
 }
 
@@ -113,7 +114,7 @@ export interface ProcessedMember {
   spouses_last_name: string;
   spouse_uid?: string;
   date_of_birth: string | null;
-  life_status: "Alive" | "Deceased";
+  life_status: LifeStatusEnum;
   email_address?: string;
   created_at?: string;
   updated_at?: string;
@@ -405,7 +406,7 @@ export interface FamilyMemberRequest {
   spouse_uid?: string;
   order_of_birth?: number;
   order_of_marriage?: number;
-  life_status?: "Alive" | "Deceased";
+  life_status?: LifeStatusEnum;
   email_address?: string;
   requested_by_user_id: string;
   status: "pending" | "approved" | "rejected";
