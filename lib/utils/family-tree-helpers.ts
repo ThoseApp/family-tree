@@ -1,6 +1,7 @@
 import { ProcessedMember, FamilyMember } from "@/lib/types";
 import { supabase } from "@/lib/supabase/client";
 import { dummyProfileImage, dummyFemaleProfileImage } from "../constants";
+import { LifeStatusEnum } from "../constants/enums";
 
 /**
  * Utility function to safely truncate strings to database field limits
@@ -92,7 +93,7 @@ export function familyMemberToProcessedMember(
       familyMember.birthDate && familyMember.birthDate.trim() !== ""
         ? familyMember.birthDate
         : null,
-    life_status: familyMember.lifeStatus || "Alive",
+    life_status: familyMember.lifeStatus || LifeStatusEnum.accountEligible,
     email_address: familyMember.emailAddress || undefined,
   };
 }

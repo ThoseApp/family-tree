@@ -39,11 +39,12 @@ import { dummyProfileImage } from "@/lib/constants";
 import { CreateAccountModal } from "@/components/modals/create-account-modal";
 import { BulkCreateAccountsModal } from "@/components/modals/bulk-create-accounts-modal";
 import { processedMemberToFamilyMember } from "@/lib/utils/family-tree-helpers";
+import { LifeStatusEnum } from "@/lib/constants/enums";
 
 interface UserAccountWithFamily extends UserProfile {
   hasAccount: boolean;
   accountCreatedAt?: string;
-  life_status?: "Alive" | "Deceased";
+  life_status?: LifeStatusEnum;
 }
 
 const UserAccountsPage = () => {
@@ -99,7 +100,8 @@ const UserAccountsPage = () => {
             ...profile,
             hasAccount: true,
             accountCreatedAt: profile.created_at,
-            life_status: familyMember.life_status || "Alive",
+            life_status:
+              familyMember.life_status || LifeStatusEnum.accountEligible,
           });
         }
       });
@@ -128,7 +130,8 @@ const UserAccountsPage = () => {
             created_at: "",
             updated_at: "",
             hasAccount: false,
-            life_status: familyMember.life_status || "Alive",
+            life_status:
+              familyMember.life_status || LifeStatusEnum.accountEligible,
           });
         }
       });
@@ -161,12 +164,17 @@ const UserAccountsPage = () => {
   const totalFamilyMembers = familyMembers.length;
   const membersWithAccounts = familyMembers.filter((m) => m.hasAccount).length;
   const membersWithoutAccounts = totalFamilyMembers - membersWithAccounts;
-  const aliveMembers = familyMembers.filter(
-    (m) => m.life_status === "Alive"
+  const accountEligibleMembers = familyMembers.filter(
+    (m) => m.life_status === LifeStatusEnum.accountEligible
   ).length;
-  const deceasedMembers = totalFamilyMembers - aliveMembers;
+  const deceasedMembers = familyMembers.filter(
+    (m) => m.life_status === LifeStatusEnum.deceased
+  ).length;
+  const childMembers = familyMembers.filter(
+    (m) => m.life_status === LifeStatusEnum.child
+  ).length;
   const eligibleForAccounts = familyMembers.filter(
-    (m) => !m.hasAccount && m.life_status === "Alive"
+    (m) => !m.hasAccount && m.life_status === LifeStatusEnum.accountEligible
   ).length;
 
   const getAccountStatusBadge = (member: UserAccountWithFamily) => {
@@ -189,10 +197,10 @@ const UserAccountsPage = () => {
 
   // Handle creating user account for family member
   const handleCreateAccount = (member: UserAccountWithFamily) => {
-    // Check if member is deceased
-    if (member.life_status === "Deceased") {
-      toast.error("Cannot create account for deceased family member", {
-        description: `${member.first_name} ${member.last_name} is marked as deceased.`,
+    // Check if member is eligible for account creation
+    if (member.life_status !== LifeStatusEnum.accountEligible) {
+      toast.error("Cannot create account for this family member", {
+        description: `${member.first_name} ${member.last_name} has life status "${member.life_status}". Only "Account Eligible" members can have accounts created.`,
       });
       return;
     }
@@ -205,7 +213,7 @@ const UserAccountsPage = () => {
       description: "Family member",
       imageSrc: member.image || "",
       birthDate: member.date_of_birth || "",
-      lifeStatus: member.life_status || "Alive",
+      lifeStatus: member.life_status || LifeStatusEnum.accountEligible,
       emailAddress: member.email || "",
     };
 
@@ -281,7 +289,8 @@ const UserAccountsPage = () => {
           <CardContent>
             <div className="text-2xl font-bold">{totalFamilyMembers}</div>
             <div className="text-xs text-muted-foreground mt-1">
-              {aliveMembers} alive, {deceasedMembers} deceased
+              {accountEligibleMembers} eligible, {childMembers} children,{" "}
+              {deceasedMembers} deceased
             </div>
           </CardContent>
         </Card>
@@ -323,10 +332,11 @@ const UserAccountsPage = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-600">
-              {deceasedMembers}
+              {deceasedMembers + childMembers}
             </div>
             <div className="text-xs text-muted-foreground mt-1">
-              Cannot create accounts
+              Cannot create accounts ({deceasedMembers} deceased, {childMembers}{" "}
+              children)
             </div>
           </CardContent>
         </Card>
@@ -410,12 +420,15 @@ const UserAccountsPage = () => {
                       <TableCell>
                         <Badge
                           variant={
-                            member.life_status === "Alive"
+                            member.life_status ===
+                            LifeStatusEnum.accountEligible
                               ? "default"
+                              : member.life_status === LifeStatusEnum.deceased
+                              ? "destructive"
                               : "secondary"
                           }
                         >
-                          {member.life_status || "Alive"}
+                          {member.life_status || LifeStatusEnum.accountEligible}
                         </Badge>
                       </TableCell>
                       <TableCell>{getAccountStatusBadge(member)}</TableCell>
@@ -522,7 +535,9 @@ const UserAccountsPage = () => {
         isOpen={isBulkCreateModalOpen}
         onClose={() => setIsBulkCreateModalOpen(false)}
         familyMembersWithoutAccounts={familyMembers.filter(
-          (member) => !member.hasAccount && member.life_status === "Alive"
+          (member) =>
+            !member.hasAccount &&
+            member.life_status === LifeStatusEnum.accountEligible
         )}
         onSuccess={handleCreateAccountSuccess}
       />

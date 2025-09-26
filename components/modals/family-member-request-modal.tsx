@@ -35,7 +35,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { uploadImage } from "@/lib/file-upload";
-import { BucketFolderEnum } from "@/lib/constants/enums";
+import { BucketFolderEnum, LifeStatusEnum } from "@/lib/constants/enums";
 import { useFamilyMemberDropdowns } from "@/hooks/use-family-member-dropdowns";
 
 interface FamilyMemberRequestModalProps {
@@ -48,7 +48,7 @@ export const FamilyMemberRequestModal: React.FC<
   FamilyMemberRequestModalProps
 > = ({ isOpen, onClose, onSuccess }) => {
   const [formData, setFormData] = useState<Partial<FamilyMember>>({
-    lifeStatus: "Alive",
+    lifeStatus: LifeStatusEnum.accountEligible,
     emailAddress: "",
     fathers_uid: undefined,
     mothers_uid: undefined,
@@ -80,7 +80,7 @@ export const FamilyMemberRequestModal: React.FC<
   useEffect(() => {
     if (isOpen) {
       setFormData({
-        lifeStatus: "Alive",
+        lifeStatus: LifeStatusEnum.accountEligible,
         emailAddress: "",
         fathers_uid: undefined,
         mothers_uid: undefined,
@@ -416,12 +416,9 @@ export const FamilyMemberRequestModal: React.FC<
             <div className="grid gap-2">
               <Label htmlFor="lifeStatus">Life Status</Label>
               <Select
-                value={formData.lifeStatus || "Alive"}
+                value={formData.lifeStatus || LifeStatusEnum.accountEligible}
                 onValueChange={(value) =>
-                  handleSelectChange(
-                    "lifeStatus",
-                    value as "Alive" | "Deceased"
-                  )
+                  handleSelectChange("lifeStatus", value as LifeStatusEnum)
                 }
                 disabled={dropdownsLoading}
               >
@@ -429,8 +426,15 @@ export const FamilyMemberRequestModal: React.FC<
                   <SelectValue placeholder="Select life status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Alive">Alive</SelectItem>
-                  <SelectItem value="Deceased">Deceased</SelectItem>
+                  <SelectItem value={LifeStatusEnum.deceased}>
+                    {LifeStatusEnum.deceased}
+                  </SelectItem>
+                  <SelectItem value={LifeStatusEnum.accountEligible}>
+                    {LifeStatusEnum.accountEligible}
+                  </SelectItem>
+                  <SelectItem value={LifeStatusEnum.child}>
+                    {LifeStatusEnum.child}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

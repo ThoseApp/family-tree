@@ -16,6 +16,7 @@ import { LoadingIcon } from "@/components/loading-icon";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase/client";
 import { FamilyMember } from "@/lib/types";
+import { LifeStatusEnum } from "@/lib/constants/enums";
 import {
   Mail,
   User,
@@ -117,10 +118,10 @@ export const CreateAccountModal: React.FC<CreateAccountModalProps> = ({
       return;
     }
 
-    // Check if family member is deceased
-    if (familyMember.lifeStatus === "Deceased") {
-      toast.error("Cannot create account for deceased family member", {
-        description: `${familyMember.name} is marked as deceased.`,
+    // Check if family member is eligible for account creation
+    if (familyMember.lifeStatus !== LifeStatusEnum.accountEligible) {
+      toast.error("Cannot create account for this family member", {
+        description: `${familyMember.name} has life status "${familyMember.lifeStatus}". Only "Account Eligible" members can have accounts created.`,
       });
       return;
     }

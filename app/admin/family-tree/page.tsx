@@ -42,6 +42,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import FamilyTreeErrorBoundary from "@/components/family-tree-error-boundary";
+import { LifeStatusEnum } from "@/lib/constants/enums";
 
 // Import family-chart library
 // @ts-ignore - family-chart doesn't have type definitions
@@ -127,7 +128,7 @@ interface ProcessedMember {
   spouses_last_name: string;
   spouse_uid?: string;
   date_of_birth: string | null;
-  life_status: "Alive" | "Deceased";
+  life_status: LifeStatusEnum;
   email_address?: string;
 }
 
@@ -457,12 +458,20 @@ const FamilyTreeUploadPage = () => {
       // Validate Life Status
       if (
         row["Life Status"] &&
-        !["Alive", "Deceased", "alive", "deceased"].includes(row["Life Status"])
+        ![
+          LifeStatusEnum.accountEligible,
+          LifeStatusEnum.deceased,
+          LifeStatusEnum.child,
+          "account eligible",
+          "deceased",
+          "child",
+        ].includes(row["Life Status"])
       ) {
         errors.push({
           row: index + 1,
           field: "Life Status",
-          message: "Life Status must be 'Alive' or 'Deceased'",
+          message:
+            "Life Status must be 'Account Eligible', 'Deceased', or 'Child'",
         });
       }
 
@@ -515,8 +524,10 @@ const FamilyTreeUploadPage = () => {
           ? new Date(row["Date of Birth"]).toISOString().split("T")[0]
           : null,
       life_status: (row["Life Status"]?.toLowerCase() === "deceased"
-        ? "Deceased"
-        : "Alive") as "Alive" | "Deceased",
+        ? LifeStatusEnum.deceased
+        : row["Life Status"]?.toLowerCase() === "child"
+        ? LifeStatusEnum.child
+        : LifeStatusEnum.accountEligible) as LifeStatusEnum,
       email_address: row["Email Address"]?.trim() || undefined,
     }));
   };
@@ -610,7 +621,7 @@ const FamilyTreeUploadPage = () => {
         // Filter members eligible for account creation
         const eligibleMembers = toInsert.filter(
           (member) =>
-            member.life_status === "Alive" &&
+            member.life_status === LifeStatusEnum.accountEligible &&
             member.email_address &&
             member.email_address.trim() !== ""
         );
@@ -770,13 +781,13 @@ const FamilyTreeUploadPage = () => {
       '"https://example.com/babatunde.jpg","S003","Male","BABATUNDE","OGUNDIMU","","","","","0","0","Married","ADUNNI","MOSURO","1899-09-12","Deceased",""',
       '"https://example.com/kemi.jpg","S004","Female","KEMI","ADEYEMI","","","","","0","0","Married","ADEBAYO","MOSURO","1907-04-03","Deceased",""',
       '"https://example.com/taiwo.jpg","S005","Male","TAIWO","ADEYEMI","","","","","0","0","Married","ADUKE","MOSURO","1905-11-22","Deceased",""',
-      '"https://example.com/adeola.jpg","D005","Male","ADEOLA","MOSURO","ADELAJA","MOSURO","FOLAKE","OGUNDIMU","1","1","Single","","","1925-07-08","Alive","adeola.mosuro@example.com"',
-      '"https://example.com/adebisi.jpg","D006","Female","ADEBISI","MOSURO","ADELAJA","MOSURO","FOLAKE","OGUNDIMU","2","0","Single","","","1927-11-15","Alive","adebisi.mosuro@example.com"',
-      '"https://example.com/kehinde.jpg","D007","Male","KEHINDE","OGUNDIMU","BABATUNDE","OGUNDIMU","ADUNNI","MOSURO","1","1","Single","","","1930-03-20","Alive","kehinde.ogundimu@example.com"',
-      '"https://example.com/taiye.jpg","D008","Male","TAIYE","OGUNDIMU","BABATUNDE","OGUNDIMU","ADUNNI","MOSURO","1","1","Single","","","1930-03-20","Alive","taiye.ogundimu@example.com"',
-      '"https://example.com/adebayo_child1.jpg","D009","Male","ADEBAYO_JR","MOSURO","ADEBAYO","MOSURO","KEMI","ADEYEMI","1","1","Single","","","1932-01-12","Alive","adebayo.jr@example.com"',
+      `"https://example.com/adeola.jpg","D005","Male","ADEOLA","MOSURO","ADELAJA","MOSURO","FOLAKE","OGUNDIMU","1","1","Single","","","1925-07-08","${LifeStatusEnum.accountEligible}","adeola.mosuro@example.com"`,
+      `"https://example.com/adebisi.jpg","D006","Female","ADEBISI","MOSURO","ADELAJA","MOSURO","FOLAKE","OGUNDIMU","2","0","Single","","","1927-11-15","${LifeStatusEnum.accountEligible}","adebisi.mosuro@example.com"`,
+      `"https://example.com/kehinde.jpg","D007","Male","KEHINDE","OGUNDIMU","BABATUNDE","OGUNDIMU","ADUNNI","MOSURO","1","1","Single","","","1930-03-20","${LifeStatusEnum.accountEligible}","kehinde.ogundimu@example.com"`,
+      `"https://example.com/taiye.jpg","D008","Male","TAIYE","OGUNDIMU","BABATUNDE","OGUNDIMU","ADUNNI","MOSURO","1","1","Single","","","1930-03-20","${LifeStatusEnum.accountEligible}","taiye.ogundimu@example.com"`,
+      `"https://example.com/adebayo_child1.jpg","D009","Male","ADEBAYO_JR","MOSURO","ADEBAYO","MOSURO","KEMI","ADEYEMI","1","1","Single","","","1932-01-12","${LifeStatusEnum.accountEligible}","adebayo.jr@example.com"`,
       '"https://example.com/second_wife.jpg","S006","Female","FUNMI","ADEYEMI","","","","","0","2","Married","ADEBAYO","MOSURO","1910-08-17","Deceased",""',
-      '"https://example.com/adebayo_child2.jpg","D010","Female","FUNMILAYO","MOSURO","ADEBAYO","MOSURO","FUNMI","ADEYEMI","1","0","Single","","","1935-06-05","Alive","funmilayo.mosuro@example.com"',
+      `"https://example.com/adebayo_child2.jpg","D010","Female","FUNMILAYO","MOSURO","ADEBAYO","MOSURO","FUNMI","ADEYEMI","1","0","Single","","","1935-06-05","${LifeStatusEnum.accountEligible}","funmilayo.mosuro@example.com"`,
     ];
 
     const csvContent = templateHeader + "\n" + sampleData.join("\n");
@@ -2759,8 +2770,12 @@ const FamilyTreeUploadPage = () => {
                           <TableCell>
                             <Badge
                               variant={
-                                member.life_status === "Alive"
+                                member.life_status ===
+                                LifeStatusEnum.accountEligible
                                   ? "default"
+                                  : member.life_status ===
+                                    LifeStatusEnum.deceased
+                                  ? "destructive"
                                   : "secondary"
                               }
                             >
