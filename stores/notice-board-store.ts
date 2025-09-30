@@ -6,8 +6,10 @@ import {
   NoticeBoardStatusEnum,
   NotificationTypeEnum,
 } from "@/lib/constants/enums";
-
-const ADMIN_ID = process.env.NEXT_PUBLIC_ADMIN_ID;
+import {
+  canCurrentUserAutoApprove,
+  createNotificationForAllAdmins,
+} from "@/lib/utils/multi-admin-helpers";
 
 interface NoticeBoardState {
   noticeBoards: NoticeBoard[];
@@ -139,14 +141,8 @@ export const useNoticeBoardStore = create<NoticeBoardState>((set, get) => ({
       // Add current date and time if not provided
       const now = new Date();
 
-      // Get current user to check role
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      const userRole = user ? getUserRoleFromMetadata(user) : "user";
-      const isAdmin = userId === ADMIN_ID;
-      const isPublisher = userRole === "publisher";
-      const canAutoApprove = isAdmin || isPublisher;
+      // Check if current user can auto-approve
+      const canAutoApprove = await canCurrentUserAutoApprove();
 
       const formattedNoticeBoard = {
         ...noticeBoard,
@@ -174,16 +170,15 @@ export const useNoticeBoardStore = create<NoticeBoardState>((set, get) => ({
         loading: false,
       }));
 
-      // Create notification for admin if user is not admin or publisher
+      // Create notification for all admins if user is not admin or publisher
       if (!canAutoApprove && userId) {
         try {
-          await supabase.rpc("create_system_notification", {
-            p_user_id: ADMIN_ID,
-            p_title: "New Notice Board Request",
-            p_body: `A new notice "${noticeBoard.title}" has been posted and is pending approval.`,
-            p_type: NotificationTypeEnum.notice_board_request,
-            p_resource_id: newNoticeBoard.id,
-            p_image: noticeBoard.image,
+          await createNotificationForAllAdmins({
+            title: "New Notice Board Request",
+            body: `A new notice "${noticeBoard.title}" has been posted and is pending approval.`,
+            type: NotificationTypeEnum.notice_board_request,
+            resource_id: newNoticeBoard.id,
+            image: noticeBoard.image,
           });
         } catch (notificationErr) {
           console.error("Failed to create notification:", notificationErr);

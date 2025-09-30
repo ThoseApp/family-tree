@@ -3,6 +3,10 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase/client";
 import { Event, getUserRoleFromMetadata } from "@/lib/types";
 import { EventStatusEnum, NotificationTypeEnum } from "@/lib/constants/enums";
+import {
+  canCurrentUserAutoApprove,
+  createNotificationForAllAdmins,
+} from "@/lib/utils/multi-admin-helpers";
 // import { v4 as uuidv4 } from "uuid";
 
 interface EventsState {
@@ -156,12 +160,8 @@ export const useEventsStore = create<EventsState>((set, get) => ({
     set({ loading: true, error: null });
 
     try {
-      // Get current user to check role
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      const userRole = user ? getUserRoleFromMetadata(user) : "user";
-      const canAutoApprove = userRole === "admin" || userRole === "publisher";
+      // Check if current user can auto-approve
+      const canAutoApprove = await canCurrentUserAutoApprove();
 
       // Format date for consistency if it's not already formatted
       const formattedEvent = {
@@ -187,16 +187,15 @@ export const useEventsStore = create<EventsState>((set, get) => ({
         loading: false,
       }));
 
-      // Create notification for admin if user is not admin/publisher and event needs approval
+      // Create notification for all admins if user is not admin/publisher and event needs approval
       if (!canAutoApprove && newEvent.user_id) {
         try {
-          await supabase.rpc("create_system_notification", {
-            p_user_id: process.env.NEXT_PUBLIC_ADMIN_ID,
-            p_title: "New Event Request",
-            p_body: `A new event "${newEvent.name}" has been submitted and is pending approval.`,
-            p_type: NotificationTypeEnum.event_request,
-            p_resource_id: newEvent.id,
-            p_image: newEvent.image,
+          await createNotificationForAllAdmins({
+            title: "New Event Request",
+            body: `A new event "${newEvent.name}" has been submitted and is pending approval.`,
+            type: NotificationTypeEnum.event_request,
+            resource_id: newEvent.id,
+            image: newEvent.image,
           });
         } catch (notificationErr) {
           console.error("Failed to create notification:", notificationErr);

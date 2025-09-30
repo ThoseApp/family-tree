@@ -17,6 +17,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { CountBadge } from "@/components/ui/count-badge";
+import { usePendingCounts } from "@/hooks/use-pending-counts";
 
 interface AdminSideBarProps {
   forceMobileExpanded?: boolean;
@@ -26,9 +28,28 @@ const AdminSideBar = ({ forceMobileExpanded = false }: AdminSideBarProps) => {
   const pathname = usePathname();
   const { logout } = useUserStore();
   const { isCollapsed, toggleSidebar } = useSidebarStore();
+  const { counts } = usePendingCounts();
 
   // Force expanded state for mobile or use store state for desktop
   const isActuallyCollapsed = forceMobileExpanded ? false : isCollapsed;
+
+  // Function to get count for a specific route
+  const getCountForRoute = (href: string): number => {
+    switch (href) {
+      case "/admin/gallery-requests":
+        return counts.galleryRequests;
+      case "/admin/notice-board-requests":
+        return counts.noticeBoardRequests;
+      case "/admin/events":
+        return counts.eventRequests;
+      case "/admin/member-requests":
+        return counts.memberRequests;
+      case "/admin/family-member-requests":
+        return counts.familyMemberRequests;
+      default:
+        return 0;
+    }
+  };
 
   // Add keyboard shortcut for toggling sidebar (only for desktop)
   useEffect(() => {
@@ -117,8 +138,17 @@ const AdminSideBar = ({ forceMobileExpanded = false }: AdminSideBarProps) => {
                             )}
                           />
                         )}
-                        {!isActuallyCollapsed && route.label}
+                        {!isActuallyCollapsed && (
+                          <span className="flex-1">{route.label}</span>
+                        )}
                       </div>
+                      {/* Count Badge */}
+                      {/* {!isActuallyCollapsed && (
+                        <CountBadge
+                          count={getCountForRoute(route.href)}
+                          className="ml-auto"
+                        />
+                      )} */}
                     </Link>
                   </TooltipTrigger>
                   {isActuallyCollapsed && (

@@ -168,7 +168,7 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
 
   return (
     <g onClick={onNodeClick}>
-      {/* Main node rectangle */}
+      {/* Main node rectangle with enhanced styling */}
       <rect
         width={nodeWidth}
         height={nodeHeight}
@@ -179,6 +179,7 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
         strokeWidth={1.5}
         rx={14}
         className="cursor-pointer hover:shadow-lg transition-all duration-200"
+        filter="drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.1))"
       />
 
       {/* Profile image area */}
@@ -213,18 +214,34 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
         }}
       />
 
-      {/* Name text */}
+      {/* Text background for better readability */}
+      {/* <rect
+        x={-nodeWidth / 2 + 8}
+        y={nameY - (nameLines.length > 1 ? 12 : 8)}
+        width={nodeWidth - 16}
+        height={nameLines.length > 1 ? 32 : 20}
+        fill="rgba(255, 255, 255, 0.75)"
+        rx={6}
+        stroke="rgba(255, 255, 255, 0.9)"
+        strokeWidth={0.5}
+      /> */}
+
+      {/* Name text with enhanced visibility */}
       <text
         x={0}
         y={nameY}
         textAnchor="middle"
-        fontSize="15"
-        fontWeight="700"
+        fontSize="16"
+        fontWeight="800"
         style={{
           fontFamily:
             "Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial",
-          fill: "#111827",
+          fill: "#1F2937",
+          filter: "drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3))",
         }}
+        stroke="#FFFFFF"
+        strokeWidth="0.5"
+        paintOrder="stroke fill"
       >
         {nameLines.map((line, index) => (
           <tspan x={0} key={index} dy={index === 0 ? 0 : "1.2em"}>
@@ -251,8 +268,11 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
             y={badgeY + 15}
             textAnchor="middle"
             fontSize="12"
-            fontWeight="700"
-            style={{ fill: "#FFFFFF" }}
+            fontWeight="800"
+            style={{
+              fill: "#FFFFFF",
+              filter: "drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.4))",
+            }}
           >
             {multipleBirthLabel}
           </text>
@@ -285,7 +305,7 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
         </text>
       )} */}
 
-      {/* Define clip path for images */}
+      {/* Define clip path for images and gradients */}
       <defs>
         <clipPath id={`imageClip-${attributes?.unique_id || "node"}`}>
           {isCircularImage ? (
@@ -304,6 +324,19 @@ const FamilyTreeNode: React.FC<CustomNodeElementProps> = ({
             />
           )}
         </clipPath>
+
+        {/* Enhanced gradient for better text contrast */}
+        <linearGradient
+          id={`nodeGradient-${attributes?.unique_id || "node"}`}
+          x1="0%"
+          y1="0%"
+          x2="0%"
+          y2="100%"
+        >
+          <stop offset="0%" stopColor={backgroundColor} stopOpacity="1" />
+          <stop offset="100%" stopColor={backgroundColor} stopOpacity="0.85" />
+        </linearGradient>
+
         {/* Subtle shadow for the multiple birth badge to improve contrast */}
         <filter id="badgeShadow" x="-50%" y="-50%" width="200%" height="200%">
           <feDropShadow dx="0" dy="1" stdDeviation="1" floodOpacity="0.25" />
