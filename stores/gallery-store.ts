@@ -10,8 +10,10 @@ import {
 } from "@/lib/constants/enums";
 import { BUCKET_NAME } from "@/lib/constants";
 import { GalleryType } from "@/lib/types";
-
-const ADMIN_ID = process.env.NEXT_PUBLIC_ADMIN_ID;
+import {
+  canCurrentUserAutoApprove,
+  createNotificationForAllAdmins,
+} from "@/lib/utils/multi-admin-helpers";
 
 // Define GalleryType type
 interface GalleryState {
@@ -162,6 +164,9 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
       set({ isLoading: true, error: null });
 
       try {
+        // Check if current user can auto-approve
+        const canAutoApprove = await canCurrentUserAutoApprove();
+
         // Create a unique file_name
         const fileExt = file.name.split(".").pop();
         const file_name = `${
@@ -203,10 +208,9 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
           file_name: file_name,
           file_size: file.size,
           album_id: albumId,
-          status:
-            userId === ADMIN_ID
-              ? GalleryStatusEnum.approved
-              : GalleryStatusEnum.pending,
+          status: canAutoApprove
+            ? GalleryStatusEnum.approved
+            : GalleryStatusEnum.pending,
         };
 
         const { error: insertError } = await supabase
@@ -215,18 +219,17 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
 
         if (insertError) throw insertError;
 
-        if (userId !== ADMIN_ID) {
-          // Create notification for admin about the gallery request using secure function
+        if (!canAutoApprove) {
+          // Create notification for all admins about the gallery request
           try {
-            await supabase.rpc("create_system_notification", {
-              p_user_id: ADMIN_ID,
-              p_title: "New Gallery Request",
-              p_body: `A new gallery item "${
+            await createNotificationForAllAdmins({
+              title: "New Gallery Request",
+              body: `A new gallery item "${
                 caption || file.name
               }" has been uploaded and is pending approval.`,
-              p_type: NotificationTypeEnum.gallery_request,
-              p_resource_id: newImage.id,
-              p_image: imageUrl,
+              type: NotificationTypeEnum.gallery_request,
+              resource_id: newImage.id,
+              image: imageUrl,
             });
           } catch (notificationErr) {
             console.error("Failed to create notification:", notificationErr);

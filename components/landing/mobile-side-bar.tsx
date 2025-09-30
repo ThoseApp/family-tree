@@ -63,11 +63,11 @@ const MobileSidebar = () => {
           variant="ghost"
           size="icon"
           className={cn(
-            "lg:hidden transition-colors duration-200",
-            isHomePage && "text-white hover:text-white/80"
+            "xl:hidden transition-colors duration-200"
+            // isHomePage && "text-white hover:text-white/80"
           )}
         >
-          <Menu className="h-5 w-5" />
+          <Menu />
         </Button>
       </SheetTrigger>
 

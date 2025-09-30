@@ -258,7 +258,7 @@ const FamilyMembersPage = () => {
         >
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
-            placeholder="Search family members..."
+            placeholder="Search by name or unique ID..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             className="pl-10 pr-24 rounded-full"

@@ -50,7 +50,7 @@ const LandingNav = () => {
         <Logo />
 
         {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center space-x-1">
+        <nav className="hidden xl:flex items-center space-x-1">
           {filteredNavLinks.map((route) => {
             const isActive = pathname === route.href;
 
@@ -61,7 +61,7 @@ const LandingNav = () => {
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "relative px-4 py-2 text-sm md:text-base  3xl:text-4xl font-medium transition-colors duration-200",
+                  "relative px-4 py-2 text-sm md:text-base 2xl:text-xl  7xl:text-3xl 7xl:px-8 font-medium transition-colors duration-200",
                   shouldUseTransparentBg &&
                     "hover:bg-primary/40 hover:text-foreground",
                   // Active state
@@ -91,14 +91,14 @@ const LandingNav = () => {
         </nav>
 
         {/* CTA Buttons */}
-        <div className="hidden lg:flex items-center gap-3">
+        <div className="hidden xl:flex items-center gap-3">
           {user ? (
             <Button
               asChild
               variant={shouldUseTransparentBg ? "secondary" : "default"}
               size="sm"
               className={cn(
-                "rounded-full px-6 transition-all text-sm md:text-base  3xl:text-4xl duration-200",
+                "rounded-full px-6 transition-all text-sm md:text-base 2xl:text-xl  7xl:text-3xl duratio8200",
                 shouldUseTransparentBg &&
                   "bg-white text-foreground hover:bg-white/90"
               )}
@@ -122,7 +122,7 @@ const LandingNav = () => {
                 // variant="ghost"
                 size="sm"
                 className={cn(
-                  "text-sm md:text-base  3xl:text-2xl font-medium transition-colors duration-200 hover:opacity-80",
+                  "text-sm md:text-bas 2xl:text-xle 7xl:text-2xl font-medium transition-colors duration-200 hover:opacity-80",
                   shouldUseTransparentBg
                     ? ""
                     : "text-foreground/70 hover:text-foreground"
@@ -148,7 +148,7 @@ const LandingNav = () => {
         </div>
 
         {/* Mobile Menu */}
-        <div className="lg:hidden">
+        <div className="xl:hidden">
           <MobileSidebar />
         </div>
       </div>

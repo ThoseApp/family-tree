@@ -17,6 +17,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { CountBadge } from "@/components/ui/count-badge";
+import { usePendingCounts } from "@/hooks/use-pending-counts";
 
 interface PublisherSideBarProps {
   forceMobileExpanded?: boolean;
@@ -28,9 +30,24 @@ const PublisherSideBar = ({
   const pathname = usePathname();
   const { logout } = useUserStore();
   const { isCollapsed, toggleSidebar } = useSidebarStore();
+  const { counts } = usePendingCounts();
 
   // Force expanded state for mobile or use store state for desktop
   const isActuallyCollapsed = forceMobileExpanded ? false : isCollapsed;
+
+  // Function to get count for a specific route
+  const getCountForRoute = (href: string): number => {
+    switch (href) {
+      case "/publisher/notice-board-requests":
+        return counts.noticeBoardRequests;
+      case "/publisher/event-requests":
+        return counts.eventRequests;
+      case "/publisher/gallery-requests":
+        return counts.galleryRequests;
+      default:
+        return 0;
+    }
+  };
 
   // Add keyboard shortcut for toggling sidebar (only for desktop)
   useEffect(() => {
@@ -119,8 +136,17 @@ const PublisherSideBar = ({
                             )}
                           />
                         )}
-                        {!isActuallyCollapsed && route.label}
+                        {!isActuallyCollapsed && (
+                          <span className="flex-1">{route.label}</span>
+                        )}
                       </div>
+                      {/* Count Badge */}
+                      {/* {!isActuallyCollapsed && (
+                        <CountBadge
+                          count={getCountForRoute(route.href)}
+                          className="ml-auto"
+                        />
+                      )} */}
                     </Link>
                   </TooltipTrigger>
                   {isActuallyCollapsed && (
