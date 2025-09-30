@@ -1,6 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { NotificationTypeEnum } from "@/lib/constants/enums";
+import { getAdminUserIdsServerSide } from "@/lib/utils/multi-admin-helpers";
 
 // Create admin client with service role key
 const createAdminClient = () => {
@@ -88,6 +90,46 @@ export async function POST(req: Request) {
         JSON.stringify({ error: "Failed to submit request." }),
         { status: 500 }
       );
+    }
+
+    // Create notifications for all admin users about the new family member request
+    try {
+      const adminIds = await getAdminUserIdsServerSide();
+
+      if (adminIds.length > 0 && data && data[0]) {
+        const notifications = adminIds.map((adminId) => ({
+          user_id: adminId,
+          title: "New Family Member Request",
+          body: `A new family member request for "${first_name} ${last_name}" has been submitted and is pending approval.`,
+          type: NotificationTypeEnum.member_request,
+          resource_id: data[0].id,
+          image: imageSrc || null,
+        }));
+
+        const { error: notificationError } = await supabase.rpc(
+          "create_system_notifications",
+          {
+            notifications: notifications,
+          }
+        );
+
+        if (notificationError) {
+          console.error(
+            "Failed to create admin notifications:",
+            notificationError
+          );
+          // Don't fail the request if notifications fail
+        } else {
+          console.log(
+            `✅ Created notifications for ${adminIds.length} admin users`
+          );
+        }
+      } else {
+        console.log("⚠️ No admin users found or no data to notify about");
+      }
+    } catch (notificationErr) {
+      console.error("Error creating admin notifications:", notificationErr);
+      // Don't fail the request if notifications fail
     }
 
     return new NextResponse(JSON.stringify(data), { status: 201 });

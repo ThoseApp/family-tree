@@ -9,6 +9,7 @@ import {
   HomeIcon,
   ImageIcon,
   HelpCircle,
+  ClipboardList,
 } from "lucide-react";
 
 export const navLinksTopSection: NavLink[] = [
@@ -46,6 +47,11 @@ export const navLinksTopSection: NavLink[] = [
     label: "Gallery",
     href: "/publisher/gallery",
     icon: ImageIcon,
+  },
+  {
+    label: "Gallery Requests",
+    href: "/publisher/gallery-requests",
+    icon: ClipboardList,
   },
   {
     label: "Help Center",

@@ -24,7 +24,9 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase
       .from("family-tree")
       .select("*")
-      .or(`first_name.ilike.${pattern},last_name.ilike.${pattern}`)
+      .or(
+        `first_name.ilike.${pattern},last_name.ilike.${pattern},unique_id.ilike.${pattern}`
+      )
       .order("created_at", { ascending: false });
 
     if (error) {
