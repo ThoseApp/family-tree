@@ -15,9 +15,12 @@ import GalleryGrid from "@/components/gallery";
 import { MoveRight } from "lucide-react";
 import { useLandingPageContent } from "@/hooks/use-landing-page-content";
 import { useGalleryStore } from "@/stores/gallery-store";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNoticeBoardStore } from "@/stores/notice-board-store";
 import Footer from "@/components/landing/footer";
+import WelcomeModal from "@/components/modals/welcome-modal";
+import { supabase } from "@/lib/supabase/client";
+import { markWelcomeMessageAsSeen } from "@/lib/utils/welcome-helpers";
 
 export default function Home() {
   const { sections, loading, error } = useLandingPageContent();
@@ -27,10 +30,38 @@ export default function Home() {
     fetchGallery,
   } = useGalleryStore();
   const { fetchApprovedNoticeBoards } = useNoticeBoardStore();
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   const familyTreeSection = sections.family_tree || {};
   const historySection = sections.hero || {};
   const gallerySection = sections.gallery_preview || {};
+
+  // Check if user should see welcome modal
+  useEffect(() => {
+    const checkWelcomeModal = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        setUserId(user.id);
+
+        // Check if user has seen the welcome message
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("has_seen_welcome_message")
+          .eq("user_id", user.id)
+          .single();
+
+        if (profile && !profile.has_seen_welcome_message) {
+          setShowWelcomeModal(true);
+        }
+      }
+    };
+
+    checkWelcomeModal();
+  }, []);
 
   // Fetch gallery data on component mount
   useEffect(() => {
@@ -41,6 +72,14 @@ export default function Home() {
     // Fetch only approved notice boards for the landing page
     fetchApprovedNoticeBoards();
   }, [fetchApprovedNoticeBoards]);
+
+  // Handle closing the welcome modal
+  const handleCloseWelcomeModal = async () => {
+    if (userId) {
+      await markWelcomeMessageAsSeen(userId);
+    }
+    setShowWelcomeModal(false);
+  };
 
   // Fallback content
   const defaultFamilyTree = {
@@ -59,120 +98,126 @@ export default function Home() {
   const galleryContent = gallerySection || defaultGallery;
 
   return (
-    <motion.div
-      className="min-h-screen flex flex-col relative"
-      initial="hidden"
-      animate="visible"
-      variants={staggerContainer}
-    >
-      <div className="flex-1 flex flex-col gap-8 lg:gap-12">
-        {/* Hero Section */}
-        <motion.div
-          className={`px-4 md:px-10 xl:px-16 ${
-            historySection && historySection.image_url
-              ? `bg-cover bg-center`
-              : ""
-          }`}
-          style={{
-            backgroundImage:
+    <>
+      <WelcomeModal
+        isOpen={showWelcomeModal}
+        onClose={handleCloseWelcomeModal}
+      />
+      <motion.div
+        className="min-h-screen flex flex-col relative"
+        initial="hidden"
+        animate="visible"
+        variants={staggerContainer}
+      >
+        <div className="flex-1 flex flex-col gap-8 lg:gap-12">
+          {/* Hero Section */}
+          <motion.div
+            className={`px-4 md:px-10 xl:px-16 ${
               historySection && historySection.image_url
-                ? `url(${historySection.image_url})`
-                : "none",
-          }}
-          variants={fadeInUp}
-        >
-          <LandingNav />
-          <LandingHero />
-        </motion.div>
+                ? `bg-cover bg-center`
+                : ""
+            }`}
+            style={{
+              backgroundImage:
+                historySection && historySection.image_url
+                  ? `url(${historySection.image_url})`
+                  : "none",
+            }}
+            variants={fadeInUp}
+          >
+            <LandingNav />
+            <LandingHero />
+          </motion.div>
 
-        {/* Every Person Makes His Own History */}
-        <section className="-mt-8 lg:-mt-12">
-          <HistorySection />
-        </section>
+          {/* Every Person Makes His Own History */}
+          <section className="-mt-8 lg:-mt-12">
+            <HistorySection />
+          </section>
 
-        {/* FAMILY TREE SECTION */}
-        <section className="relative h-[585px] w-full mt-8 lg:mt-12 ">
-          <Image
-            src={familyTreeContent.image_url || defaultFamilyTree.image_url}
-            alt="Family Tree"
-            fill
-            className="object-cover"
-            priority
-          />
+          {/* FAMILY TREE SECTION */}
+          <section className="relative h-[585px] w-full mt-8 lg:mt-12 ">
+            <Image
+              src={familyTreeContent.image_url || defaultFamilyTree.image_url}
+              alt="Family Tree"
+              fill
+              className="object-cover"
+              priority
+            />
 
-          <div className="absolute inset-0 bg-foreground/50" />
+            <div className="absolute inset-0 bg-foreground/50" />
 
-          {/* Centered Heading */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-y-8">
-            <h2 className="text-4xl md:text-6xl font-bold text-center text-background px-4">
-              {loading ? "Mosuro's Family Tree" : familyTreeContent.title}
-            </h2>
-            {familyTreeContent.subtitle && (
-              <h3 className="text-xl md:text-2xl text-background/90 font-medium text-center px-4">
-                {familyTreeContent.subtitle}
-              </h3>
-            )}
-            <p className="text-background text-center text-lg md:max-w-2xl px-4">
-              {loading
-                ? defaultFamilyTree.description
-                : familyTreeContent.description}
-            </p>
-
-            <Button className="rounded-full text-lg " size={"lg"} asChild>
-              <Link href="/family-tree">View Family Tree</Link>
-            </Button>
-          </div>
-        </section>
-
-        {/* MEET THE FAMILY */}
-        <FamilyMembersSection />
-
-        {/* UPCOMING EVENTS */}
-        <UpcomingEventsSection />
-
-        {/* GALLERY */}
-        <FrameWrapper className="py-8 lg:py-12">
-          {/* HEADER SECTION */}
-          <div className="text-center  items-center space-y-6">
-            <h2 className="text-xl md:text-2xl font-semibold ">
-              {loading ? "GALLERY" : galleryContent.title}
-            </h2>
-            <p className=" font-bold text-base md:text-xl tracking-wider">
-              {loading
-                ? "Remembering Our Golden Days"
-                : galleryContent.subtitle}
-            </p>
-            {galleryContent.description && (
-              <p className="text-muted-foreground max-w-2xl mx-auto">
-                {galleryContent.description}
+            {/* Centered Heading */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-y-8">
+              <h2 className="text-4xl md:text-6xl font-bold text-center text-background px-4">
+                {loading ? "Mosuro's Family Tree" : familyTreeContent.title}
+              </h2>
+              {familyTreeContent.subtitle && (
+                <h3 className="text-xl md:text-2xl text-background/90 font-medium text-center px-4">
+                  {familyTreeContent.subtitle}
+                </h3>
+              )}
+              <p className="text-background text-center text-lg md:max-w-2xl px-4">
+                {loading
+                  ? defaultFamilyTree.description
+                  : familyTreeContent.description}
               </p>
-            )}
-          </div>
 
-          {/* GALLERY GRID */}
-          {galleryLoading ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground"></div>
+              <Button className="rounded-full text-lg " size={"lg"} asChild>
+                <Link href="/family-tree">View Family Tree</Link>
+              </Button>
             </div>
-          ) : (
-            <GalleryGrid gallery={gallery} />
-          )}
+          </section>
 
-          <div className="flex justify-center">
-            <Button
-              variant="alternative"
-              size="lg"
-              className="rounded-full items-center"
-              asChild
-            >
-              <Link href="/gallery">
-                View Details
-                <MoveRight className="size-5 ml-2" />
-              </Link>
-            </Button>
-          </div>
-        </FrameWrapper>
-      </div>
-    </motion.div>
+          {/* MEET THE FAMILY */}
+          <FamilyMembersSection />
+
+          {/* UPCOMING EVENTS */}
+          <UpcomingEventsSection />
+
+          {/* GALLERY */}
+          <FrameWrapper className="py-8 lg:py-12">
+            {/* HEADER SECTION */}
+            <div className="text-center  items-center space-y-6">
+              <h2 className="text-xl md:text-2xl font-semibold ">
+                {loading ? "GALLERY" : galleryContent.title}
+              </h2>
+              <p className=" font-bold text-base md:text-xl tracking-wider">
+                {loading
+                  ? "Remembering Our Golden Days"
+                  : galleryContent.subtitle}
+              </p>
+              {galleryContent.description && (
+                <p className="text-muted-foreground max-w-2xl mx-auto">
+                  {galleryContent.description}
+                </p>
+              )}
+            </div>
+
+            {/* GALLERY GRID */}
+            {galleryLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground"></div>
+              </div>
+            ) : (
+              <GalleryGrid gallery={gallery} />
+            )}
+
+            <div className="flex justify-center">
+              <Button
+                variant="alternative"
+                size="lg"
+                className="rounded-full items-center"
+                asChild
+              >
+                <Link href="/gallery">
+                  View Details
+                  <MoveRight className="size-5 ml-2" />
+                </Link>
+              </Button>
+            </div>
+          </FrameWrapper>
+        </div>
+      </motion.div>
+    </>
   );
 }

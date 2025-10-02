@@ -63,6 +63,9 @@ export interface UserProfile {
   status?: keyof typeof UserStatusEnum;
   role?: "admin" | "publisher" | "user";
   family_tree_uid?: string; // Link to family-tree table unique_id
+  has_seen_welcome_message?: boolean; // Track if user has seen welcome message
+  has_completed_onboarding_tour?: boolean; // Track if user has completed onboarding tour
+  onboarding_tour_version?: string; // Version of onboarding tour completed
 
   gender?: string;
   timeline?: any; // JSONB type

@@ -41,6 +41,8 @@ interface UserStore {
   }) => Promise<any>;
   updatePassword: (password: string) => Promise<any>;
   getUserProfile: () => Promise<any>;
+  fetchProfile: () => Promise<any>; // Alias for getUserProfile
+  profile: any | null; // Alias for userProfile
   resetPasswordWithToken: (token: string, password: string) => Promise<any>;
   setPasswordChangeModal: (show: boolean, redirectPath?: string) => void;
   handlePasswordChangeSuccess: () => void;
@@ -49,6 +51,7 @@ interface UserStore {
 const initialState = {
   user: null,
   userProfile: null,
+  profile: null,
   loading: false,
   success: false,
   error: null,
@@ -384,11 +387,11 @@ export const useUserStore = create(
           if (error) throw error;
 
           // Update the store with the fetched profile
-          set({ userProfile: data, loading: false });
+          set({ userProfile: data, profile: data, loading: false });
           return data;
         } catch (error: any) {
           const errorMessage = error?.message || "Failed to fetch user profile";
-          set({ error: errorMessage, userProfile: null });
+          set({ error: errorMessage, userProfile: null, profile: null });
           return null;
         } finally {
           set({ loading: false });
@@ -525,6 +528,11 @@ export const useUserStore = create(
           }, 1000);
         }
       },
+
+      // Alias for getUserProfile for consistency with onboarding hook
+      fetchProfile: async function () {
+        return this.getUserProfile();
+      },
     }),
     {
       name: "user-store",
@@ -540,6 +548,7 @@ export const useUserStore = create(
           ...initialState,
           user,
           userProfile,
+          profile: userProfile, // Keep profile in sync with userProfile
           showPasswordChangeModal,
           passwordChangeRedirectPath,
           login: () => Promise.resolve(),
@@ -551,6 +560,7 @@ export const useUserStore = create(
           updateProfile: () => Promise.resolve(),
           updatePassword: () => Promise.resolve(),
           getUserProfile: () => Promise.resolve(),
+          fetchProfile: () => Promise.resolve(),
           resetPasswordWithToken: () => Promise.resolve(),
         };
       },
