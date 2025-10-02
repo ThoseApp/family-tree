@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState, useEffect } from "react";
 import "driver.js/dist/driver.css";
 import { usePathname, useRouter } from "next/navigation";
 import { useUserStore } from "@/stores/user-store";
 import { getUserRoleFromMetadata, UserRole } from "@/lib/types";
+import { supabase } from "@/lib/supabase/client";
 
 type DriverInstance = ReturnType<typeof import("driver.js").driver> | null;
 
@@ -13,11 +14,8 @@ let tourIsRunning = false;
 let tourAttemptInProgress = false;
 let activeDriver: any = null;
 
-function getStorageKey(userId: string | undefined) {
-  const id = userId || "anonymous";
-  const version = "v1"; // bump to re-show tour after changes
-  return `onboarding:${version}:${id}`;
-}
+// Current version of the onboarding tour - increment to re-show tour after changes
+const CURRENT_TOUR_VERSION = "v1";
 
 function buildStepsForRole(role: UserRole, pathname: string) {
   const steps: any[] = [];
@@ -138,7 +136,46 @@ function buildStepsForRole(role: UserRole, pathname: string) {
 export function useOnboardingTour() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user } = useUserStore();
+  const { user, profile, fetchProfile } = useUserStore();
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
+
+  // Mark onboarding tour as completed in database
+  const markTourCompleted = useCallback(async () => {
+    if (!user?.id) return false;
+
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          has_completed_onboarding_tour: true,
+          onboarding_tour_version: CURRENT_TOUR_VERSION,
+        })
+        .eq("user_id", user.id);
+
+      if (error) {
+        console.error("Error marking tour as completed:", error);
+        return false;
+      }
+
+      // Refresh the profile to get updated data
+      await fetchProfile();
+      return true;
+    } catch (error) {
+      console.error("Error marking tour as completed:", error);
+      return false;
+    }
+  }, [user?.id, fetchProfile]);
+
+  // Check if user should see the onboarding tour
+  const shouldShowTour = useCallback(() => {
+    if (!profile || !user?.id) return false;
+
+    // Show tour if user hasn't completed it or if they completed an older version
+    return (
+      !profile.has_completed_onboarding_tour ||
+      profile.onboarding_tour_version !== CURRENT_TOUR_VERSION
+    );
+  }, [profile, user?.id]);
 
   const start = useCallback(async () => {
     if (tourIsRunning) return false;
@@ -165,22 +202,24 @@ export function useOnboardingTour() {
     (driverObj as any)?.setSteps(steps);
     activeDriver = driverObj;
     (driverObj as any)?.drive(0);
-    // Best-effort reset when overlay closes
+    // Best-effort reset when overlay closes and mark tour as completed
     try {
-      (driverObj as any)?.on("destroyed", () => {
+      (driverObj as any)?.on("destroyed", async () => {
         tourIsRunning = false;
         activeDriver = null;
+        // Mark tour as completed in database
+        await markTourCompleted();
       });
     } catch {}
     return true;
-  }, [pathname, user]);
+  }, [pathname, user, markTourCompleted]);
 
   const maybeStart = useCallback(async () => {
-    const storageKey = getStorageKey(user?.id);
     if (typeof window === "undefined") return;
-    const seen = window.localStorage.getItem(storageKey);
-    if (seen === "1") return;
-    if (tourIsRunning || tourAttemptInProgress) return;
+    if (isCheckingStatus || tourIsRunning || tourAttemptInProgress) return;
+
+    // Check if user should see the tour based on database status
+    if (!shouldShowTour()) return;
 
     // Delay and retry a few times to ensure DOM targets exist before starting
     tourAttemptInProgress = true;
@@ -188,7 +227,6 @@ export function useOnboardingTour() {
       if (tourIsRunning) return;
       const started = await start();
       if (started) {
-        window.localStorage.setItem(storageKey, "1");
         tourAttemptInProgress = false;
         return;
       }
@@ -200,7 +238,41 @@ export function useOnboardingTour() {
     };
 
     setTimeout(() => attemptStart(1), 800);
-  }, [start, user?.id]);
+  }, [start, shouldShowTour, isCheckingStatus]);
 
-  return { start, maybeStart };
+  // Reset onboarding tour status (useful for testing or forcing re-tour)
+  const resetTour = useCallback(async () => {
+    if (!user?.id) return false;
+
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          has_completed_onboarding_tour: false,
+          onboarding_tour_version: null,
+        })
+        .eq("user_id", user.id);
+
+      if (error) {
+        console.error("Error resetting tour:", error);
+        return false;
+      }
+
+      // Refresh the profile to get updated data
+      await fetchProfile();
+      return true;
+    } catch (error) {
+      console.error("Error resetting tour:", error);
+      return false;
+    }
+  }, [user?.id, fetchProfile]);
+
+  return {
+    start,
+    maybeStart,
+    resetTour,
+    shouldShowTour: shouldShowTour(),
+    isCheckingStatus,
+    markTourCompleted,
+  };
 }
