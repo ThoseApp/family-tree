@@ -52,7 +52,7 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) => {
             </p>
 
             <p>
-              In the 40 years since the book's publication, the family has
+              In the 40 years since the book&apos;s publication, the family has
               grown, and the need has evolved to complete some aspects of the
               history as well as update the family tree. The desire and will
               have always been there, however, the personnel to manage the
@@ -61,12 +61,12 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) => {
               and I stepped to the plate and committed to updating the book and
               family tree. I must commend the efforts of Mr Tosin Mosuro in
               rounding up the members and setting up all the meetings of the
-              'committee'. At one of its earliest meetings, the committee
-              decided to develop a family website which would incorporate the
-              contents of the original book, the family history, family tree,
-              and a family directory. The advantages of having a website are
-              numerous. It is modern and it offers the opportunity to
-              perpetually update any information about the family tree,
+              &apos;committee&apos;. At one of its earliest meetings, the
+              committee decided to develop a family website which would
+              incorporate the contents of the original book, the family history,
+              family tree, and a family directory. The advantages of having a
+              website are numerous. It is modern and it offers the opportunity
+              to perpetually update any information about the family tree,
               particularly when we consider the fact that some members of the
               family are widely spread in the diaspora.
             </p>
@@ -74,15 +74,15 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) => {
             <p>
               Mr Tosin Mosuro was actively involved in defining the scope and
               deliverables of the project. He was also instrumental in finding
-              the developers of the website, "The House of Sounds" and acting as
-              liaison. I must acknowledge the extraordinary work of the CEO of
-              the company, Mr Subomi Mosuro and his team. They went the extra
-              mile to ensure that the project was successfully delivered,
-              overcoming all the technical challenges they faced during the
-              process. With the completion of the website, the hope is that
-              every member of the family will be granted access to their history
-              and be able to understand their relationship with other members of
-              the family.
+              the developers of the website, &quot;The House of Sounds&quot; and
+              acting as liaison. I must acknowledge the extraordinary work of
+              the CEO of the company, Mr Subomi Mosuro and his team. They went
+              the extra mile to ensure that the project was successfully
+              delivered, overcoming all the technical challenges they faced
+              during the process. With the completion of the website, the hope
+              is that every member of the family will be granted access to their
+              history and be able to understand their relationship with other
+              members of the family.
             </p>
 
             <p>
@@ -99,7 +99,7 @@ const WelcomeModal: React.FC<WelcomeModalProps> = ({ isOpen, onClose }) => {
             </p>
 
             <div className="pt-4 space-y-2">
-              <p className="font-semibold">Dr 'Kunle Mosuro</p>
+              <p className="font-semibold">Dr &apos;Kunle Mosuro</p>
               <p className="text-sm text-muted-foreground">on behalf of</p>
               <div className="space-y-1">
                 <p>Mr Tosin Mosuro</p>
