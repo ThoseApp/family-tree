@@ -687,31 +687,9 @@ function buildSubTree(
 
   if (hasChildren && hasNoSpouses) {
     // For single parent families (no spouse), attach children directly to the descendant
-    // Also handle out-of-wedlock children for single parents
-    const allChildren = findChildren(member, allMembers);
-    const owChildrenFatherSingle = allChildren.filter(
-      (child: ProcessedMember) =>
-        !isMissingUid(child.fathers_uid) &&
-        isMissingUid(child.mothers_uid) &&
-        state.visibleNodes.has(child.unique_id)
-    );
-    const owChildrenMotherSingle = allChildren.filter(
-      (child: ProcessedMember) =>
-        !isMissingUid(child.mothers_uid) &&
-        isMissingUid(child.fathers_uid) &&
-        state.visibleNodes.has(child.unique_id)
-    );
-    const singleParentOwChildren = [
-      ...owChildrenFatherSingle,
-      ...owChildrenMotherSingle,
-    ];
-
-    // Combine regular children and out-of-wedlock children, sort by birth order
-    const allSingleParentChildren = [
-      ...visibleChildren,
-      ...singleParentOwChildren,
-    ];
-    const sortedSingleParentChildren = allSingleParentChildren
+    // visibleChildren already contains all visible children (regular + out-of-wedlock)
+    // so we just need to sort them by birth order and build the subtrees
+    const sortedSingleParentChildren = visibleChildren
       .sort((a, b) => (a.order_of_birth || 0) - (b.order_of_birth || 0))
       .map((child) => buildSubTree(child, allMembers, state, undefined));
 
