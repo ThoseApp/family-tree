@@ -679,11 +679,26 @@ function buildSubTree(
 
   // CONSISTENCY RULE: Children should NEVER come directly from descendants
   // They must ALWAYS come from spouses to maintain tree branching consistency
+  // EXCEPTION: If a descendant has no spouses but has children, show the children directly
 
-  // If no family group (spouses not visible or don't exist), children are hidden
-  // This enforces the spouse-first branching rule throughout the entire tree.
-  // Requested behavior: Out-of-wedlock children should only be visible when a spouse group is expanded.
-  memberNode.children = [];
+  // Check if this descendant has children but no spouses
+  const hasChildren = visibleChildren.length > 0;
+  const hasNoSpouses = spouses.length === 0;
+
+  if (hasChildren && hasNoSpouses) {
+    // For single parent families (no spouse), attach children directly to the descendant
+    // visibleChildren already contains all visible children (regular + out-of-wedlock)
+    // so we just need to sort them by birth order and build the subtrees
+    const sortedSingleParentChildren = visibleChildren
+      .sort((a, b) => (a.order_of_birth || 0) - (b.order_of_birth || 0))
+      .map((child) => buildSubTree(child, allMembers, state, undefined));
+
+    memberNode.children = sortedSingleParentChildren;
+  } else {
+    // If no family group (spouses not visible or don't exist) and no children, hide children
+    // This enforces the spouse-first branching rule for families with spouses
+    memberNode.children = [];
+  }
 
   return memberNode;
 }

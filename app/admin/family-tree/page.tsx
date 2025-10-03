@@ -204,10 +204,10 @@ const FamilyTreeUploadPage = () => {
   const [uploadResults, setUploadResults] = useState<{
     success: number;
     failed: number;
+    updated?: number;
+    updatedIds?: string[];
     errors: string[];
     failedRecords: FailedRecord[];
-    skippedExisting?: number;
-    skippedExistingIds?: string[];
     accountResults?: {
       success: number;
       failed: number;
@@ -549,21 +549,35 @@ const FamilyTreeUploadPage = () => {
     setIsLoading(true);
     const processedData = processDataForDatabase(excelData);
 
-    // Skip records that already exist in DB by Unique ID
-    const existingIds = new Set(
+    // Separate records into new inserts vs existing updates
+    const existingRecordsMap = new Map(
       (existingData || [])
-        .map((m) => (m.unique_id || "").trim())
-        .filter(Boolean)
+        .filter((m) => m.unique_id?.trim())
+        .map((m) => [(m.unique_id || "").trim(), m])
     );
+
     const toInsert = processedData.filter(
-      (m) => m.unique_id && !existingIds.has((m.unique_id || "").trim())
+      (m) => m.unique_id && !existingRecordsMap.has((m.unique_id || "").trim())
     );
-    const skippedExistingRecords = processedData.filter((m) =>
-      existingIds.has((m.unique_id || "").trim())
-    );
+
+    const toUpdate = processedData
+      .filter((m) => existingRecordsMap.has((m.unique_id || "").trim()))
+      .map((newRecord) => {
+        const existingRecord = existingRecordsMap.get(
+          (newRecord.unique_id || "").trim()
+        )!;
+        // Preserve picture_link, first_name, last_name from existing record
+        return {
+          ...newRecord,
+          picture_link: existingRecord.picture_link,
+          first_name: existingRecord.first_name,
+          last_name: existingRecord.last_name,
+        };
+      });
 
     let successCount = 0;
     let failedCount = 0;
+    let updatedCount = 0;
     const errors: string[] = [];
     const failedRecords: FailedRecord[] = [];
 
@@ -576,13 +590,13 @@ const FamilyTreeUploadPage = () => {
     try {
       // Phase 1: Upload family tree data
       const batchSize = 50;
-      const totalSteps = toInsert.length || 1;
+      const totalSteps = toInsert.length + toUpdate.length || 1;
       let currentStep = 0;
 
-      // Inform about skipped records due to existing IDs
-      if (skippedExistingRecords.length > 0) {
+      // Inform about records to be updated
+      if (toUpdate.length > 0) {
         toast.info(
-          `Skipping ${skippedExistingRecords.length} record(s) with existing Unique IDs`
+          `Updating ${toUpdate.length} existing record(s) while preserving names and pictures`
         );
       }
 
@@ -614,12 +628,62 @@ const FamilyTreeUploadPage = () => {
         currentStep += batch.length;
       }
 
-      // Phase 2: Create accounts for eligible family members
-      if (successCount > 0) {
-        toast.info("Family data uploaded! Now creating accounts...");
+      // Phase 1.5: Update existing records
+      for (let i = 0; i < toUpdate.length; i += batchSize) {
+        const batch = toUpdate.slice(i, i + batchSize);
+        setUploadProgress((currentStep / totalSteps) * 50); // Continue progress for updates
 
-        // Filter members eligible for account creation
-        const eligibleMembers = toInsert.filter(
+        // Update each record individually since we need to match by unique_id
+        for (const record of batch) {
+          const { data, error } = await supabase
+            .from("family-tree")
+            .update({
+              gender: record.gender,
+              fathers_first_name: record.fathers_first_name,
+              fathers_last_name: record.fathers_last_name,
+              fathers_uid: record.fathers_uid,
+              mothers_first_name: record.mothers_first_name,
+              mothers_last_name: record.mothers_last_name,
+              mothers_uid: record.mothers_uid,
+              order_of_birth: record.order_of_birth,
+              order_of_marriage: record.order_of_marriage,
+              marital_status: record.marital_status,
+              spouses_first_name: record.spouses_first_name,
+              spouses_last_name: record.spouses_last_name,
+              spouse_uid: record.spouse_uid,
+              date_of_birth: record.date_of_birth,
+              life_status: record.life_status,
+              email_address: record.email_address,
+              // Note: picture_link, first_name, last_name are intentionally excluded
+            })
+            .eq("unique_id", record.unique_id)
+            .select();
+
+          if (error) {
+            failedCount += 1;
+            errors.push(
+              `Update failed for ${record.unique_id}: ${error.message}`
+            );
+            failedRecords.push({
+              record,
+              error: error.message,
+              originalRow: i + 1, // Approximate row number
+            });
+          } else {
+            updatedCount += 1;
+          }
+        }
+
+        currentStep += batch.length;
+      }
+
+      // Phase 2: Create accounts for eligible family members
+      if (successCount > 0 || updatedCount > 0) {
+        toast.info("Family data processed! Now creating accounts...");
+
+        // Filter members eligible for account creation from both new and updated records
+        const allProcessedMembers = [...toInsert, ...toUpdate];
+        const eligibleMembers = allProcessedMembers.filter(
           (member) =>
             member.life_status === LifeStatusEnum.accountEligible &&
             member.email_address &&
@@ -721,10 +785,10 @@ const FamilyTreeUploadPage = () => {
       setUploadResults({
         success: successCount,
         failed: failedCount,
+        updated: updatedCount,
+        updatedIds: toUpdate.map((r) => r.unique_id),
         errors,
         failedRecords,
-        skippedExisting: skippedExistingRecords.length,
-        skippedExistingIds: skippedExistingRecords.map((r) => r.unique_id),
         accountResults: {
           success: accountsCreated,
           failed: accountsFailed,
@@ -735,28 +799,35 @@ const FamilyTreeUploadPage = () => {
 
       // Show success messages
       if (successCount > 0) {
-        toast.success(`Successfully uploaded ${successCount} family members`);
+        toast.success(
+          `Successfully uploaded ${successCount} new family members`
+        );
+      }
+      if (updatedCount > 0) {
+        toast.success(
+          `Successfully updated ${updatedCount} existing family members`
+        );
+      }
 
-        if (accountsCreated > 0) {
-          toast.success(`Created ${accountsCreated} user accounts`);
-        }
+      if (accountsCreated > 0) {
+        toast.success(`Created ${accountsCreated} user accounts`);
+      }
 
-        if (accountsSkipped > 0) {
-          toast.info(
-            `Skipped ${accountsSkipped} accounts (deceased members or invalid emails)`
-          );
-        }
+      if (accountsSkipped > 0) {
+        toast.info(
+          `Skipped ${accountsSkipped} accounts (deceased members or invalid emails)`
+        );
+      }
 
-        if (accountsFailed > 0) {
-          toast.warning(`Failed to create ${accountsFailed} accounts`);
-        }
-
-        refreshData();
+      if (accountsFailed > 0) {
+        toast.warning(`Failed to create ${accountsFailed} accounts`);
       }
 
       if (failedCount > 0) {
         toast.error(`Failed to upload ${failedCount} family records`);
       }
+
+      refreshData();
     } catch (error) {
       console.error("Upload error:", error);
       toast.error("Failed to upload data to database");
@@ -3006,14 +3077,18 @@ const FamilyTreeUploadPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Alert>
+          {/* <Alert>
             <AlertDescription>
               Records with a Unique ID that already exists in the database will
               be
-              <span className="font-semibold"> skipped</span> during upload.
-              Only new, non-duplicate records will be inserted.
+              <span className="font-semibold"> updated</span> during upload. The{" "}
+              <span className="font-semibold">picture_link</span>,{" "}
+              <span className="font-semibold">first_name</span>, and{" "}
+              <span className="font-semibold">last_name</span> fields will be
+              preserved from the existing record, while all other fields will be
+              updated with the new data.
             </AlertDescription>
-          </Alert>
+          </Alert> */}
           <div className="grid w-full items-center gap-2">
             <Label htmlFor="excel-file">Excel or CSV File</Label>
             <Input
@@ -3216,11 +3291,11 @@ const FamilyTreeUploadPage = () => {
                 </div>
               </div>
               <div className="p-4 border rounded-lg text-center">
-                <div className="text-2xl font-bold text-yellow-600">
-                  {uploadResults.skippedExisting || 0}
+                <div className="text-2xl font-bold text-blue-600">
+                  {uploadResults.updated || 0}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Skipped (Already Exists)
+                  Records Updated
                 </div>
               </div>
             </div>
@@ -3347,15 +3422,16 @@ const FamilyTreeUploadPage = () => {
               </div>
             )}
 
-            {uploadResults.skippedExisting &&
-              uploadResults.skippedExisting > 0 && (
-                <div className="space-y-2">
-                  <h4 className="font-medium">Skipped Existing Unique IDs:</h4>
-                  <div className="text-xs text-muted-foreground break-words">
-                    {(uploadResults.skippedExistingIds || []).join(", ")}
-                  </div>
+            {uploadResults.updated && uploadResults.updated > 0 && (
+              <div className="space-y-2">
+                <h4 className="font-medium">
+                  Updated Existing Records (Unique IDs):
+                </h4>
+                <div className="text-xs text-muted-foreground break-words">
+                  {(uploadResults.updatedIds || []).join(", ")}
                 </div>
-              )}
+              </div>
+            )}
 
             {uploadResults.errors.length > 0 && (
               <div className="space-y-2">

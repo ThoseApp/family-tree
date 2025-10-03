@@ -143,6 +143,8 @@ export function useOnboardingTour() {
   const markTourCompleted = useCallback(async () => {
     if (!user?.id) return false;
 
+    console.log("Onboarding tour: Marking tour as completed for user", user.id);
+
     try {
       const { error } = await supabase
         .from("profiles")
@@ -157,6 +159,8 @@ export function useOnboardingTour() {
         return false;
       }
 
+      console.log("Onboarding tour: Successfully marked as completed");
+
       // Refresh the profile to get updated data
       await fetchProfile();
       return true;
@@ -170,7 +174,8 @@ export function useOnboardingTour() {
   const shouldShowTour = useCallback(() => {
     if (!profile || !user?.id) return false;
 
-    // Show tour if user hasn't completed it or if they completed an older version
+    // Only show tour if user has NEVER completed it
+    // Note: We also check version in case we need to re-show for major updates
     return (
       !profile.has_completed_onboarding_tour ||
       profile.onboarding_tour_version !== CURRENT_TOUR_VERSION
@@ -218,8 +223,21 @@ export function useOnboardingTour() {
     if (typeof window === "undefined") return;
     if (isCheckingStatus || tourIsRunning || tourAttemptInProgress) return;
 
+    // Ensure we have both user and profile data before checking
+    if (!user?.id || !profile) {
+      console.log("Onboarding tour: Waiting for user and profile data");
+      return;
+    }
+
     // Check if user should see the tour based on database status
-    if (!shouldShowTour()) return;
+    const shouldShow = shouldShowTour();
+    console.log("Onboarding tour: Should show tour?", shouldShow, {
+      hasCompletedTour: profile.has_completed_onboarding_tour,
+      tourVersion: profile.onboarding_tour_version,
+      currentVersion: CURRENT_TOUR_VERSION,
+    });
+
+    if (!shouldShow) return;
 
     // Delay and retry a few times to ensure DOM targets exist before starting
     tourAttemptInProgress = true;
@@ -238,7 +256,7 @@ export function useOnboardingTour() {
     };
 
     setTimeout(() => attemptStart(1), 800);
-  }, [start, shouldShowTour, isCheckingStatus]);
+  }, [start, shouldShowTour, isCheckingStatus, user?.id, profile]);
 
   // Reset onboarding tour status (useful for testing or forcing re-tour)
   const resetTour = useCallback(async () => {

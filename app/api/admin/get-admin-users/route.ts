@@ -48,32 +48,42 @@ async function verifyAdminUser(request: NextRequest) {
 // GET: Get all admin user IDs (for notifications)
 export async function GET(request: NextRequest) {
   try {
+    console.log("🔍 API: Getting admin users...");
+
     // Verify admin user
     const adminUser = await verifyAdminUser(request);
     if (!adminUser) {
+      console.log("❌ API: User not authorized as admin");
       return NextResponse.json(
         { code: "not_admin", message: "User not allowed" },
         { status: 403 }
       );
     }
 
+    console.log(`✅ API: Admin user verified: ${adminUser.email}`);
+
     const supabase = createAdminClient();
 
     // Get all users from auth
+    console.log("🔄 API: Fetching all users from auth...");
     const { data: authUsers, error } = await supabase.auth.admin.listUsers();
 
     if (error) {
-      console.error("Error fetching users:", error);
+      console.error("❌ API: Error fetching users:", error);
       return NextResponse.json(
-        { error: "Failed to fetch users" },
+        { error: "Failed to fetch users", details: error.message },
         { status: 500 }
       );
     }
+
+    console.log(`📊 API: Found ${authUsers.users.length} total users`);
 
     // Filter users who have is_admin = true
     const adminUsers = authUsers.users.filter(
       (user) => user.user_metadata?.is_admin === true
     );
+
+    console.log(`👥 API: Found ${adminUsers.length} admin users`);
 
     const adminUserData = adminUsers.map((user) => ({
       id: user.id,
@@ -84,14 +94,17 @@ export async function GET(request: NextRequest) {
       },
     }));
 
-    return NextResponse.json({
+    const response = {
       adminUsers: adminUserData,
       adminIds: adminUserData.map((user) => user.id),
-    });
+    };
+
+    console.log(`✅ API: Returning ${response.adminIds.length} admin IDs`);
+    return NextResponse.json(response);
   } catch (error: any) {
-    console.error("Error fetching admin users:", error);
+    console.error("❌ API: Error fetching admin users:", error);
     return NextResponse.json(
-      { error: "Failed to fetch admin users" },
+      { error: "Failed to fetch admin users", details: error.message },
       { status: 500 }
     );
   }

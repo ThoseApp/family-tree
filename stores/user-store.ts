@@ -225,6 +225,8 @@ export const useUserStore = create(
                 relative: relative || null,
                 relationship_to_relative: relationshipToRelative || null,
                 status: isAdmin || isPublisher ? "approved" : "pending", // Set status based on admin/publisher flag
+                has_completed_onboarding_tour: false, // Ensure new users see the tour
+                onboarding_tour_version: null, // Start with no version completed
               });
 
             if (profileError) {

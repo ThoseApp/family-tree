@@ -164,7 +164,9 @@ const DashboardNavbar = () => {
           description: member.description || "Family member",
           type: "family-member",
           icon: Users,
-          href: `/family-members`,
+          href: member.unique_id
+            ? `/profile/${member.unique_id}`
+            : `/family-members`,
           metadata: undefined,
         });
       }

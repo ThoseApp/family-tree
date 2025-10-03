@@ -99,6 +99,11 @@ const customPathFunc = (
     return drawStepPath(source, target);
   }
 
+  // For single parent families (no spouse), children come directly from the descendant
+  if (isDescendantSource && isChildTarget && !parentIsFamily) {
+    return drawStepPath(source, target);
+  }
+
   // For all other standard links, use the step function
   return drawStepPath(source, target);
 };
@@ -585,6 +590,82 @@ const FamilyTreeComponent: React.FC = () => {
           partner.mothers_uid === "S00Z00001");
 
       let generationChanged = false;
+
+      // Rule: Handle descendants with children but no spouses (single parents)
+      if (isDescendantNode && spouses.length === 0 && children.length > 0) {
+        const areChildrenVisible = children.every((child) =>
+          newState.visibleNodes.has(child.unique_id)
+        );
+
+        if (!areChildrenVisible) {
+          // EXPAND: Show children for single parent
+          children.forEach((child) => {
+            newState.visibleNodes.add(child.unique_id);
+          });
+          newState.expandedChildren.add(uid);
+
+          // Advance the generation when children are revealed
+          newState.currentGeneration += 1;
+          generationChanged = true;
+        } else {
+          // COLLAPSE: Hide children and all their descendants
+          children.forEach((child) => {
+            newState.visibleNodes.delete(child.unique_id);
+            collapseDescendantsRecursively(child.unique_id, newState);
+          });
+          newState.expandedChildren.delete(uid);
+
+          // Recalculate generation counter
+          let maxGeneration = 1;
+          newState.visibleNodes.forEach((visibleUid) => {
+            const visibleMember = allMembers.find(
+              (m) => m.unique_id === visibleUid
+            );
+            if (visibleMember) {
+              let generation = 1;
+              if (
+                visibleMember.fathers_uid === "D00Z00001" ||
+                visibleMember.mothers_uid === "S00Z00001"
+              ) {
+                generation = 2;
+              } else if (
+                visibleMember.fathers_uid &&
+                visibleMember.fathers_uid !== "D00Z00001"
+              ) {
+                const parent = allMembers.find(
+                  (m) => m.unique_id === visibleMember.fathers_uid
+                );
+                if (
+                  parent &&
+                  (parent.fathers_uid === "D00Z00001" ||
+                    parent.mothers_uid === "S00Z00001")
+                ) {
+                  generation = 3;
+                } else if (
+                  parent &&
+                  parent.fathers_uid &&
+                  parent.fathers_uid !== "D00Z00001"
+                ) {
+                  generation = 4;
+                }
+              }
+              maxGeneration = Math.max(maxGeneration, generation);
+            }
+          });
+          newState.currentGeneration = maxGeneration;
+          generationChanged = true;
+        }
+
+        setTreeState({
+          visibleNodes: newState.visibleNodes,
+          expandedSpouses: newState.expandedSpouses,
+          expandedChildren: newState.expandedChildren,
+          spouseAssignments: newState.spouseAssignments,
+          currentGeneration: newState.currentGeneration,
+          lastClickedNodeId: uid,
+        });
+        return;
+      }
 
       // Rule: Male descendants (D IDs) behavior - for monogamous, show spouse + children together
       if (isDescendantNode && spouses.length > 0) {

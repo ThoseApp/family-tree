@@ -7,15 +7,26 @@ import { useSidebarStore } from "@/stores/sidebar-store";
 import { cn } from "@/lib/utils";
 import React, { useEffect } from "react";
 import { useOnboardingTour } from "@/hooks/use-onboarding-tour";
+import { useUserStore } from "@/stores/user-store";
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const { isCollapsed } = useSidebarStore();
   const { maybeStart } = useOnboardingTour();
+  const { user, profile, getUserProfile } = useUserStore();
 
+  // Load user profile when dashboard mounts if not already loaded
   useEffect(() => {
-    // Auto-start tour once per user
-    maybeStart();
-  }, [maybeStart]);
+    if (user && !profile) {
+      getUserProfile();
+    }
+  }, [user, profile, getUserProfile]);
+
+  // Start onboarding tour only after profile is loaded
+  useEffect(() => {
+    if (user && profile) {
+      maybeStart();
+    }
+  }, [user, profile, maybeStart]);
 
   return (
     <MobileResponsiveWrapper
