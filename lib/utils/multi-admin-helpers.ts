@@ -80,9 +80,14 @@ export async function getAdminUserIds(): Promise<string[]> {
     } = await supabase.auth.getSession();
 
     if (sessionError || !session?.access_token) {
-      console.error("No valid session for admin user IDs fetch");
+      console.error(
+        "❌ No valid session for admin user IDs fetch:",
+        sessionError
+      );
       return [];
     }
+
+    console.log("🔍 Fetching admin user IDs...");
 
     // Call the API route to get admin user IDs
     const response = await fetch("/api/admin/get-admin-users", {
@@ -94,14 +99,26 @@ export async function getAdminUserIds(): Promise<string[]> {
     });
 
     if (!response.ok) {
-      console.error("Failed to fetch admin user IDs:", response.statusText);
+      const errorText = await response.text();
+      console.error("❌ Failed to fetch admin user IDs:", {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText,
+      });
       return [];
     }
 
     const data = await response.json();
-    return data.adminIds || [];
+    const adminIds = data.adminIds || [];
+
+    console.log(`✅ Found ${adminIds.length} admin user(s)`);
+    if (adminIds.length === 0) {
+      console.warn("⚠️ No admin users found - notifications will not be sent");
+    }
+
+    return adminIds;
   } catch (error) {
-    console.error("Error getting admin user IDs:", error);
+    console.error("❌ Error getting admin user IDs:", error);
     return [];
   }
 }
@@ -192,12 +209,23 @@ export async function createNotificationForAllAdmins(notificationData: {
   image?: string;
 }): Promise<boolean> {
   try {
+    console.log(
+      "📧 Creating notifications for all admins:",
+      notificationData.title
+    );
+
     const adminIds = await getAdminUserIds();
 
     if (adminIds.length === 0) {
-      console.warn("No admin users found for notification");
+      console.warn(
+        "⚠️ No admin users found for notification - skipping notification creation"
+      );
       return false;
     }
+
+    console.log(
+      `📤 Creating notifications for ${adminIds.length} admin user(s)`
+    );
 
     // Create notifications for all admins
     const notifications = adminIds.map((adminId) => ({
@@ -209,18 +237,33 @@ export async function createNotificationForAllAdmins(notificationData: {
       image: notificationData.image || null,
     }));
 
-    const { error } = await supabase.rpc("create_system_notifications", {
-      notifications: notifications,
-    });
+    console.log("🔄 Calling create_system_notifications RPC function...");
+
+    const { data: createdCount, error } = await supabase.rpc(
+      "create_system_notifications",
+      {
+        notifications: notifications,
+      }
+    );
 
     if (error) {
-      console.error("Error creating admin notifications:", error);
+      console.error("❌ Error creating admin notifications:", {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      });
       return false;
     }
 
+    console.log(
+      `✅ Successfully created ${
+        createdCount || notifications.length
+      } notification(s) for admin users`
+    );
     return true;
   } catch (error) {
-    console.error("Error in createNotificationForAllAdmins:", error);
+    console.error("❌ Error in createNotificationForAllAdmins:", error);
     return false;
   }
 }
