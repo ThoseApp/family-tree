@@ -133,6 +133,8 @@ async function createFamilyMemberAccount(
       date_of_birth: accountData.dateOfBirth || familyMember.date_of_birth,
       status: "approved", // Auto-approve accounts created by admin
       family_tree_uid: accountData.familyMemberId, // Link to family tree
+      has_completed_onboarding_tour: false, // Ensure new users see the tour
+      onboarding_tour_version: null, // Start with no version completed
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     });
