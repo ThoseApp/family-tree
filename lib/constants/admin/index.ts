@@ -45,11 +45,11 @@ export const navLinksTopSection: NavLink[] = [
     href: "/admin/manage-landing-page",
     icon: Hourglass,
   },
-  {
-    label: "Member Requests",
-    href: "/admin/member-requests",
-    icon: UserPlus,
-  },
+  // {
+  //   label: "Member Requests",
+  //   href: "/admin/member-requests",
+  //   icon: UserPlus,
+  // },
   {
     label: "Publisher Management",
     href: "/admin/publisher-management",

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -22,11 +23,19 @@ import {
   CheckCircle,
   ChevronRight,
   ArrowLeft,
+  HelpCircle,
 } from "lucide-react";
 import Link from "next/link";
+import {
+  HelpDetailsModal,
+  getHelpTopicsByUserType,
+  getHelpTopicById,
+  type HelpTopic,
+} from "@/components/modals/help-details-modal";
 
 const helpTopics = [
   {
+    id: "managing-notice-board",
     icon: FileText,
     title: "Notice Board Management",
     description:
@@ -36,6 +45,7 @@ const helpTopics = [
     requiresApproval: true,
   },
   {
+    id: "notice-board-requests",
     icon: Clock,
     title: "Notice Board Requests",
     description:
@@ -45,6 +55,7 @@ const helpTopics = [
     requiresApproval: false,
   },
   {
+    id: "managing-events",
     icon: Calendar,
     title: "Event Creation",
     description:
@@ -54,6 +65,7 @@ const helpTopics = [
     requiresApproval: true,
   },
   {
+    id: "event-requests",
     icon: CheckCircle,
     title: "Event Requests",
     description:
@@ -63,6 +75,7 @@ const helpTopics = [
     requiresApproval: false,
   },
   {
+    id: "managing-gallery-uploads",
     icon: Upload,
     title: "Gallery Management",
     description:
@@ -72,6 +85,7 @@ const helpTopics = [
     requiresApproval: true,
   },
   {
+    id: "content-approval-workflow",
     icon: Bell,
     title: "Content Approval Workflow",
     description:
@@ -81,6 +95,7 @@ const helpTopics = [
     requiresApproval: false,
   },
   {
+    id: "photo-guidelines",
     icon: ImageIcon,
     title: "Photo Guidelines",
     description:
@@ -90,6 +105,7 @@ const helpTopics = [
     requiresApproval: false,
   },
   {
+    id: "profile-settings",
     icon: User,
     title: "Profile Management",
     description:
@@ -99,6 +115,7 @@ const helpTopics = [
     requiresApproval: false,
   },
   {
+    id: "settings",
     icon: Settings,
     title: "Settings",
     description:
@@ -108,6 +125,7 @@ const helpTopics = [
     requiresApproval: false,
   },
   {
+    id: "global-search",
     icon: Search,
     title: "Global Search",
     description:
@@ -119,6 +137,22 @@ const helpTopics = [
 ];
 
 export default function PublisherHelpPage() {
+  const [selectedTopic, setSelectedTopic] = useState<HelpTopic | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleTopicClick = (topicId: string) => {
+    const topic = getHelpTopicById(topicId);
+    if (topic) {
+      setSelectedTopic(topic);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedTopic(null);
+  };
+
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="mb-8">
@@ -162,12 +196,22 @@ export default function PublisherHelpPage() {
               <CardDescription className="text-sm mb-4">
                 {topic.description}
               </CardDescription>
-              <Link href={topic.href}>
-                <Button variant="outline" size="sm" className="w-full">
-                  Learn More
-                  <ChevronRight className="h-4 w-4 ml-2" />
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => handleTopicClick(topic.id)}
+                >
+                  <HelpCircle className="h-4 w-4 mr-2" />
+                  View Guide
                 </Button>
-              </Link>
+                <Link href={topic.href}>
+                  <Button variant="secondary" size="sm">
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
             </CardContent>
           </Card>
         ))}
@@ -259,6 +303,12 @@ export default function PublisherHelpPage() {
           additional guidance.
         </p>
       </div>
+
+      <HelpDetailsModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        topic={selectedTopic}
+      />
     </div>
   );
 }
