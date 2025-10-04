@@ -383,27 +383,28 @@ export default function TestNotificationsPage() {
             <h4 className="font-semibold mb-2">How to use this test page:</h4>
             <ol className="list-decimal list-inside space-y-1 text-sm">
               <li>Open the browser console (F12) to see detailed logs</li>
-              <li>Click "Debug Current User" to check your user metadata</li>
-              <li>If you're not an admin, click "Set Current User as Admin"</li>
               <li>
-                Click "Debug All Users" to see all users and their admin status
+                Click &quot; Debug Current User&quot; to check your user
+                metadata
               </li>
-              <li>Click "Run Comprehensive Test" to test the entire system</li>
+              <li>
+                If you&apos;re not an admin, click &quot;Set Current User as
+                Admin&quot;
+              </li>
+              <li>
+                Click &quot;Debug All Users&quot; to see all users and their
+                admin status
+              </li>
+              <li>
+                Click &quot;Run Comprehensive Test&quot; to test the entire
+                system
+              </li>
               <li>Check the results and console logs for any issues</li>
             </ol>
           </div>
-
           <div>
             <h4 className="font-semibold mb-2">Common issues and solutions:</h4>
             <ul className="list-disc list-inside space-y-1 text-sm">
-              <li>
-                <strong>No admin users found:</strong> Use "Set Current User as
-                Admin" button to fix your user metadata
-              </li>
-              <li>
-                <strong>Current user not admin:</strong> Click "Debug Current
-                User" to check metadata, then use the fix button
-              </li>
               <li>
                 <strong>API route not working:</strong> Check authentication and
                 server logs
