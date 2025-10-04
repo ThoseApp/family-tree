@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -24,11 +25,19 @@ import {
   Settings,
   ChevronRight,
   ArrowLeft,
+  HelpCircle,
 } from "lucide-react";
 import Link from "next/link";
+import {
+  HelpDetailsModal,
+  getHelpTopicsByUserType,
+  getHelpTopicById,
+  type HelpTopic,
+} from "@/components/modals/help-details-modal";
 
 const helpTopics = [
   {
+    id: "adding-new-members",
     icon: UserPlus,
     title: "Adding New Members",
     description:
@@ -38,6 +47,7 @@ const helpTopics = [
     adminOnly: false,
   },
   {
+    id: "managing-family-member-requests",
     icon: Users,
     title: "Managing Member Requests",
     description:
@@ -47,6 +57,7 @@ const helpTopics = [
     adminOnly: true,
   },
   {
+    id: "managing-gallery-uploads",
     icon: Upload,
     title: "Managing Gallery Uploads",
     description:
@@ -56,6 +67,7 @@ const helpTopics = [
     adminOnly: true,
   },
   {
+    id: "managing-notice-board",
     icon: FileText,
     title: "Managing Notice Board",
     description:
@@ -65,6 +77,7 @@ const helpTopics = [
     adminOnly: true,
   },
   {
+    id: "publisher-management",
     icon: Shield,
     title: "Publisher Management",
     description:
@@ -74,6 +87,7 @@ const helpTopics = [
     adminOnly: true,
   },
   {
+    id: "user-account-management",
     icon: Users,
     title: "User Account Management",
     description:
@@ -83,6 +97,7 @@ const helpTopics = [
     adminOnly: true,
   },
   {
+    id: "managing-events",
     icon: Calendar,
     title: "Managing Events",
     description:
@@ -92,6 +107,7 @@ const helpTopics = [
     adminOnly: true,
   },
   {
+    id: "gallery-management",
     icon: ImageIcon,
     title: "Gallery Management",
     description:
@@ -101,6 +117,7 @@ const helpTopics = [
     adminOnly: true,
   },
   {
+    id: "profile-settings",
     icon: User,
     title: "Profile & Settings",
     description:
@@ -110,6 +127,7 @@ const helpTopics = [
     adminOnly: false,
   },
   {
+    id: "global-search",
     icon: Search,
     title: "Global Search",
     description:
@@ -121,6 +139,22 @@ const helpTopics = [
 ];
 
 export default function AdminHelpPage() {
+  const [selectedTopic, setSelectedTopic] = useState<HelpTopic | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleTopicClick = (topicId: string) => {
+    const topic = getHelpTopicById(topicId);
+    if (topic) {
+      setSelectedTopic(topic);
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedTopic(null);
+  };
+
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="mb-8">
@@ -165,12 +199,22 @@ export default function AdminHelpPage() {
               <CardDescription className="text-sm mb-4">
                 {topic.description}
               </CardDescription>
-              <Link href={topic.href}>
-                <Button variant="outline" size="sm" className="w-full">
-                  Explore
-                  <ChevronRight className="h-4 w-4 ml-2" />
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => handleTopicClick(topic.id)}
+                >
+                  <HelpCircle className="h-4 w-4 mr-2" />
+                  View Guide
                 </Button>
-              </Link>
+                <Link href={topic.href}>
+                  <Button variant="secondary" size="sm">
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
             </CardContent>
           </Card>
         ))}
@@ -196,6 +240,12 @@ export default function AdminHelpPage() {
           documentation.
         </p>
       </div>
+
+      <HelpDetailsModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        topic={selectedTopic}
+      />
     </div>
   );
 }
