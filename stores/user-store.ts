@@ -541,8 +541,9 @@ export const useUserStore = create(
       },
 
       // Alias for getUserProfile for consistency with onboarding hook
-      fetchProfile: async function () {
-        return this.getUserProfile();
+      fetchProfile: async () => {
+        const { getUserProfile } = get();
+        return getUserProfile();
       },
     }),
     {
