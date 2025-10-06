@@ -4,6 +4,7 @@ import { User } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase/client";
 import { syncProfileNameToFamilyTree } from "@/lib/utils/profile-sync-helpers";
+import { clearAllStorage } from "@/lib/utils/storage-helpers";
 
 interface UserStore {
   user: User | null;
@@ -259,7 +260,15 @@ export const useUserStore = create(
 
           if (error) throw error;
 
-          set({ user: null, success: true, loading: false });
+          await clearAllStorage();
+
+          set({
+            user: null,
+            success: true,
+            loading: false,
+            profile: null,
+            userProfile: null,
+          });
           toast.success("Logged out successfully");
           window.location.href = "/sign-in";
         } catch (error: any) {
