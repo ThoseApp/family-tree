@@ -72,6 +72,7 @@ export async function GET(request: NextRequest) {
       .from("profiles")
       .select("*")
       .eq("status", "approved")
+      // .neq("user_id", adminUser.id)
       .order("created_at", { ascending: false });
 
     if (profileError) throw profileError;
@@ -81,7 +82,6 @@ export async function GET(request: NextRequest) {
       profiles.map(async (profile) => {
         const { data: authUser, error: authError } =
           await supabase.auth.admin.getUserById(profile.user_id);
-        console.log("authUser", authUser);
         const role =
           authUser && !authError
             ? getUserRoleFromMetadata(authUser.user)

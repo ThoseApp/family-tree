@@ -26,6 +26,7 @@ import {
   ChevronRight,
   ArrowLeft,
   HelpCircle,
+  Crown,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -74,6 +75,16 @@ const helpTopics = [
       "Review notice board requests and manage published notices. Publisher users can submit notices for your approval.",
     color: "text-orange-600",
     href: "/admin/notice-board-requests",
+    adminOnly: true,
+  },
+  {
+    id: "admin-management",
+    icon: Crown,
+    title: "Admin Management",
+    description:
+      "Manage administrator accounts and permissions. Promote users to admin role for full system access or demote admins to regular users.",
+    color: "text-purple-600",
+    href: "/admin/admin-management",
     adminOnly: true,
   },
   {

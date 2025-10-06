@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -29,14 +28,21 @@ import { LoadingIcon } from "@/components/loading-icon";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase/client";
 import { UserProfile } from "@/lib/types";
-import { Search, UserPlus, UserMinus, Shield, Crown } from "lucide-react";
+import {
+  Search,
+  UserPlus,
+  UserMinus,
+  Shield,
+  Crown,
+  Users,
+} from "lucide-react";
 import { dummyProfileImage } from "@/lib/constants";
 
 interface UserWithRole extends UserProfile {
   role: "admin" | "publisher" | "user";
 }
 
-const PublisherManagementPage = () => {
+const AdminManagementPage = () => {
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -103,8 +109,8 @@ const PublisherManagementPage = () => {
       user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Handle promoting user to publisher
-  const handlePromoteToPublisher = (user: UserWithRole) => {
+  // Handle promoting user to admin
+  const handlePromoteToAdmin = (user: UserWithRole) => {
     setActionDialog({
       isOpen: true,
       user,
@@ -112,8 +118,8 @@ const PublisherManagementPage = () => {
     });
   };
 
-  // Handle demoting publisher to user
-  const handleDemoteFromPublisher = (user: UserWithRole) => {
+  // Handle demoting admin to user/publisher
+  const handleDemoteFromAdmin = (user: UserWithRole) => {
     setActionDialog({
       isOpen: true,
       user,
@@ -149,8 +155,8 @@ const PublisherManagementPage = () => {
         },
         body: JSON.stringify({
           userId: user.user_id,
-          isPublisher: isPromoting,
-          isAdmin: user.role === "admin", // Preserve admin status
+          isPublisher: user.role === "publisher" || isPromoting, // Preserve publisher status when promoting, or keep current when demoting
+          isAdmin: isPromoting,
         }),
       });
 
@@ -163,7 +169,14 @@ const PublisherManagementPage = () => {
       setUsers((prev) =>
         prev.map((u) =>
           u.user_id === user.user_id
-            ? { ...u, role: isPromoting ? "publisher" : "user" }
+            ? {
+                ...u,
+                role: isPromoting
+                  ? "admin"
+                  : user.role === "admin" && u.role === "publisher"
+                  ? "publisher"
+                  : "user",
+              }
             : u
         )
       );
@@ -171,12 +184,10 @@ const PublisherManagementPage = () => {
       // Create notification for the user
       try {
         const notificationData = {
-          title: isPromoting
-            ? "Publisher Role Granted"
-            : "Publisher Role Removed",
+          title: isPromoting ? "Admin Role Granted" : "Admin Role Removed",
           body: isPromoting
-            ? "You have been granted publisher permissions and can now manage notice boards and events."
-            : "Your publisher permissions have been removed. You now have regular user access.",
+            ? "You have been granted administrator permissions and can now manage all aspects of the family tree application."
+            : "Your administrator permissions have been removed. You now have regular user access.",
           type: "system",
           resource_id: null,
           user_id: user.user_id,
@@ -191,8 +202,8 @@ const PublisherManagementPage = () => {
 
       toast.success(
         isPromoting
-          ? `${user.first_name} ${user.last_name} has been promoted to publisher`
-          : `${user.first_name} ${user.last_name} has been demoted from publisher`
+          ? `${user.first_name} ${user.last_name} has been promoted to admin`
+          : `${user.first_name} ${user.last_name} has been demoted from admin`
       );
     } catch (error: any) {
       console.error("Error updating user role:", error);
@@ -226,23 +237,22 @@ const PublisherManagementPage = () => {
       case "user":
         return (
           <Badge variant="outline" className="flex items-center gap-1">
-            <UserPlus className="h-3 w-3" />
+            <Users className="h-3 w-3" />
             User
           </Badge>
         );
     }
   };
 
-  const canPromote = (user: UserWithRole) => user.role === "user";
-  const canDemote = (user: UserWithRole) => user.role === "publisher";
+  const canPromote = (user: UserWithRole) => user.role !== "admin";
+  const canDemote = (user: UserWithRole) => user.role === "admin";
 
   // Calculate statistics
   const totalUsers = users.length;
+  const adminCount = users.filter((user) => user.role === "admin").length;
   const publisherCount = users.filter(
     (user) => user.role === "publisher"
   ).length;
-
-  const adminCount = users.filter((user) => user.role === "admin").length;
   const regularUserCount = users.filter((user) => user.role === "user").length;
 
   if (loading) {
@@ -258,9 +268,10 @@ const PublisherManagementPage = () => {
       {/* HEADER SECTION */}
       <div className="flex md:items-center md:flex-row flex-col md:justify-between gap-y-4">
         <div>
-          <h1 className="text-2xl font-semibold">Publisher Management</h1>
+          <h1 className="text-2xl font-semibold">Admin Management</h1>
           <p className="text-gray-600 text-sm">
-            Promote users to publishers or demote publishers to regular users
+            Promote users to administrators or demote administrators to regular
+            users
           </p>
         </div>
       </div>
@@ -382,23 +393,23 @@ const PublisherManagementPage = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handlePromoteToPublisher(user)}
+                            onClick={() => handlePromoteToAdmin(user)}
                             disabled={processingUsers.has(user.user_id)}
                             className="flex items-center gap-1"
                           >
                             {processingUsers.has(user.user_id) ? (
                               <LoadingIcon className="h-3 w-3" />
                             ) : (
-                              <UserPlus className="h-3 w-3" />
+                              <Crown className="h-3 w-3" />
                             )}
-                            Promote
+                            Promote to Admin
                           </Button>
                         )}
                         {canDemote(user) && (
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleDemoteFromPublisher(user)}
+                            onClick={() => handleDemoteFromAdmin(user)}
                             disabled={processingUsers.has(user.user_id)}
                             className="flex items-center gap-1"
                           >
@@ -407,13 +418,8 @@ const PublisherManagementPage = () => {
                             ) : (
                               <UserMinus className="h-3 w-3" />
                             )}
-                            Demote
+                            Demote from Admin
                           </Button>
-                        )}
-                        {user.role === "admin" && (
-                          <span className="text-sm text-muted-foreground px-3 py-1">
-                            Admin
-                          </span>
                         )}
                       </div>
                     </TableCell>
@@ -436,19 +442,21 @@ const PublisherManagementPage = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>
               {actionDialog.action === "promote"
-                ? "Promote User"
-                : "Demote Publisher"}
+                ? "Promote to Admin"
+                : "Demote from Admin"}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {actionDialog.action === "promote"
-                ? `Are you sure you want to promote ${actionDialog.user?.first_name} ${actionDialog.user?.last_name} to publisher? They will be able to approve content and create public events.`
-                : `Are you sure you want to demote ${actionDialog.user?.first_name} ${actionDialog.user?.last_name} from publisher? They will lose their content management permissions.`}
+                ? `Are you sure you want to promote ${actionDialog.user?.first_name} ${actionDialog.user?.last_name} to administrator? They will have full access to manage all aspects of the family tree application, including user management and system settings.`
+                : `Are you sure you want to demote ${actionDialog.user?.first_name} ${actionDialog.user?.last_name} from administrator? They will lose their administrative permissions and revert to their previous role.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={executeAction}>
-              {actionDialog.action === "promote" ? "Promote" : "Demote"}
+              {actionDialog.action === "promote"
+                ? "Promote to Admin"
+                : "Demote from Admin"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -457,4 +465,4 @@ const PublisherManagementPage = () => {
   );
 };
 
-export default PublisherManagementPage;
+export default AdminManagementPage;
