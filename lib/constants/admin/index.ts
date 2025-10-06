@@ -26,6 +26,7 @@ import {
   ClipboardPenLine,
   ClipboardPlus,
   HelpCircle,
+  Crown,
 } from "lucide-react";
 import { dummyProfileImage } from "..";
 
@@ -50,6 +51,11 @@ export const navLinksTopSection: NavLink[] = [
   //   href: "/admin/member-requests",
   //   icon: UserPlus,
   // },
+  {
+    label: "Admin Management",
+    href: "/admin/admin-management",
+    icon: Crown,
+  },
   {
     label: "Publisher Management",
     href: "/admin/publisher-management",

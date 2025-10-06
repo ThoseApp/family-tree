@@ -14,6 +14,9 @@ let tourIsRunning = false;
 let tourAttemptInProgress = false;
 let activeDriver: any = null;
 
+// Global flag to prevent multiple concurrent tour attempts (not session-based)
+let isTourCurrentlyAttempting = false;
+
 // Current version of the onboarding tour - increment to re-show tour after changes
 const CURRENT_TOUR_VERSION = "v1";
 
@@ -155,17 +158,23 @@ export function useOnboardingTour() {
         .eq("user_id", user.id);
 
       if (error) {
-        console.error("Error marking tour as completed:", error);
+        console.error(
+          "Onboarding tour: Error marking tour as completed:",
+          error
+        );
         return false;
       }
 
-      console.log("Onboarding tour: Successfully marked as completed");
+      console.log(
+        "Onboarding tour: Successfully marked as completed in database"
+      );
 
       // Refresh the profile to get updated data
       await fetchProfile();
+      console.log("Onboarding tour: Profile refreshed after completion");
       return true;
     } catch (error) {
-      console.error("Error marking tour as completed:", error);
+      console.error("Onboarding tour: Error marking tour as completed:", error);
       return false;
     }
   }, [user?.id, fetchProfile]);
@@ -196,67 +205,133 @@ export function useOnboardingTour() {
       activeDriver?.destroy?.();
     } catch {}
 
+    // Mark tour as completed when it ends (any way: completed, canceled, closed)
+    const handleTourEnd = async (reason: string) => {
+      console.log(
+        `Onboarding tour: Tour ended (${reason}), marking as completed`
+      );
+      tourIsRunning = false;
+      activeDriver = null;
+      isTourCurrentlyAttempting = false; // Reset the attempt flag
+      // Mark tour as completed in database regardless of how it ended
+      await markTourCompleted();
+    };
+
     const driverObj: DriverInstance = driver({
       showProgress: true,
       overlayOpacity: 0.6,
       allowClose: true,
       stagePadding: 6,
+      onDestroyed: () => {
+        console.log("Onboarding tour: Driver onDestroyed callback triggered");
+        handleTourEnd("onDestroyed-callback");
+      },
     });
 
     // Some driver.js typings expect drive(stepIndex?: number). Use setSteps then drive.
     (driverObj as any)?.setSteps(steps);
     activeDriver = driverObj;
     (driverObj as any)?.drive(0);
-    // Best-effort reset when overlay closes and mark tour as completed
     try {
-      (driverObj as any)?.on("destroyed", async () => {
-        tourIsRunning = false;
-        activeDriver = null;
-        // Mark tour as completed in database
-        await markTourCompleted();
-      });
-    } catch {}
+      // Handle all possible ways the tour can end
+      (driverObj as any)?.on("destroyed", () => handleTourEnd("destroyed"));
+      (driverObj as any)?.on("deactivated", () => handleTourEnd("deactivated"));
+      (driverObj as any)?.on("overlayClick", () =>
+        handleTourEnd("overlay-click")
+      );
+    } catch (error) {
+      console.warn("Onboarding tour: Error setting up event handlers:", error);
+    }
     return true;
   }, [pathname, user, markTourCompleted]);
 
   const maybeStart = useCallback(async () => {
     if (typeof window === "undefined") return;
-    if (isCheckingStatus || tourIsRunning || tourAttemptInProgress) return;
+    if (
+      isCheckingStatus ||
+      tourIsRunning ||
+      tourAttemptInProgress ||
+      isTourCurrentlyAttempting
+    )
+      return;
+
+    // Get current user and profile from the store
+    const currentUser = user;
+    const currentProfile = profile;
 
     // Ensure we have both user and profile data before checking
-    if (!user?.id || !profile) {
+    if (!currentUser?.id || !currentProfile) {
       console.log("Onboarding tour: Waiting for user and profile data");
       return;
     }
 
-    // Check if user should see the tour based on database status
-    const shouldShow = shouldShowTour();
+    console.log("Onboarding tour: Current profile", currentProfile);
+
+    // Check if user should see the tour based on database status ONLY
+    const shouldShow =
+      !currentProfile.has_completed_onboarding_tour ||
+      currentProfile.onboarding_tour_version !== CURRENT_TOUR_VERSION;
+
     console.log("Onboarding tour: Should show tour?", shouldShow, {
-      hasCompletedTour: profile.has_completed_onboarding_tour,
-      tourVersion: profile.onboarding_tour_version,
+      userId: currentUser.id,
+      hasCompletedTour: currentProfile.has_completed_onboarding_tour,
+      tourVersion: currentProfile.onboarding_tour_version,
       currentVersion: CURRENT_TOUR_VERSION,
     });
 
-    if (!shouldShow) return;
+    if (!shouldShow) {
+      console.log("Onboarding tour: User has already completed tour, skipping");
+      return;
+    }
+
+    // Prevent concurrent attempts
+    if (isTourCurrentlyAttempting) {
+      console.log(
+        "Onboarding tour: Tour attempt already in progress, skipping"
+      );
+      return;
+    }
+
+    // Mark as attempting to prevent concurrent calls
+    isTourCurrentlyAttempting = true;
+    console.log("Onboarding tour: Starting tour attempt");
 
     // Delay and retry a few times to ensure DOM targets exist before starting
     tourAttemptInProgress = true;
     const attemptStart = async (attempt: number) => {
-      if (tourIsRunning) return;
-      const started = await start();
-      if (started) {
-        tourAttemptInProgress = false;
+      if (tourIsRunning) {
+        console.log(
+          `Onboarding tour: Tour already running, skipping attempt ${attempt}`
+        );
         return;
       }
+
+      console.log(
+        `Onboarding tour: Attempting to start tour (attempt ${attempt})`
+      );
+      const started = await start();
+
+      if (started) {
+        console.log("Onboarding tour: Successfully started");
+        tourAttemptInProgress = false;
+        // Don't reset isTourCurrentlyAttempting here - let it reset when tour completes
+        return;
+      }
+
       if (attempt < 5) {
+        console.log(
+          `Onboarding tour: Attempt ${attempt} failed, retrying in 500ms`
+        );
         setTimeout(() => attemptStart(attempt + 1), 500);
       } else {
+        console.log("Onboarding tour: All attempts failed, giving up");
         tourAttemptInProgress = false;
+        isTourCurrentlyAttempting = false; // Reset on failure
       }
     };
 
     setTimeout(() => attemptStart(1), 800);
-  }, [start, shouldShowTour, isCheckingStatus, user?.id, profile]);
+  }, [start]);
 
   // Reset onboarding tour status (useful for testing or forcing re-tour)
   const resetTour = useCallback(async () => {
@@ -285,10 +360,17 @@ export function useOnboardingTour() {
     }
   }, [user?.id, fetchProfile]);
 
+  // Reset attempt flag (useful for testing)
+  const resetAttemptFlag = useCallback(() => {
+    isTourCurrentlyAttempting = false;
+    console.log("Onboarding tour: Attempt flag reset");
+  }, []);
+
   return {
     start,
     maybeStart,
     resetTour,
+    resetAttemptFlag,
     shouldShowTour: shouldShowTour(),
     isCheckingStatus,
     markTourCompleted,

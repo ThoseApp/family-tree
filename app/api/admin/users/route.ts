@@ -72,26 +72,27 @@ export async function GET(request: NextRequest) {
       .from("profiles")
       .select("*")
       .eq("status", "approved")
+      // .neq("user_id", adminUser.id)
       .order("created_at", { ascending: false });
 
     if (profileError) throw profileError;
 
-    // Get auth users to check their metadata
-    const { data: authUsers, error: authError } =
-      await supabase.auth.admin.listUsers();
+    // Combine profile data with auth metadata to determine roles using parallel requests
+    const usersWithRoles = await Promise.all(
+      profiles.map(async (profile) => {
+        const { data: authUser, error: authError } =
+          await supabase.auth.admin.getUserById(profile.user_id);
+        const role =
+          authUser && !authError
+            ? getUserRoleFromMetadata(authUser.user)
+            : "user";
 
-    if (authError) throw authError;
-
-    // Combine profile data with auth metadata to determine roles
-    const usersWithRoles = profiles.map((profile) => {
-      const authUser = authUsers.users.find((u) => u.id === profile.user_id);
-      const role = authUser ? getUserRoleFromMetadata(authUser) : "user";
-
-      return {
-        ...profile,
-        role,
-      };
-    });
+        return {
+          ...profile,
+          role,
+        };
+      })
+    );
 
     return NextResponse.json({ users: usersWithRoles });
   } catch (error: any) {

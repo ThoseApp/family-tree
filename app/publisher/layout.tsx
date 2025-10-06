@@ -7,14 +7,18 @@ import { useSidebarStore } from "@/stores/sidebar-store";
 import { cn } from "@/lib/utils";
 import React, { useEffect } from "react";
 import { useOnboardingTour } from "@/hooks/use-onboarding-tour";
+import { useUserStore } from "@/stores/user-store";
 
 const PublisherLayout = ({ children }: { children: React.ReactNode }) => {
   const { isCollapsed } = useSidebarStore();
   const { maybeStart } = useOnboardingTour();
+  const { user, profile } = useUserStore();
 
   useEffect(() => {
-    maybeStart();
-  }, [maybeStart]);
+    if (user && profile) {
+      maybeStart();
+    }
+  }, [user?.id, profile?.has_completed_onboarding_tour]);
 
   return (
     <MobileResponsiveWrapper
