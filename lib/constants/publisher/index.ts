@@ -38,11 +38,11 @@ export const navLinksTopSection: NavLink[] = [
     href: "/publisher/events",
     icon: Calendar,
   },
-  {
-    label: "Event Requests",
-    href: "/publisher/event-requests",
-    icon: CheckCircle,
-  },
+  // {
+  //   label: "Event Requests",
+  //   href: "/publisher/event-requests",
+  //   icon: CheckCircle,
+  // },
   {
     label: "Gallery",
     href: "/publisher/gallery",
