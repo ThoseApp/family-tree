@@ -241,6 +241,8 @@ const PublisherManagementPage = () => {
   const publisherCount = users.filter(
     (user) => user.role === "publisher"
   ).length;
+
+  console.log("users", users);
   const adminCount = users.filter((user) => user.role === "admin").length;
   const regularUserCount = users.filter((user) => user.role === "user").length;
 
