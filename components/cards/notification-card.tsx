@@ -114,7 +114,7 @@ const NotificationCard = ({ notification }: NotificationCardProps) => {
       {/* ACTION BUTTONS SECTION */}
       <div className="flex flex-col gap-2 sm:gap-2 lg:gap-3 w-full sm:w-auto flex-shrink-0 sm:self-center">
         {/* Primary Action Button */}
-        {isNavigable && (
+        {/* {isNavigable && (
           <Button
             variant="outline"
             size="sm"
@@ -123,7 +123,7 @@ const NotificationCard = ({ notification }: NotificationCardProps) => {
           >
             {actionText}
           </Button>
-        )}
+        )} */}
 
         {/* Secondary Actions Row */}
         <div className="flex flex-row sm:flex-row gap-2 w-full sm:w-auto">

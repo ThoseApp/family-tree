@@ -21,12 +21,12 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     }
   }, [user, profile, getUserProfile]);
 
-  // Start onboarding tour only after profile is loaded
+  // Start onboarding tour after profile is loaded
   useEffect(() => {
     if (user && profile) {
       maybeStart();
     }
-  }, [user, profile, maybeStart]);
+  }, [user?.id, profile?.has_completed_onboarding_tour]);
 
   return (
     <MobileResponsiveWrapper

@@ -1,5 +1,42 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { UserRole } from "@/lib/types";
+
+// Helper function to determine user role from user metadata and profile
+function getUserRole(user: any, userProfile: any): UserRole {
+  // Check user metadata first (for admin/publisher flags)
+  if (user?.user_metadata?.is_admin === true) return "admin";
+  if (user?.user_metadata?.is_publisher === true) return "publisher";
+
+  // Check profile role field as fallback
+  if (userProfile?.role === "admin") return "admin";
+  if (userProfile?.role === "publisher") return "publisher";
+
+  return "user";
+}
+
+// Helper function to check if user can access a specific dashboard
+function canAccessDashboard(
+  userRole: UserRole,
+  dashboardPath: string
+): boolean {
+  switch (userRole) {
+    case "admin":
+      // Admin can access all dashboards
+      return true;
+    case "publisher":
+      // Publisher can access /dashboard and /publisher
+      return (
+        dashboardPath.startsWith("/dashboard") ||
+        dashboardPath.startsWith("/publisher")
+      );
+    case "user":
+      // Regular users can only access /dashboard
+      return dashboardPath.startsWith("/dashboard");
+    default:
+      return false;
+  }
+}
 
 export async function updateSession(request: NextRequest) {
   // Create a response object that we can mutate
@@ -146,7 +183,7 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(redirectUrl);
     }
 
-    // Check approval status for authenticated users on private routes
+    // Check approval status and role-based access for authenticated users on private routes
     if (user && userProfile && isPrivateRoute) {
       if (userProfile.status === "pending") {
         // Redirect to pending approval page
@@ -160,6 +197,30 @@ export async function updateSession(request: NextRequest) {
         // Redirect to account rejected page
         if (!path.startsWith("/account-rejected")) {
           const redirectUrl = new URL("/account-rejected", request.url);
+          return NextResponse.redirect(redirectUrl);
+        }
+      }
+
+      // Role-based access control for approved users
+      if (userProfile.status === "approved") {
+        const userRole = getUserRole(user, userProfile);
+
+        // Check if user can access the requested dashboard
+        if (!canAccessDashboard(userRole, path)) {
+          // Redirect unauthorized users to their appropriate dashboard
+          let redirectPath = "/dashboard"; // Default for regular users
+
+          if (userRole === "admin") {
+            redirectPath = "/admin"; // Admins go to admin dashboard
+          } else if (userRole === "publisher") {
+            redirectPath = "/publisher"; // Publishers go to publisher dashboard
+          }
+
+          const redirectUrl = new URL(redirectPath, request.url);
+          redirectUrl.searchParams.set(
+            "message",
+            "Access denied for this area"
+          );
           return NextResponse.redirect(redirectUrl);
         }
       }
