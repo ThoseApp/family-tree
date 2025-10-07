@@ -1,5 +1,6 @@
 "use client";
 
+import ClientMetadata from "@/components/seo/client-metadata";
 import DashboardOverviewCard from "@/components/cards/dashboard-overview-card";
 import UpcomingEventCard from "@/components/cards/upcoming-event-card";
 import {
@@ -220,281 +221,289 @@ const DashboardPage = () => {
   };
 
   return (
-    <div className="flex flex-col gap-y-8 lg:gap-y-12">
-      {/* HEADER SECTION */}
-      <div className="flex md:items-center md:flex-row flex-col md:justify-between gap-y-4">
-        <h1 className="text-2xl font-semibold">Welcome back, Admin</h1>
-        {isLoading && (
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <LoadingIcon className="size-4" />
-            <span className="text-sm">Loading dashboard data...</span>
-          </div>
-        )}
-      </div>
+    <>
+      <ClientMetadata
+        title="Admin Dashboard - Mosuro Family Management"
+        description="Administrative dashboard for managing the Mosuro family tree application. Handle member requests, content moderation, and system administration."
+        keywords={["admin", "management", "administration"]}
+        noIndex={true}
+      />
+      <div className="flex flex-col gap-y-8 lg:gap-y-12">
+        {/* HEADER SECTION */}
+        <div className="flex md:items-center md:flex-row flex-col md:justify-between gap-y-4">
+          <h1 className="text-2xl font-semibold">Welcome back, Admin</h1>
+          {isLoading && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <LoadingIcon className="size-4" />
+              <span className="text-sm">Loading dashboard data...</span>
+            </div>
+          )}
+        </div>
 
-      {/* Dashboard Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-        {/* Pending Member Requests Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-medium text-muted-foreground">
-              Pending Member Requests
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex items-center justify-between">
-            <span className="text-6xl font-bold">{pendingMembers}</span>
-          </CardContent>
-          <CardFooter>
-            <div className="flex items-center gap-4 w-full justify-end">
-              <Button
-                variant="outline"
-                className="w-full rounded-full"
-                size="lg"
-                onClick={() => router.push("/admin/member-requests")}
-              >
-                View All
-              </Button>
-              <Button
-                className="w-full rounded-full bg-foreground text-background hover:bg-foreground/80"
-                size="lg"
-                onClick={async () => {
-                  try {
-                    const memberRequestsStore =
-                      useMemberRequestsStore.getState();
+        {/* Dashboard Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+          {/* Pending Member Requests Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-medium text-muted-foreground">
+                Pending Member Requests
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-center justify-between">
+              <span className="text-6xl font-bold">{pendingMembers}</span>
+            </CardContent>
+            <CardFooter>
+              <div className="flex items-center gap-4 w-full justify-end">
+                <Button
+                  variant="outline"
+                  className="w-full rounded-full"
+                  size="lg"
+                  onClick={() => router.push("/admin/member-requests")}
+                >
+                  View All
+                </Button>
+                <Button
+                  className="w-full rounded-full bg-foreground text-background hover:bg-foreground/80"
+                  size="lg"
+                  onClick={async () => {
+                    try {
+                      const memberRequestsStore =
+                        useMemberRequestsStore.getState();
 
-                    // Get pending member requests and approve them in bulk
-                    const { data: pendingMembers, error } = await supabase
-                      .from("profiles")
-                      .select("*")
-                      .eq("status", "pending")
-                      .limit(5); // Approve up to 5 at a time
+                      // Get pending member requests and approve them in bulk
+                      const { data: pendingMembers, error } = await supabase
+                        .from("profiles")
+                        .select("*")
+                        .eq("status", "pending")
+                        .limit(5); // Approve up to 5 at a time
 
-                    if (error) {
-                      throw error;
+                      if (error) {
+                        throw error;
+                      }
+
+                      if (pendingMembers && pendingMembers.length > 0) {
+                        // Approve members using the store
+                        const userIds = pendingMembers.map(
+                          (member) => member.user_id
+                        );
+                        await memberRequestsStore.approveBulkRequests(userIds);
+
+                        // Refresh the count
+                        const updatedCount =
+                          await memberRequestsStore.getMemberRequestsCount();
+                        setPendingMembers(updatedCount);
+                      } else {
+                        toast.info("No pending member requests to approve");
+                      }
+                    } catch (error) {
+                      console.error("Error approving member requests:", error);
+                      toast.error("Failed to approve member requests");
                     }
-
-                    if (pendingMembers && pendingMembers.length > 0) {
-                      // Approve members using the store
-                      const userIds = pendingMembers.map(
-                        (member) => member.user_id
-                      );
-                      await memberRequestsStore.approveBulkRequests(userIds);
-
-                      // Refresh the count
-                      const updatedCount =
-                        await memberRequestsStore.getMemberRequestsCount();
-                      setPendingMembers(updatedCount);
-                    } else {
-                      toast.info("No pending member requests to approve");
-                    }
-                  } catch (error) {
-                    console.error("Error approving member requests:", error);
-                    toast.error("Failed to approve member requests");
-                  }
-                }}
-              >
-                Accept
-              </Button>
-            </div>
-          </CardFooter>
-        </Card>
-
-        {/* Gallery Uploads Requests Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-medium text-muted-foreground">
-              Gallery Uploads Requests
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex items-center justify-between">
-            <span className="text-6xl font-bold">
-              {isLoading ? (
-                <LoadingIcon className="size-16" />
-              ) : (
-                galleryRequests
-              )}
-            </span>
-          </CardContent>
-
-          <CardFooter>
-            <div className="flex items-center gap-4 w-full justify-end">
-              <Button
-                variant="outline"
-                className="w-full rounded-full"
-                size="lg"
-                onClick={handleViewGalleryRequests}
-                disabled={isLoading}
-              >
-                View All
-              </Button>
-              <Button
-                className="w-full rounded-full bg-foreground text-background hover:bg-foreground/80"
-                size="lg"
-                onClick={handleAcceptGalleryRequests}
-                disabled={isLoading || galleryRequests === 0}
-              >
-                Accept
-              </Button>
-            </div>
-          </CardFooter>
-        </Card>
-
-        {/* Notice Board Requests Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-medium text-muted-foreground">
-              Notice Board Requests
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex items-center justify-between">
-            <span className="text-6xl font-bold">
-              {isLoading ? (
-                <LoadingIcon className="size-16" />
-              ) : (
-                noticeBoardRequests
-              )}
-            </span>
-          </CardContent>
-
-          <CardFooter>
-            <div className="flex items-center gap-4 w-full justify-end">
-              <Button
-                variant="outline"
-                className="w-full rounded-full"
-                size="lg"
-                onClick={handleViewNoticeBoardRequests}
-                disabled={isLoading}
-              >
-                View All
-              </Button>
-              <Button
-                className="w-full rounded-full bg-foreground text-background hover:bg-foreground/80"
-                size="lg"
-                onClick={handleAcceptNoticeBoardRequests}
-                disabled={isLoading || noticeBoardRequests === 0}
-              >
-                Accept
-              </Button>
-            </div>
-          </CardFooter>
-        </Card>
-
-        {/* Landing Page Updates Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-medium text-muted-foreground">
-              Landing Page Updates
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {/* Ensure Image component covers the area */}
-            <div className="relative aspect-video">
-              <Image
-                src={landingPageImageUrl}
-                alt="Landing Page Preview"
-                fill
-                className="object-cover rounded-xl"
-              />
-            </div>
-          </CardContent>
-          <CardFooter>
-            <div className="flex items-center gap-4 w-full justify-end">
-              <Button
-                className="w-full rounded-full bg-foreground text-background hover:bg-foreground/80"
-                size="lg"
-                onClick={handleEditLandingPage}
-              >
-                Edit
-              </Button>
-            </div>
-          </CardFooter>
-        </Card>
-
-        {/* Event Highlights Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-medium text-muted-foreground">
-              Event Highlights
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <LoadingIcon className="size-8" />
+                  }}
+                >
+                  Accept
+                </Button>
               </div>
-            ) : featuredEvent ? (
-              <>
-                <div>
-                  <p className="font-semibold">{featuredEvent.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {new Date(featuredEvent.date).toLocaleDateString()}
-                  </p>
-                </div>
-                <div className="relative aspect-video">
-                  <Image
-                    src={featuredEvent.image || dummyProfileImage}
-                    alt="Event Highlight"
-                    fill
-                    className="object-cover rounded-xl"
-                  />
-                </div>
-              </>
-            ) : (
-              <>
-                <div>
-                  <p className="font-semibold">No upcoming events</p>
-                  <p className="text-sm text-muted-foreground">
-                    Create an event to see it here
-                  </p>
-                </div>
-                <div className="relative aspect-video">
-                  <Image
-                    src={dummyProfileImage}
-                    alt="Event Placeholder"
-                    fill
-                    className="object-cover rounded-xl opacity-50"
-                  />
-                </div>
-              </>
-            )}
-          </CardContent>
-          <CardFooter>
-            <div className="flex items-center gap-4 w-full justify-end">
-              <Button
-                variant="outline"
-                className="w-full rounded-full"
-                size="lg"
-                onClick={handleViewAllEvents}
-              >
-                View All
-              </Button>
-            </div>
-          </CardFooter>
-        </Card>
-      </div>
+            </CardFooter>
+          </Card>
 
-      {/* Action Buttons */}
-      <div className="flex items-center gap-4">
-        <Button
-          variant="outline"
-          className="rounded-full"
-          size="lg"
-          onClick={handleAddEvent}
-          id="add-event-button"
-        >
-          Add Event
-        </Button>
-        <Button
-          variant="outline"
-          className="rounded-full"
-          size="lg"
-          onClick={handleAddMember}
-          id="add-family-member-button"
-        >
-          Add Member
-        </Button>
+          {/* Gallery Uploads Requests Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-medium text-muted-foreground">
+                Gallery Uploads Requests
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-center justify-between">
+              <span className="text-6xl font-bold">
+                {isLoading ? (
+                  <LoadingIcon className="size-16" />
+                ) : (
+                  galleryRequests
+                )}
+              </span>
+            </CardContent>
+
+            <CardFooter>
+              <div className="flex items-center gap-4 w-full justify-end">
+                <Button
+                  variant="outline"
+                  className="w-full rounded-full"
+                  size="lg"
+                  onClick={handleViewGalleryRequests}
+                  disabled={isLoading}
+                >
+                  View All
+                </Button>
+                <Button
+                  className="w-full rounded-full bg-foreground text-background hover:bg-foreground/80"
+                  size="lg"
+                  onClick={handleAcceptGalleryRequests}
+                  disabled={isLoading || galleryRequests === 0}
+                >
+                  Accept
+                </Button>
+              </div>
+            </CardFooter>
+          </Card>
+
+          {/* Notice Board Requests Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-medium text-muted-foreground">
+                Notice Board Requests
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-center justify-between">
+              <span className="text-6xl font-bold">
+                {isLoading ? (
+                  <LoadingIcon className="size-16" />
+                ) : (
+                  noticeBoardRequests
+                )}
+              </span>
+            </CardContent>
+
+            <CardFooter>
+              <div className="flex items-center gap-4 w-full justify-end">
+                <Button
+                  variant="outline"
+                  className="w-full rounded-full"
+                  size="lg"
+                  onClick={handleViewNoticeBoardRequests}
+                  disabled={isLoading}
+                >
+                  View All
+                </Button>
+                <Button
+                  className="w-full rounded-full bg-foreground text-background hover:bg-foreground/80"
+                  size="lg"
+                  onClick={handleAcceptNoticeBoardRequests}
+                  disabled={isLoading || noticeBoardRequests === 0}
+                >
+                  Accept
+                </Button>
+              </div>
+            </CardFooter>
+          </Card>
+
+          {/* Landing Page Updates Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-medium text-muted-foreground">
+                Landing Page Updates
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {/* Ensure Image component covers the area */}
+              <div className="relative aspect-video">
+                <Image
+                  src={landingPageImageUrl}
+                  alt="Landing Page Preview"
+                  fill
+                  className="object-cover rounded-xl"
+                />
+              </div>
+            </CardContent>
+            <CardFooter>
+              <div className="flex items-center gap-4 w-full justify-end">
+                <Button
+                  className="w-full rounded-full bg-foreground text-background hover:bg-foreground/80"
+                  size="lg"
+                  onClick={handleEditLandingPage}
+                >
+                  Edit
+                </Button>
+              </div>
+            </CardFooter>
+          </Card>
+
+          {/* Event Highlights Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-medium text-muted-foreground">
+                Event Highlights
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <LoadingIcon className="size-8" />
+                </div>
+              ) : featuredEvent ? (
+                <>
+                  <div>
+                    <p className="font-semibold">{featuredEvent.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(featuredEvent.date).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="relative aspect-video">
+                    <Image
+                      src={featuredEvent.image || dummyProfileImage}
+                      alt="Event Highlight"
+                      fill
+                      className="object-cover rounded-xl"
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <p className="font-semibold">No upcoming events</p>
+                    <p className="text-sm text-muted-foreground">
+                      Create an event to see it here
+                    </p>
+                  </div>
+                  <div className="relative aspect-video">
+                    <Image
+                      src={dummyProfileImage}
+                      alt="Event Placeholder"
+                      fill
+                      className="object-cover rounded-xl opacity-50"
+                    />
+                  </div>
+                </>
+              )}
+            </CardContent>
+            <CardFooter>
+              <div className="flex items-center gap-4 w-full justify-end">
+                <Button
+                  variant="outline"
+                  className="w-full rounded-full"
+                  size="lg"
+                  onClick={handleViewAllEvents}
+                >
+                  View All
+                </Button>
+              </div>
+            </CardFooter>
+          </Card>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            className="rounded-full"
+            size="lg"
+            onClick={handleAddEvent}
+            id="add-event-button"
+          >
+            Add Event
+          </Button>
+          <Button
+            variant="outline"
+            className="rounded-full"
+            size="lg"
+            onClick={handleAddMember}
+            id="add-family-member-button"
+          >
+            Add Member
+          </Button>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
