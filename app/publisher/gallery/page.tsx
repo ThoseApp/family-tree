@@ -1,5 +1,6 @@
 "use client";
 
+import ClientMetadata from "@/components/seo/client-metadata";
 import { Button } from "@/components/ui/button";
 import {
   AlignJustify,
@@ -527,678 +528,712 @@ const Page = () => {
   };
 
   return (
-    <div className="flex flex-col gap-y-8 lg:gap-y-12">
-      {/* HEADER SECTION */}
-      <div className="flex md:items-center md:flex-row flex-col md:justify-between gap-y-4">
-        <div>
-          <h1 className="text-2xl font-semibold">Manage Family Gallery</h1>
-          {!isLoading && (viewMode === "grid" || viewMode === "table") && (
-            <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-              <span>Total: {statusCounts.total}</span>
-              <span className="text-green-600">
-                Approved: {statusCounts.approved}
-              </span>
-              <span className="text-yellow-600">
-                Pending: {statusCounts.pending}
-              </span>
-              <span className="text-red-600">
-                Rejected: {statusCounts.rejected}
-              </span>
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Button
-              variant={viewMode === "albums" ? "default" : "outline"}
-              size="sm"
-              className="rounded-full"
-              onClick={() => setViewMode("albums")}
-            >
-              Albums
-            </Button>
-
-            <Button
-              variant={viewMode === "table" ? "default" : "outline"}
-              size="icon"
-              className="rounded-full"
-              onClick={() => setViewMode("table")}
-            >
-              <AlignJustify className="size-5" />
-            </Button>
-
-            <Button
-              variant={viewMode === "grid" ? "default" : "outline"}
-              size="icon"
-              className="rounded-full"
-              onClick={() => setViewMode("grid")}
-            >
-              <LayoutGrid className="size-5" />
-            </Button>
+    <>
+      <ClientMetadata
+        title="Manage Gallery - Publisher Dashboard"
+        description="Manage and publish family photo galleries. Upload, organize, and moderate family photos and memories."
+        keywords={["publisher", "gallery management", "photo management"]}
+        noIndex={true}
+      />
+      <div className="flex flex-col gap-y-8 lg:gap-y-12">
+        {/* HEADER SECTION */}
+        <div className="flex md:items-center md:flex-row flex-col md:justify-between gap-y-4">
+          <div>
+            <h1 className="text-2xl font-semibold">Manage Family Gallery</h1>
+            {!isLoading && (viewMode === "grid" || viewMode === "table") && (
+              <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                <span>Total: {statusCounts.total}</span>
+                <span className="text-green-600">
+                  Approved: {statusCounts.approved}
+                </span>
+                <span className="text-yellow-600">
+                  Pending: {statusCounts.pending}
+                </span>
+                <span className="text-red-600">
+                  Rejected: {statusCounts.rejected}
+                </span>
+              </div>
+            )}
           </div>
 
-          <Button
-            variant="outline"
-            className="rounded-full"
-            onClick={() => setIsImportModalOpen(true)}
-          >
-            <Download className="size-5 mr-2" />
-            Import from Web
-          </Button>
-
-          <Button
-            className="bg-foreground text-background rounded-full hover:bg-foreground/80"
-            onClick={() => fileInputRef.current?.click()}
-            id="upload-gallery-button"
-          >
-            <Plus className="size-5 mr-2" />
-            Upload File (Image/Video)
-          </Button>
-          <input
-            type="file"
-            ref={fileInputRef}
-            className="hidden"
-            accept="image/*,video/*"
-            onChange={handleFileUpload}
-          />
-        </div>
-      </div>
-
-      {/* ENHANCED FILTERING SECTION */}
-      {(viewMode === "grid" || viewMode === "table") && (
-        <div className="space-y-4">
-          {/* Search and Filter Controls */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <div className="relative w-full flex-1">
-              <Input
-                placeholder="Search by caption or filename..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            </div>
-
+          <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="rounded-full relative">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Filters
-                    {activeFiltersCount > 0 && (
-                      <Badge className="ml-2 h-5 w-5 p-0 text-xs rounded-full">
-                        {activeFiltersCount}
-                      </Badge>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-80 p-4" align="end">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-medium">Filter Options</h4>
-                      {hasActiveFilters && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={clearAllFilters}
-                          className="h-8 px-2 text-xs"
-                        >
-                          Clear All
-                        </Button>
-                      )}
-                    </div>
+              <Button
+                variant={viewMode === "albums" ? "default" : "outline"}
+                size="sm"
+                className="rounded-full"
+                onClick={() => setViewMode("albums")}
+              >
+                Albums
+              </Button>
 
-                    <div className="space-y-3">
-                      {/* Status Filter */}
-                      <div>
-                        <label className="text-sm font-medium mb-2 block">
-                          Status
-                        </label>
-                        <Select
-                          value={statusFilter}
-                          onValueChange={setStatusFilter}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Filter by status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Status</SelectItem>
-                            <SelectItem value="approved">Approved</SelectItem>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="rejected">Rejected</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+              <Button
+                variant={viewMode === "table" ? "default" : "outline"}
+                size="icon"
+                className="rounded-full"
+                onClick={() => setViewMode("table")}
+              >
+                <AlignJustify className="size-5" />
+              </Button>
 
-                      {/* File Type Filter */}
-                      <div>
-                        <label className="text-sm font-medium mb-2 block">
-                          File Type
-                        </label>
-                        <Select
-                          value={fileTypeFilter}
-                          onValueChange={setFileTypeFilter}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Filter by type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Types</SelectItem>
-                            <SelectItem value="images">
-                              <div className="flex items-center gap-2">
-                                <FileImage className="h-4 w-4" />
-                                Images
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="videos">
-                              <div className="flex items-center gap-2">
-                                <FileVideo className="h-4 w-4" />
-                                Videos
-                              </div>
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Album Filter */}
-                      <div>
-                        <label className="text-sm font-medium mb-2 block">
-                          Album
-                        </label>
-                        <Select
-                          value={albumFilter}
-                          onValueChange={setAlbumFilter}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Filter by album" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Albums</SelectItem>
-                            <SelectItem value="no-album">No Album</SelectItem>
-                            {userAlbums.map((album) => (
-                              <SelectItem key={album.id} value={album.id}>
-                                {album.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Date Range Filter */}
-                      <div>
-                        <label className="text-sm font-medium mb-2 block">
-                          Date Range
-                        </label>
-                        <Select
-                          value={dateRangeFilter}
-                          onValueChange={setDateRangeFilter}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Filter by date" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Time</SelectItem>
-                            <SelectItem value="today">Today</SelectItem>
-                            <SelectItem value="week">This Week</SelectItem>
-                            <SelectItem value="month">This Month</SelectItem>
-                            <SelectItem value="year">This Year</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Sort By */}
-                      <div>
-                        <label className="text-sm font-medium mb-2 block">
-                          Sort By
-                        </label>
-                        <Select value={sortBy} onValueChange={setSortBy}>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Sort by" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="newest">Newest First</SelectItem>
-                            <SelectItem value="oldest">Oldest First</SelectItem>
-                            <SelectItem value="name">Name (A-Z)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-
-          {/* Active Filters Display */}
-          {hasActiveFilters && (
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm text-muted-foreground">
-                Active filters:
-              </span>
-              {searchQuery && (
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  Search: &quot;{searchQuery}&quot;
-                  <X
-                    className="h-3 w-3 cursor-pointer"
-                    onClick={() => setSearchQuery("")}
-                  />
-                </Badge>
-              )}
-              {statusFilter !== "all" && (
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  Status: {statusFilter}
-                  <X
-                    className="h-3 w-3 cursor-pointer"
-                    onClick={() => setStatusFilter("all")}
-                  />
-                </Badge>
-              )}
-              {fileTypeFilter !== "all" && (
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  Type: {fileTypeFilter}
-                  <X
-                    className="h-3 w-3 cursor-pointer"
-                    onClick={() => setFileTypeFilter("all")}
-                  />
-                </Badge>
-              )}
-              {albumFilter !== "all" && (
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  Album:{" "}
-                  {albumFilter === "no-album"
-                    ? "No Album"
-                    : userAlbums.find((a) => a.id === albumFilter)?.name ||
-                      albumFilter}
-                  <X
-                    className="h-3 w-3 cursor-pointer"
-                    onClick={() => setAlbumFilter("all")}
-                  />
-                </Badge>
-              )}
-              {dateRangeFilter !== "all" && (
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  Date: {dateRangeFilter}
-                  <X
-                    className="h-3 w-3 cursor-pointer"
-                    onClick={() => setDateRangeFilter("all")}
-                  />
-                </Badge>
-              )}
-              {sortBy !== "newest" && (
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  Sort: {sortBy}
-                  <X
-                    className="h-3 w-3 cursor-pointer"
-                    onClick={() => setSortBy("newest")}
-                  />
-                </Badge>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {(isLoading && userGallery.length === 0) ||
-      (albumsLoading && userAlbums.length === 0) ? (
-        <div className="flex items-center justify-center h-40">
-          <LoadingIcon className="size-8" />
-        </div>
-      ) : viewMode === "albums" ? (
-        <div className="flex h-[calc(100vh-200px)] bg-gray-50 rounded-lg overflow-hidden">
-          {/* Sidebar */}
-          <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
-            <div className="p-4 border-b border-gray-200 bg-yellow-50">
-              <h2 className="text-lg font-semibold text-gray-900">
-                Media Library
-              </h2>
-            </div>
-            <div className="flex-1 p-4">
-              <div className="space-y-2">
-                {selectedAlbum && (
-                  <div
-                    className="flex items-center gap-2 text-gray-600 hover:bg-gray-100 p-2 rounded cursor-pointer mb-2"
-                    onClick={handleBackToAllAlbums}
-                  >
-                    <span className="text-sm">← Back to Albums</span>
-                  </div>
-                )}
-                {!selectedAlbum && userAlbums.length > 0 ? (
-                  userAlbums.map((album) => (
-                    <div
-                      key={album.id}
-                      className="flex items-center gap-2 text-gray-700 hover:bg-yellow-50 p-2 rounded cursor-pointer"
-                      onClick={() => handleSidebarAlbumClick(album)}
-                    >
-                      <Folder className="w-4 h-4" />
-                      <span className="text-sm truncate max-w-[120px]">
-                        {album.name}
-                      </span>
-                      <span className="text-xs text-gray-400 ml-auto">
-                        {album.item_count}
-                      </span>
-                      <div
-                        className="flex items-center gap-1 ml-2"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <button
-                          className="p-1 rounded hover:bg-gray-200"
-                          aria-label="Edit album"
-                          onClick={() => handleOpenEditAlbum(album)}
-                        >
-                          <Pencil className="w-4 h-4 text-gray-500" />
-                        </button>
-                        <button
-                          className="p-1 rounded hover:bg-gray-200"
-                          aria-label="Delete album"
-                          onClick={() => handleRequestDeleteAlbum(album)}
-                        >
-                          <Trash2 className="w-4 h-4 text-gray-500" />
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                ) : !selectedAlbum ? (
-                  <div className="text-gray-500 text-sm p-2">No albums yet</div>
-                ) : null}
-              </div>
-              <div className="mt-6">
-                <button
-                  onClick={() => setIsCreateAlbumModalOpen(true)}
-                  className="flex items-center gap-2 text-yellow-600 hover:text-yellow-700 text-sm font-medium"
-                >
-                  <Plus className="w-4 h-4" />
-                  New Folder
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Main Content */}
-          <div className="flex-1 flex flex-col">
-            {/* Breadcrumb */}
-            <div className="p-4 bg-white border-b border-gray-200">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <span>Media Library</span>
-                <span>›</span>
-                {selectedAlbum ? (
-                  <>
-                    <span
-                      className="hover:text-gray-900 cursor-pointer"
-                      onClick={handleBackToAllAlbums}
-                    >
-                      Albums
-                    </span>
-                    <span>›</span>
-                    <span className="font-medium text-gray-900">
-                      {selectedAlbum.name}
-                    </span>
-                  </>
-                ) : (
-                  <span className="font-medium text-gray-900">Albums</span>
-                )}
-              </div>
+              <Button
+                variant={viewMode === "grid" ? "default" : "outline"}
+                size="icon"
+                className="rounded-full"
+                onClick={() => setViewMode("grid")}
+              >
+                <LayoutGrid className="size-5" />
+              </Button>
             </div>
 
-            {/* Content Area */}
-            <div className="flex-1 p-6">
-              {selectedAlbum ? (
-                // Show album contents
-                <div>
-                  <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <h2 className="text-xl font-semibold text-gray-900">
-                        {selectedAlbum.name}
-                      </h2>
-                      {selectedAlbum.description && (
-                        <p className="text-gray-600 text-sm mt-1">
-                          {selectedAlbum.description}
-                        </p>
-                      )}
-                      <p className="text-gray-500 text-sm mt-1">
-                        {albumGallery.length} items
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        className="rounded-full"
-                        onClick={() => handleOpenEditAlbum(selectedAlbum)}
-                      >
-                        <Pencil className="w-4 h-4 mr-2" /> Edit
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        className="rounded-full"
-                        onClick={() => handleRequestDeleteAlbum(selectedAlbum)}
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" /> Delete
-                      </Button>
-                    </div>
-                  </div>
-
-                  {albumGallery.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-64 text-center">
-                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                        <ImageIcon className="w-8 h-8 text-gray-400" />
-                      </div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        No items in this album yet
-                      </h3>
-                      <p className="text-gray-500 text-sm">
-                        Upload images or videos to this album to see them here
-                      </p>
-                    </div>
-                  ) : (
-                    <GalleryGrid
-                      gallery={albumGallery}
-                      onImageClick={handlePreviewImage}
-                    />
-                  )}
-                </div>
-              ) : userAlbums.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-center">
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    You have no album yet
-                  </h3>
-                  <button
-                    onClick={() => setIsCreateAlbumModalOpen(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-black font-medium rounded-lg transition-colors"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Create
-                  </button>
-                </div>
-              ) : (
-                <AlbumGrid
-                  albums={userAlbums}
-                  onAlbumClick={handleSidebarAlbumClick}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-      ) : viewMode === "table" ? (
-        <GalleryTable
-          data={filteredGallery}
-          onUserClick={handlePreviewImage}
-          deleteImage={handleDeleteImage}
-          previewImage={handlePreviewImage}
-          showSearchInput={false}
-        />
-      ) : (
-        <div className="mt-4">
-          <GalleryGrid
-            gallery={filteredGallery}
-            onImageClick={(image) => {
-              // Pass the image directly as the format is already correct
-              handlePreviewImage(image);
-            }}
-          />
-        </div>
-      )}
-
-      {/* Show a message when no results are found */}
-      {!isLoading &&
-        (viewMode === "grid" || viewMode === "table") &&
-        filteredGallery.length === 0 &&
-        userGallery.length > 0 && (
-          <div className="text-center py-10">
-            <p className="text-muted-foreground mb-4">
-              No items found matching your filters
-            </p>
             <Button
               variant="outline"
-              onClick={clearAllFilters}
               className="rounded-full"
+              onClick={() => setIsImportModalOpen(true)}
             >
-              Clear All Filters
+              <Download className="size-5 mr-2" />
+              Import from Web
             </Button>
+
+            <Button
+              className="bg-foreground text-background rounded-full hover:bg-foreground/80"
+              onClick={() => fileInputRef.current?.click()}
+              id="upload-gallery-button"
+            >
+              <Plus className="size-5 mr-2" />
+              Upload File (Image/Video)
+            </Button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept="image/*,video/*"
+              onChange={handleFileUpload}
+            />
+          </div>
+        </div>
+
+        {/* ENHANCED FILTERING SECTION */}
+        {(viewMode === "grid" || viewMode === "table") && (
+          <div className="space-y-4">
+            {/* Search and Filter Controls */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="relative w-full flex-1">
+                <Input
+                  placeholder="Search by caption or filename..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="rounded-full relative">
+                      <Filter className="h-4 w-4 mr-2" />
+                      Filters
+                      {activeFiltersCount > 0 && (
+                        <Badge className="ml-2 h-5 w-5 p-0 text-xs rounded-full">
+                          {activeFiltersCount}
+                        </Badge>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 p-4" align="end">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium">Filter Options</h4>
+                        {hasActiveFilters && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={clearAllFilters}
+                            className="h-8 px-2 text-xs"
+                          >
+                            Clear All
+                          </Button>
+                        )}
+                      </div>
+
+                      <div className="space-y-3">
+                        {/* Status Filter */}
+                        <div>
+                          <label className="text-sm font-medium mb-2 block">
+                            Status
+                          </label>
+                          <Select
+                            value={statusFilter}
+                            onValueChange={setStatusFilter}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Filter by status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Status</SelectItem>
+                              <SelectItem value="approved">Approved</SelectItem>
+                              <SelectItem value="pending">Pending</SelectItem>
+                              <SelectItem value="rejected">Rejected</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* File Type Filter */}
+                        <div>
+                          <label className="text-sm font-medium mb-2 block">
+                            File Type
+                          </label>
+                          <Select
+                            value={fileTypeFilter}
+                            onValueChange={setFileTypeFilter}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Filter by type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Types</SelectItem>
+                              <SelectItem value="images">
+                                <div className="flex items-center gap-2">
+                                  <FileImage className="h-4 w-4" />
+                                  Images
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="videos">
+                                <div className="flex items-center gap-2">
+                                  <FileVideo className="h-4 w-4" />
+                                  Videos
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Album Filter */}
+                        <div>
+                          <label className="text-sm font-medium mb-2 block">
+                            Album
+                          </label>
+                          <Select
+                            value={albumFilter}
+                            onValueChange={setAlbumFilter}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Filter by album" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Albums</SelectItem>
+                              <SelectItem value="no-album">No Album</SelectItem>
+                              {userAlbums.map((album) => (
+                                <SelectItem key={album.id} value={album.id}>
+                                  {album.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Date Range Filter */}
+                        <div>
+                          <label className="text-sm font-medium mb-2 block">
+                            Date Range
+                          </label>
+                          <Select
+                            value={dateRangeFilter}
+                            onValueChange={setDateRangeFilter}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Filter by date" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Time</SelectItem>
+                              <SelectItem value="today">Today</SelectItem>
+                              <SelectItem value="week">This Week</SelectItem>
+                              <SelectItem value="month">This Month</SelectItem>
+                              <SelectItem value="year">This Year</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Sort By */}
+                        <div>
+                          <label className="text-sm font-medium mb-2 block">
+                            Sort By
+                          </label>
+                          <Select value={sortBy} onValueChange={setSortBy}>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Sort by" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="newest">
+                                Newest First
+                              </SelectItem>
+                              <SelectItem value="oldest">
+                                Oldest First
+                              </SelectItem>
+                              <SelectItem value="name">Name (A-Z)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+
+            {/* Active Filters Display */}
+            {hasActiveFilters && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  Active filters:
+                </span>
+                {searchQuery && (
+                  <Badge
+                    variant="secondary"
+                    className="flex items-center gap-1"
+                  >
+                    Search: &quot;{searchQuery}&quot;
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => setSearchQuery("")}
+                    />
+                  </Badge>
+                )}
+                {statusFilter !== "all" && (
+                  <Badge
+                    variant="secondary"
+                    className="flex items-center gap-1"
+                  >
+                    Status: {statusFilter}
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => setStatusFilter("all")}
+                    />
+                  </Badge>
+                )}
+                {fileTypeFilter !== "all" && (
+                  <Badge
+                    variant="secondary"
+                    className="flex items-center gap-1"
+                  >
+                    Type: {fileTypeFilter}
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => setFileTypeFilter("all")}
+                    />
+                  </Badge>
+                )}
+                {albumFilter !== "all" && (
+                  <Badge
+                    variant="secondary"
+                    className="flex items-center gap-1"
+                  >
+                    Album:{" "}
+                    {albumFilter === "no-album"
+                      ? "No Album"
+                      : userAlbums.find((a) => a.id === albumFilter)?.name ||
+                        albumFilter}
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => setAlbumFilter("all")}
+                    />
+                  </Badge>
+                )}
+                {dateRangeFilter !== "all" && (
+                  <Badge
+                    variant="secondary"
+                    className="flex items-center gap-1"
+                  >
+                    Date: {dateRangeFilter}
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => setDateRangeFilter("all")}
+                    />
+                  </Badge>
+                )}
+                {sortBy !== "newest" && (
+                  <Badge
+                    variant="secondary"
+                    className="flex items-center gap-1"
+                  >
+                    Sort: {sortBy}
+                    <X
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => setSortBy("newest")}
+                    />
+                  </Badge>
+                )}
+              </div>
+            )}
           </div>
         )}
 
-      {/* Image Preview Modal */}
-      <ImagePreviewModal
-        isOpen={isPreviewOpen}
-        onClose={() => {
-          setIsPreviewOpen(false);
-          setIsEditMode(false);
-          setEditingCaption("");
-          // If we were viewing a temporary file (new upload), revoke the URL
-          if (selectedImage?.file && selectedImage?.url) {
-            URL.revokeObjectURL(selectedImage.url);
+        {(isLoading && userGallery.length === 0) ||
+        (albumsLoading && userAlbums.length === 0) ? (
+          <div className="flex items-center justify-center h-40">
+            <LoadingIcon className="size-8" />
+          </div>
+        ) : viewMode === "albums" ? (
+          <div className="flex h-[calc(100vh-200px)] bg-gray-50 rounded-lg overflow-hidden">
+            {/* Sidebar */}
+            <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
+              <div className="p-4 border-b border-gray-200 bg-yellow-50">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Media Library
+                </h2>
+              </div>
+              <div className="flex-1 p-4">
+                <div className="space-y-2">
+                  {selectedAlbum && (
+                    <div
+                      className="flex items-center gap-2 text-gray-600 hover:bg-gray-100 p-2 rounded cursor-pointer mb-2"
+                      onClick={handleBackToAllAlbums}
+                    >
+                      <span className="text-sm">← Back to Albums</span>
+                    </div>
+                  )}
+                  {!selectedAlbum && userAlbums.length > 0 ? (
+                    userAlbums.map((album) => (
+                      <div
+                        key={album.id}
+                        className="flex items-center gap-2 text-gray-700 hover:bg-yellow-50 p-2 rounded cursor-pointer"
+                        onClick={() => handleSidebarAlbumClick(album)}
+                      >
+                        <Folder className="w-4 h-4" />
+                        <span className="text-sm truncate max-w-[120px]">
+                          {album.name}
+                        </span>
+                        <span className="text-xs text-gray-400 ml-auto">
+                          {album.item_count}
+                        </span>
+                        <div
+                          className="flex items-center gap-1 ml-2"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            className="p-1 rounded hover:bg-gray-200"
+                            aria-label="Edit album"
+                            onClick={() => handleOpenEditAlbum(album)}
+                          >
+                            <Pencil className="w-4 h-4 text-gray-500" />
+                          </button>
+                          <button
+                            className="p-1 rounded hover:bg-gray-200"
+                            aria-label="Delete album"
+                            onClick={() => handleRequestDeleteAlbum(album)}
+                          >
+                            <Trash2 className="w-4 h-4 text-gray-500" />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : !selectedAlbum ? (
+                    <div className="text-gray-500 text-sm p-2">
+                      No albums yet
+                    </div>
+                  ) : null}
+                </div>
+                <div className="mt-6">
+                  <button
+                    onClick={() => setIsCreateAlbumModalOpen(true)}
+                    className="flex items-center gap-2 text-yellow-600 hover:text-yellow-700 text-sm font-medium"
+                  >
+                    <Plus className="w-4 h-4" />
+                    New Folder
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Main Content */}
+            <div className="flex-1 flex flex-col">
+              {/* Breadcrumb */}
+              <div className="p-4 bg-white border-b border-gray-200">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <span>Media Library</span>
+                  <span>›</span>
+                  {selectedAlbum ? (
+                    <>
+                      <span
+                        className="hover:text-gray-900 cursor-pointer"
+                        onClick={handleBackToAllAlbums}
+                      >
+                        Albums
+                      </span>
+                      <span>›</span>
+                      <span className="font-medium text-gray-900">
+                        {selectedAlbum.name}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="font-medium text-gray-900">Albums</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Content Area */}
+              <div className="flex-1 p-6">
+                {selectedAlbum ? (
+                  // Show album contents
+                  <div>
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h2 className="text-xl font-semibold text-gray-900">
+                          {selectedAlbum.name}
+                        </h2>
+                        {selectedAlbum.description && (
+                          <p className="text-gray-600 text-sm mt-1">
+                            {selectedAlbum.description}
+                          </p>
+                        )}
+                        <p className="text-gray-500 text-sm mt-1">
+                          {albumGallery.length} items
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          className="rounded-full"
+                          onClick={() => handleOpenEditAlbum(selectedAlbum)}
+                        >
+                          <Pencil className="w-4 h-4 mr-2" /> Edit
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          className="rounded-full"
+                          onClick={() =>
+                            handleRequestDeleteAlbum(selectedAlbum)
+                          }
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" /> Delete
+                        </Button>
+                      </div>
+                    </div>
+
+                    {albumGallery.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-64 text-center">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                          <ImageIcon className="w-8 h-8 text-gray-400" />
+                        </div>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                          No items in this album yet
+                        </h3>
+                        <p className="text-gray-500 text-sm">
+                          Upload images or videos to this album to see them here
+                        </p>
+                      </div>
+                    ) : (
+                      <GalleryGrid
+                        gallery={albumGallery}
+                        onImageClick={handlePreviewImage}
+                      />
+                    )}
+                  </div>
+                ) : userAlbums.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-center">
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      You have no album yet
+                    </h3>
+                    <button
+                      onClick={() => setIsCreateAlbumModalOpen(true)}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-black font-medium rounded-lg transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Create
+                    </button>
+                  </div>
+                ) : (
+                  <AlbumGrid
+                    albums={userAlbums}
+                    onAlbumClick={handleSidebarAlbumClick}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+        ) : viewMode === "table" ? (
+          <GalleryTable
+            data={filteredGallery}
+            onUserClick={handlePreviewImage}
+            deleteImage={handleDeleteImage}
+            previewImage={handlePreviewImage}
+            showSearchInput={false}
+          />
+        ) : (
+          <div className="mt-4">
+            <GalleryGrid
+              gallery={filteredGallery}
+              onImageClick={(image) => {
+                // Pass the image directly as the format is already correct
+                handlePreviewImage(image);
+              }}
+            />
+          </div>
+        )}
+
+        {/* Show a message when no results are found */}
+        {!isLoading &&
+          (viewMode === "grid" || viewMode === "table") &&
+          filteredGallery.length === 0 &&
+          userGallery.length > 0 && (
+            <div className="text-center py-10">
+              <p className="text-muted-foreground mb-4">
+                No items found matching your filters
+              </p>
+              <Button
+                variant="outline"
+                onClick={clearAllFilters}
+                className="rounded-full"
+              >
+                Clear All Filters
+              </Button>
+            </div>
+          )}
+
+        {/* Image Preview Modal */}
+        <ImagePreviewModal
+          isOpen={isPreviewOpen}
+          onClose={() => {
+            setIsPreviewOpen(false);
+            setIsEditMode(false);
+            setEditingCaption("");
+            // If we were viewing a temporary file (new upload), revoke the URL
+            if (selectedImage?.file && selectedImage?.url) {
+              URL.revokeObjectURL(selectedImage.url);
+            }
+          }}
+          imageUrl={selectedImage?.url || ""}
+          imageName={selectedImage?.name || ""}
+          captionValue={selectedImage?.file ? captionInput : editingCaption}
+          onCaptionChange={(value) => {
+            if (selectedImage?.file) {
+              setCaptionInput(value);
+            } else {
+              setEditingCaption(value);
+            }
+          }}
+          onConfirm={
+            selectedImage?.file
+              ? handleUploadConfirm
+              : isEditMode
+              ? handleSaveEdit
+              : () => setIsPreviewOpen(false)
           }
-        }}
-        imageUrl={selectedImage?.url || ""}
-        imageName={selectedImage?.name || ""}
-        captionValue={selectedImage?.file ? captionInput : editingCaption}
-        onCaptionChange={(value) => {
-          if (selectedImage?.file) {
-            setCaptionInput(value);
-          } else {
-            setEditingCaption(value);
+          onEdit={
+            selectedImage?.file
+              ? undefined
+              : isEditMode
+              ? handleCancelEdit
+              : handleEditImage
           }
-        }}
-        onConfirm={
-          selectedImage?.file
-            ? handleUploadConfirm
-            : isEditMode
-            ? handleSaveEdit
-            : () => setIsPreviewOpen(false)
-        }
-        onEdit={
-          selectedImage?.file
-            ? undefined
-            : isEditMode
-            ? handleCancelEdit
-            : handleEditImage
-        }
-        isLoading={isLoading}
-        showCaptionInput={!!selectedImage?.file || isEditMode}
-        showAlbumSelection={!!selectedImage?.file}
-        albums={userAlbums}
-        selectedAlbumId={selectedAlbumId}
-        onAlbumChange={setSelectedAlbumId}
-        editMode={isEditMode}
-        editButtonText={isEditMode ? "Cancel" : "Edit"}
-        confirmButtonText={
-          selectedImage?.file ? "Upload" : isEditMode ? "Save Changes" : "OK"
-        }
-      />
+          isLoading={isLoading}
+          showCaptionInput={!!selectedImage?.file || isEditMode}
+          showAlbumSelection={!!selectedImage?.file}
+          albums={userAlbums}
+          selectedAlbumId={selectedAlbumId}
+          onAlbumChange={setSelectedAlbumId}
+          editMode={isEditMode}
+          editButtonText={isEditMode ? "Cancel" : "Edit"}
+          confirmButtonText={
+            selectedImage?.file ? "Upload" : isEditMode ? "Save Changes" : "OK"
+          }
+        />
 
-      {/* DELETE CONFIRMATION DIALOG */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this image? This action cannot be
-              undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex justify-end gap-2 mt-4">
-            <Button
-              variant="destructive"
-              onClick={confirmDelete}
-              disabled={isDeletingImage}
-              className="rounded-full"
-            >
-              {isDeletingImage && <LoadingIcon className="mr-2" />}
-              Delete
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="rounded-full"
-              onClick={() => setIsDeleteDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        {/* DELETE CONFIRMATION DIALOG */}
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Confirm Deletion</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this image? This action cannot
+                be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex justify-end gap-2 mt-4">
+              <Button
+                variant="destructive"
+                onClick={confirmDelete}
+                disabled={isDeletingImage}
+                className="rounded-full"
+              >
+                {isDeletingImage && <LoadingIcon className="mr-2" />}
+                Delete
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-full"
+                onClick={() => setIsDeleteDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-      {/* DELETE ALBUM CONFIRMATION DIALOG */}
-      <Dialog
-        open={isDeleteAlbumDialogOpen}
-        onOpenChange={setIsDeleteAlbumDialogOpen}
-      >
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Delete Album</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete the album &quot;
-              {albumToDelete?.name}&quot;? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex justify-end gap-2 mt-4">
-            <Button
-              variant="destructive"
-              onClick={confirmDeleteAlbum}
-              disabled={isDeletingAlbum}
-              className="rounded-full"
-            >
-              {isDeletingAlbum && <LoadingIcon className="mr-2" />}
-              Delete
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="rounded-full"
-              onClick={() => setIsDeleteAlbumDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        {/* DELETE ALBUM CONFIRMATION DIALOG */}
+        <Dialog
+          open={isDeleteAlbumDialogOpen}
+          onOpenChange={setIsDeleteAlbumDialogOpen}
+        >
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Delete Album</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete the album &quot;
+                {albumToDelete?.name}&quot;? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex justify-end gap-2 mt-4">
+              <Button
+                variant="destructive"
+                onClick={confirmDeleteAlbum}
+                disabled={isDeletingAlbum}
+                className="rounded-full"
+              >
+                {isDeletingAlbum && <LoadingIcon className="mr-2" />}
+                Delete
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-full"
+                onClick={() => setIsDeleteAlbumDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-      {/* EDIT ALBUM MODAL */}
-      <EditAlbumModal
-        isOpen={isEditAlbumModalOpen}
-        onClose={() => setIsEditAlbumModalOpen(false)}
-        onConfirm={handleConfirmEditAlbum}
-        isLoading={albumsLoading}
-        defaultName={albumBeingEdited?.name || ""}
-        defaultDescription={albumBeingEdited?.description || ""}
-      />
+        {/* EDIT ALBUM MODAL */}
+        <EditAlbumModal
+          isOpen={isEditAlbumModalOpen}
+          onClose={() => setIsEditAlbumModalOpen(false)}
+          onConfirm={handleConfirmEditAlbum}
+          isLoading={albumsLoading}
+          defaultName={albumBeingEdited?.name || ""}
+          defaultDescription={albumBeingEdited?.description || ""}
+        />
 
-      {/* CREATE ALBUM MODAL */}
-      <CreateAlbumModal
-        isOpen={isCreateAlbumModalOpen}
-        onClose={() => setIsCreateAlbumModalOpen(false)}
-        onConfirm={handleCreateAlbum}
-        isLoading={albumsLoading}
-      />
+        {/* CREATE ALBUM MODAL */}
+        <CreateAlbumModal
+          isOpen={isCreateAlbumModalOpen}
+          onClose={() => setIsCreateAlbumModalOpen(false)}
+          onConfirm={handleCreateAlbum}
+          isLoading={albumsLoading}
+        />
 
-      {/* IMPORT FROM WEB MODAL */}
-      <ImportFromWebModal
-        isOpen={isImportModalOpen}
-        onClose={() => setIsImportModalOpen(false)}
-        onConfirm={handleImportFromWeb}
-        isLoading={isLoading}
-      />
-    </div>
+        {/* IMPORT FROM WEB MODAL */}
+        <ImportFromWebModal
+          isOpen={isImportModalOpen}
+          onClose={() => setIsImportModalOpen(false)}
+          onConfirm={handleImportFromWeb}
+          isLoading={isLoading}
+        />
+      </div>
+    </>
   );
 };
 

@@ -40,8 +40,6 @@ const PublisherSideBar = ({
     switch (href) {
       case "/publisher/notice-board-requests":
         return counts.noticeBoardRequests;
-      case "/publisher/event-requests":
-        return counts.eventRequests;
       case "/publisher/gallery-requests":
         return counts.galleryRequests;
       default:

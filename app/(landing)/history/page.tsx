@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import PageHeader from "@/components/page-header";
 import { dummyProfileImage } from "@/lib/constants";
 import {
@@ -8,6 +9,9 @@ import {
 } from "@/components/ui/accordion";
 import Image from "next/image";
 import React from "react";
+import { generatePageMetadata } from "@/lib/constants/metadata";
+
+export const metadata: Metadata = generatePageMetadata("history");
 
 const HistoryPage = () => {
   return (

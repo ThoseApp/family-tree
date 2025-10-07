@@ -1,5 +1,6 @@
 "use client";
 
+import ClientMetadata from "@/components/seo/client-metadata";
 import React, { useEffect, useState } from "react";
 import NewNoticeCard from "@/components/cards/new-notice-card";
 import NoticeBoardCard from "@/components/cards/notice-board-card";
@@ -164,136 +165,151 @@ const PublisherNoticeBoardPage = () => {
   );
 
   return (
-    <div className="flex flex-col gap-y-8 lg:gap-y-12">
-      {/* HEADER SECTION */}
-      <div className="flex md:items-center md:flex-row flex-col md:justify-between gap-y-4">
-        <div>
-          <h1 className="text-2xl font-semibold">Notice Board Management</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Create and manage family notice board posts. Your posts are
-            automatically approved.
-          </p>
-        </div>
-        <div className="flex items-center gap-4">
-          {/* Display Mode Toggle */}
-          <div className="flex items-center space-x-2">
-            <Button
-              variant={displayMode === "grid" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setDisplayMode("grid")}
-            >
-              <Grid className="h-4 w-4 mr-2" />
-              Grid
-            </Button>
-            <Button
-              variant={displayMode === "table" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setDisplayMode("table")}
-            >
-              <Table className="h-4 w-4 mr-2" />
-              Table
+    <>
+      <ClientMetadata
+        title="Manage Notice Board - Publisher Dashboard"
+        description="Create and manage family notice board posts. Publish announcements, news, and important family communications."
+        keywords={[
+          "publisher",
+          "notice board",
+          "announcements",
+          "content management",
+        ]}
+        noIndex={true}
+      />
+      <div className="flex flex-col gap-y-8 lg:gap-y-12">
+        {/* HEADER SECTION */}
+        <div className="flex md:items-center md:flex-row flex-col md:justify-between gap-y-4">
+          <div>
+            <h1 className="text-2xl font-semibold">Notice Board Management</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Create and manage family notice board posts. Your posts are
+              automatically approved.
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            {/* Display Mode Toggle */}
+            <div className="flex items-center space-x-2">
+              <Button
+                variant={displayMode === "grid" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setDisplayMode("grid")}
+              >
+                <Grid className="h-4 w-4 mr-2" />
+                Grid
+              </Button>
+              <Button
+                variant={displayMode === "table" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setDisplayMode("table")}
+              >
+                <Table className="h-4 w-4 mr-2" />
+                Table
+              </Button>
+            </div>
+
+            {/* Add Notice Button */}
+            <Button onClick={toggleNewNotice} id="add-notice-button">
+              <Plus className="mr-2 h-4 w-4" />
+              {newNotice ? "Hide Form" : "Add Notice"}
             </Button>
           </div>
-
-          {/* Add Notice Button */}
-          <Button onClick={toggleNewNotice} id="add-notice-button">
-            <Plus className="mr-2 h-4 w-4" />
-            {newNotice ? "Hide Form" : "Add Notice"}
-          </Button>
         </div>
-      </div>
 
-      {/* NEW NOTICE FORM */}
-      {newNotice && (
-        <div className="mb-8">
-          <NewNoticeCard
-            onClose={toggleNewNotice}
-            onSubmit={handleCreateNotice}
-            loading={loading}
-          />
-        </div>
-      )}
-
-      {/* SEARCH AND FILTERS SECTION */}
-      <NoticeBoardSearchFilters
-        noticeBoards={noticeBoards}
-        filters={filters}
-        onFiltersChange={setFilters}
-      />
-
-      {/* NOTICES DISPLAY */}
-      {loading && noticeBoards.length === 0 ? (
-        <div className="flex items-center justify-center h-40">
-          <LoadingIcon className="size-8" />
-        </div>
-      ) : (
-        <>
-          {displayMode === "grid" ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredNotices.map((notice) => (
-                <NoticeBoardCard
-                  key={notice.id}
-                  noticeBoard={notice}
-                  onEdit={() => handleEdit(notice)}
-                  onDelete={() => handleDeleteClick(notice.id)}
-                  onTogglePin={() => handlePinToggle(notice.id, notice.pinned)}
-                  showActions={true}
-                />
-              ))}
-            </div>
-          ) : (
-            <NoticeBoardTable
-              data={filteredNotices}
-              onEditClick={handleEdit}
-              onDeleteClick={handleDeleteClick}
-              onTogglePinClick={handlePinToggle}
-            />
-          )}
-        </>
-      )}
-
-      {/* DELETE CONFIRMATION DIALOG */}
-      <AlertDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              notice board post.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* EDIT DIALOG */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Edit Notice</DialogTitle>
-          </DialogHeader>
-          {selectedNoticeBoard && (
-            <NoticeBoardForm
-              defaultValues={selectedNoticeBoard}
+        {/* NEW NOTICE FORM */}
+        {newNotice && (
+          <div className="mb-8">
+            <NewNoticeCard
+              onClose={toggleNewNotice}
+              onSubmit={handleCreateNotice}
               loading={loading}
-              onSubmit={handleUpdate}
-              onCancel={() => setIsEditDialogOpen(false)}
             />
-          )}
-        </DialogContent>
-      </Dialog>
-    </div>
+          </div>
+        )}
+
+        {/* SEARCH AND FILTERS SECTION */}
+        <NoticeBoardSearchFilters
+          noticeBoards={noticeBoards}
+          filters={filters}
+          onFiltersChange={setFilters}
+        />
+
+        {/* NOTICES DISPLAY */}
+        {loading && noticeBoards.length === 0 ? (
+          <div className="flex items-center justify-center h-40">
+            <LoadingIcon className="size-8" />
+          </div>
+        ) : (
+          <>
+            {displayMode === "grid" ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredNotices.map((notice) => (
+                  <NoticeBoardCard
+                    key={notice.id}
+                    noticeBoard={notice}
+                    onEdit={() => handleEdit(notice)}
+                    onDelete={() => handleDeleteClick(notice.id)}
+                    onTogglePin={() =>
+                      handlePinToggle(notice.id, notice.pinned)
+                    }
+                    showActions={true}
+                  />
+                ))}
+              </div>
+            ) : (
+              <NoticeBoardTable
+                data={filteredNotices}
+                onEditClick={handleEdit}
+                onDeleteClick={handleDeleteClick}
+                onTogglePinClick={handlePinToggle}
+              />
+            )}
+          </>
+        )}
+
+        {/* DELETE CONFIRMATION DIALOG */}
+        <AlertDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the
+                notice board post.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDelete}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* EDIT DIALOG */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Edit Notice</DialogTitle>
+            </DialogHeader>
+            {selectedNoticeBoard && (
+              <NoticeBoardForm
+                defaultValues={selectedNoticeBoard}
+                loading={loading}
+                onSubmit={handleUpdate}
+                onCancel={() => setIsEditDialogOpen(false)}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
+    </>
   );
 };
 

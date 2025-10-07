@@ -1,5 +1,6 @@
 "use client";
 
+import ClientMetadata from "@/components/seo/client-metadata";
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import PageHeader from "@/components/page-header";
 import FamilyMemberCard from "@/components/cards/family-member-card";
@@ -240,280 +241,293 @@ const FamilyMembersPage = () => {
   // Render list is driven by filteredFamilyMembers so UI matches stats
 
   return (
-    <div className="pb-20">
-      <PageHeader
-        title="The Mosuro Family"
-        description="Get to know the amazing individuals that make up our family tree"
+    <>
+      <ClientMetadata
+        title="Family Members - Meet the Mosuro Family"
+        description="Meet all members of the Mosuro family. Browse profiles, learn about family members, and discover the people who make our family special."
+        keywords={["family members", "family profiles", "meet the family"]}
       />
+      <div className="pb-20">
+        <PageHeader
+          title="The Mosuro Family"
+          description="Get to know the amazing individuals that make up our family tree"
+        />
 
-      {/* Search and Filter Section */}
-      <div className="mb-8 space-y-4">
-        {/* Search Bar */}
-        <form
-          className="relative"
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSearch();
-          }}
-        >
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            placeholder="Search by name or unique ID..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            className="pl-10 pr-24 rounded-full"
-          />
-          <Button
-            type="submit"
-            size="sm"
-            className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full px-4"
-            aria-label="Search"
+        {/* Search and Filter Section */}
+        <div className="mb-8 space-y-4">
+          {/* Search Bar */}
+          <form
+            className="relative"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSearch();
+            }}
           >
-            Search
-          </Button>
-        </form>
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder="Search by name or unique ID..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="pl-10 pr-24 rounded-full"
+            />
+            <Button
+              type="submit"
+              size="sm"
+              className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full px-4"
+              aria-label="Search"
+            >
+              Search
+            </Button>
+          </form>
 
-        {/* Filters and Stats Row */}
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          {/* Filter Controls */}
-          <div className="flex flex-wrap gap-2 items-center">
-            {user && (
-              <Button
-                variant="default"
-                size="sm"
-                className="gap-2"
-                onClick={() => setIsRequestModalOpen(true)}
-              >
-                Add New Member
-              </Button>
-            )}
-            <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Filter className="h-4 w-4" />
-                  Filters
-                  {activeFiltersCount > 0 && (
-                    <Badge
-                      variant="secondary"
-                      className="h-5 w-5 p-0 flex items-center justify-center"
-                    >
-                      {activeFiltersCount}
+          {/* Filters and Stats Row */}
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            {/* Filter Controls */}
+            <div className="flex flex-wrap gap-2 items-center">
+              {user && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => setIsRequestModalOpen(true)}
+                >
+                  Add New Member
+                </Button>
+              )}
+              <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Filter className="h-4 w-4" />
+                    Filters
+                    {activeFiltersCount > 0 && (
+                      <Badge
+                        variant="secondary"
+                        className="h-5 w-5 p-0 flex items-center justify-center"
+                      >
+                        {activeFiltersCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80" align="start">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-semibold">Filter Family Members</h4>
+                      {hasActiveFilters && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={clearAllFilters}
+                          className="text-xs"
+                        >
+                          Clear All
+                        </Button>
+                      )}
+                    </div>
+
+                    <div className="space-y-3">
+                      {/* Gender Filter */}
+                      <div>
+                        <label className="text-sm font-medium">Gender</label>
+                        <Select
+                          value={genderFilter}
+                          onValueChange={setGenderFilter}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="All Genders" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Genders</SelectItem>
+                            <SelectItem value="Male">Male</SelectItem>
+                            <SelectItem value="Female">Female</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Age Filter */}
+                      <div>
+                        <label className="text-sm font-medium">Age Group</label>
+                        <Select value={ageFilter} onValueChange={setAgeFilter}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="All Ages" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Ages</SelectItem>
+                            <SelectItem value="0-18">0-18 years</SelectItem>
+                            <SelectItem value="19-35">19-35 years</SelectItem>
+                            <SelectItem value="36-55">36-55 years</SelectItem>
+                            <SelectItem value="56+">56+ years</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Sort By */}
+                      <div>
+                        <label className="text-sm font-medium">Sort By</label>
+                        <Select value={sortBy} onValueChange={setSortBy}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Sort by Name" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="name">Name (A-Z)</SelectItem>
+                            <SelectItem value="age">
+                              Age (Youngest First)
+                            </SelectItem>
+                            <SelectItem value="gender">Gender</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              {/* Active Filters Display */}
+              {hasActiveFilters && (
+                <div className="flex flex-wrap gap-1">
+                  {appliedSearch && (
+                    <Badge variant="secondary" className="gap-1">
+                      Search: &quot;{appliedSearch}&quot;
+                      <X
+                        className="h-3 w-3 cursor-pointer"
+                        onClick={() => {
+                          setSearchInput("");
+                          setAppliedSearch("");
+                        }}
+                      />
                     </Badge>
                   )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80" align="start">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-semibold">Filter Family Members</h4>
-                    {hasActiveFilters && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={clearAllFilters}
-                        className="text-xs"
-                      >
-                        Clear All
-                      </Button>
-                    )}
-                  </div>
-
-                  <div className="space-y-3">
-                    {/* Gender Filter */}
-                    <div>
-                      <label className="text-sm font-medium">Gender</label>
-                      <Select
-                        value={genderFilter}
-                        onValueChange={setGenderFilter}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="All Genders" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Genders</SelectItem>
-                          <SelectItem value="Male">Male</SelectItem>
-                          <SelectItem value="Female">Female</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Age Filter */}
-                    <div>
-                      <label className="text-sm font-medium">Age Group</label>
-                      <Select value={ageFilter} onValueChange={setAgeFilter}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="All Ages" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All Ages</SelectItem>
-                          <SelectItem value="0-18">0-18 years</SelectItem>
-                          <SelectItem value="19-35">19-35 years</SelectItem>
-                          <SelectItem value="36-55">36-55 years</SelectItem>
-                          <SelectItem value="56+">56+ years</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Sort By */}
-                    <div>
-                      <label className="text-sm font-medium">Sort By</label>
-                      <Select value={sortBy} onValueChange={setSortBy}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Sort by Name" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="name">Name (A-Z)</SelectItem>
-                          <SelectItem value="age">
-                            Age (Youngest First)
-                          </SelectItem>
-                          <SelectItem value="gender">Gender</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
+                  {genderFilter !== "all" && (
+                    <Badge variant="secondary" className="gap-1">
+                      {genderFilter}
+                      <X
+                        className="h-3 w-3 cursor-pointer"
+                        onClick={() => setGenderFilter("all")}
+                      />
+                    </Badge>
+                  )}
+                  {ageFilter !== "all" && (
+                    <Badge variant="secondary" className="gap-1">
+                      Age: {ageFilter}
+                      <X
+                        className="h-3 w-3 cursor-pointer"
+                        onClick={() => setAgeFilter("all")}
+                      />
+                    </Badge>
+                  )}
                 </div>
-              </PopoverContent>
-            </Popover>
+              )}
+            </div>
 
-            {/* Active Filters Display */}
-            {hasActiveFilters && (
-              <div className="flex flex-wrap gap-1">
-                {appliedSearch && (
-                  <Badge variant="secondary" className="gap-1">
-                    Search: &quot;{appliedSearch}&quot;
-                    <X
-                      className="h-3 w-3 cursor-pointer"
-                      onClick={() => {
-                        setSearchInput("");
-                        setAppliedSearch("");
-                      }}
-                    />
-                  </Badge>
-                )}
-                {genderFilter !== "all" && (
-                  <Badge variant="secondary" className="gap-1">
-                    {genderFilter}
-                    <X
-                      className="h-3 w-3 cursor-pointer"
-                      onClick={() => setGenderFilter("all")}
-                    />
-                  </Badge>
-                )}
-                {ageFilter !== "all" && (
-                  <Badge variant="secondary" className="gap-1">
-                    Age: {ageFilter}
-                    <X
-                      className="h-3 w-3 cursor-pointer"
-                      onClick={() => setAgeFilter("all")}
-                    />
-                  </Badge>
-                )}
+            {/* Stats */}
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <Users className="h-4 w-4" />
+                <span>
+                  {stats.total} {hasActiveFilters && `of ${stats.totalAll}`}{" "}
+                  members
+                </span>
               </div>
-            )}
-          </div>
-
-          {/* Stats */}
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <Users className="h-4 w-4" />
-              <span>
-                {stats.total} {hasActiveFilters && `of ${stats.totalAll}`}{" "}
-                members
-              </span>
+              <span>♂ {stats.male}</span>
+              <span>♀ {stats.female}</span>
             </div>
-            <span>♂ {stats.male}</span>
-            <span>♀ {stats.female}</span>
           </div>
         </div>
-      </div>
 
-      {/* Loading State */}
-      {isLoading && (
-        <div className="flex justify-center items-center py-20">
-          <LoadingIcon />
-        </div>
-      )}
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex justify-center items-center py-20">
+            <LoadingIcon />
+          </div>
+        )}
 
-      {/* Searching State (server-side search) */}
-      {isSearching && (
-        <div className="flex justify-center items-center py-20">
-          <LoadingIcon />
-        </div>
-      )}
+        {/* Searching State (server-side search) */}
+        {isSearching && (
+          <div className="flex justify-center items-center py-20">
+            <LoadingIcon />
+          </div>
+        )}
 
-      {/* Error State */}
-      {error && (
-        <Card className="border-destructive">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-destructive">Failed to load family members</p>
-              <Button
-                variant="outline"
-                onClick={fetchFamilyMembers}
-                className="mt-4"
-              >
-                Try Again
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Empty State */}
-      {!isLoading && !error && familyMembers.length === 0 && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center py-12">
-              <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No Family Members</h3>
-              <p className="text-muted-foreground">
-                Family member data will appear here once it&apos;s been added.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* No Results State */}
-      {!isLoading &&
-        !isSearching &&
-        !error &&
-        familyMembers.length > 0 &&
-        filteredFamilyMembers.length === 0 && (
-          <Card>
+        {/* Error State */}
+        {error && (
+          <Card className="border-destructive">
             <CardContent className="pt-6">
-              <div className="text-center py-12">
-                <Search className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No Results Found</h3>
-                <p className="text-muted-foreground mb-4">
-                  Try adjusting your search or filters to find family members.
+              <div className="text-center">
+                <p className="text-destructive">
+                  Failed to load family members
                 </p>
-                <Button variant="outline" onClick={clearAllFilters}>
-                  Clear All Filters
+                <Button
+                  variant="outline"
+                  onClick={fetchFamilyMembers}
+                  className="mt-4"
+                >
+                  Try Again
                 </Button>
               </div>
             </CardContent>
           </Card>
         )}
 
-      {/* Family Members Grid */}
-      {!isLoading &&
-        !isSearching &&
-        !error &&
-        filteredFamilyMembers.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-8">
-            {[...filteredFamilyMembers].map((member) => (
-              <FamilyMemberCard key={member.id} member={member} />
-            ))}
-          </div>
+        {/* Empty State */}
+        {!isLoading && !error && familyMembers.length === 0 && (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center py-12">
+                <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">
+                  No Family Members
+                </h3>
+                <p className="text-muted-foreground">
+                  Family member data will appear here once it&apos;s been added.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
-      <FamilyMemberRequestModal
-        isOpen={isRequestModalOpen}
-        onClose={() => setIsRequestModalOpen(false)}
-        onSuccess={handleRequestSuccess}
-      />
-    </div>
+        {/* No Results State */}
+        {!isLoading &&
+          !isSearching &&
+          !error &&
+          familyMembers.length > 0 &&
+          filteredFamilyMembers.length === 0 && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center py-12">
+                  <Search className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">
+                    No Results Found
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    Try adjusting your search or filters to find family members.
+                  </p>
+                  <Button variant="outline" onClick={clearAllFilters}>
+                    Clear All Filters
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+        {/* Family Members Grid */}
+        {!isLoading &&
+          !isSearching &&
+          !error &&
+          filteredFamilyMembers.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-8">
+              {[...filteredFamilyMembers].map((member) => (
+                <FamilyMemberCard key={member.id} member={member} />
+              ))}
+            </div>
+          )}
+
+        <FamilyMemberRequestModal
+          isOpen={isRequestModalOpen}
+          onClose={() => setIsRequestModalOpen(false)}
+          onSuccess={handleRequestSuccess}
+        />
+      </div>
+    </>
   );
 };
 

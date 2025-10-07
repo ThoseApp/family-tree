@@ -27,7 +27,10 @@ import {
   FileText,
   Shield,
   ImageIcon,
+  Crown,
   User,
+  Mail,
+  Bell,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -371,6 +374,608 @@ export const helpTopicsData: HelpTopic[] = [
       "Search results will show the most relevant matches first",
     ],
   },
+  {
+    id: "uploading-pictures",
+    title: "Uploading Pictures",
+    description:
+      "Upload family photos to share memories with your family. All uploads require admin approval.",
+    icon: Upload,
+    color: "text-green-600",
+    userType: "user",
+    requiresApproval: true,
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Navigate to Gallery",
+        description: "Go to the Gallery section from your dashboard menu.",
+      },
+      {
+        stepNumber: 2,
+        title: "Click Upload Button",
+        description:
+          "Look for the 'Upload' or 'Add Photos' button in the gallery interface.",
+      },
+      {
+        stepNumber: 3,
+        title: "Select Photos",
+        description: "Choose photos from your device to upload.",
+        subSteps: [
+          {
+            label: "File Types",
+            description: "Supported formats: JPEG, PNG, WebP",
+          },
+          {
+            label: "File Size",
+            description: "Maximum file size: 10MB per photo",
+          },
+          {
+            label: "Multiple Selection",
+            description: "You can select multiple photos at once",
+          },
+        ],
+      },
+      {
+        stepNumber: 4,
+        title: "Add Captions and Details",
+        description:
+          "Provide meaningful captions and organize photos into albums.",
+        subSteps: [
+          {
+            label: "Descriptive Captions",
+            description: "Add context about when and where the photo was taken",
+          },
+          {
+            label: "Album Selection",
+            description: "Choose an existing album or create a new one",
+          },
+          {
+            label: "Privacy Settings",
+            description: "Set appropriate privacy levels for your photos",
+          },
+        ],
+      },
+      {
+        stepNumber: 5,
+        title: "Submit for Approval",
+        description: "Submit your photos for admin review and approval.",
+      },
+    ],
+    actionButtons: [
+      { label: "Go to Gallery", href: "/dashboard/gallery" },
+      {
+        label: "View Upload Guidelines",
+        href: "/dashboard/help",
+        variant: "outline",
+      },
+    ],
+    tips: [
+      "Use high-quality photos for better viewing experience",
+      "Add descriptive captions to help family members understand the context",
+      "Group related photos into albums for better organization",
+      "Be patient - approval may take some time",
+    ],
+    warnings: [
+      "Only upload photos you have permission to share",
+      "Ensure photos are family-appropriate",
+      "Large files may take longer to upload",
+    ],
+  },
+  {
+    id: "creating-events",
+    title: "Creating Events",
+    description:
+      "Create family gatherings, birthdays, and important dates to keep everyone informed.",
+    icon: Calendar,
+    color: "text-purple-600",
+    userType: "user",
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Navigate to Events",
+        description: "Access the Events section from your dashboard menu.",
+      },
+      {
+        stepNumber: 2,
+        title: "Click Create Event",
+        description: "Look for the 'Create Event' or 'Add New Event' button.",
+      },
+      {
+        stepNumber: 3,
+        title: "Fill Event Details",
+        description: "Provide comprehensive information about your event.",
+        subSteps: [
+          {
+            label: "Event Title",
+            description: "Choose a clear, descriptive title",
+          },
+          {
+            label: "Date and Time",
+            description: "Set the event date, start time, and duration",
+          },
+          {
+            label: "Location",
+            description: "Specify where the event will take place",
+          },
+          {
+            label: "Description",
+            description: "Add details about what to expect",
+          },
+        ],
+      },
+      {
+        stepNumber: 4,
+        title: "Set Event Options",
+        description: "Configure event settings and privacy options.",
+        subSteps: [
+          {
+            label: "Privacy Level",
+            description: "Choose who can see and attend the event",
+          },
+          {
+            label: "RSVP Settings",
+            description: "Enable or disable RSVP tracking",
+          },
+          {
+            label: "Reminders",
+            description: "Set up automatic reminders for attendees",
+          },
+        ],
+      },
+      {
+        stepNumber: 5,
+        title: "Invite Family Members",
+        description: "Select family members to invite to your event.",
+      },
+    ],
+    actionButtons: [
+      { label: "Go to Events", href: "/dashboard/events" },
+      {
+        label: "View My Events",
+        href: "/dashboard/events",
+        variant: "outline",
+      },
+    ],
+    tips: [
+      "Include all important details in the description",
+      "Set reminders to help family members remember",
+      "Consider time zones if family is spread across different locations",
+      "Update event details if plans change",
+    ],
+  },
+  {
+    id: "accepting-invitations",
+    title: "Accepting Invitations",
+    description:
+      "Manage event invitations and family member requests you've received.",
+    icon: Mail,
+    color: "text-orange-600",
+    userType: "user",
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Navigate to Invitations",
+        description: "Access the Invitations section from your dashboard menu.",
+      },
+      {
+        stepNumber: 2,
+        title: "Review Pending Invitations",
+        description: "Check all pending invitations and requests.",
+        subSteps: [
+          {
+            label: "Event Invitations",
+            description: "Family events you've been invited to attend",
+          },
+          {
+            label: "Family Member Requests",
+            description: "Requests to connect with new family members",
+          },
+          {
+            label: "Group Invitations",
+            description: "Invitations to join family groups or circles",
+          },
+        ],
+      },
+      {
+        stepNumber: 3,
+        title: "Review Invitation Details",
+        description:
+          "Click on invitations to see full details before responding.",
+      },
+      {
+        stepNumber: 4,
+        title: "Respond to Invitations",
+        description: "Accept, decline, or request more information.",
+        subSteps: [
+          {
+            label: "Accept",
+            description: "Confirm your attendance or agreement",
+          },
+          {
+            label: "Decline",
+            description: "Politely decline with optional message",
+          },
+          {
+            label: "Maybe/Tentative",
+            description: "Indicate uncertainty about attendance",
+          },
+        ],
+      },
+    ],
+    actionButtons: [
+      { label: "Go to Invitations", href: "/dashboard/invitations" },
+      { label: "View Events", href: "/dashboard/events", variant: "outline" },
+    ],
+    tips: [
+      "Respond to invitations promptly to help organizers plan",
+      "Add events to your calendar after accepting",
+      "Communicate any dietary restrictions or special needs",
+      "Update your response if your availability changes",
+    ],
+  },
+  {
+    id: "adding-notices",
+    title: "Adding Notices",
+    description:
+      "Post important announcements and updates for your family to see.",
+    icon: Bell,
+    color: "text-red-600",
+    userType: "user",
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Navigate to Notice Board",
+        description:
+          "Access the Notice Board section from your dashboard menu.",
+      },
+      {
+        stepNumber: 2,
+        title: "Click Add Notice",
+        description:
+          "Look for the 'Add Notice' or 'Create Announcement' button.",
+      },
+      {
+        stepNumber: 3,
+        title: "Write Your Notice",
+        description: "Create a clear and informative announcement.",
+        subSteps: [
+          {
+            label: "Title",
+            description: "Write a clear, attention-grabbing headline",
+          },
+          {
+            label: "Content",
+            description: "Provide all necessary details and information",
+          },
+          {
+            label: "Priority Level",
+            description: "Set importance level (urgent, normal, low)",
+          },
+          {
+            label: "Expiration Date",
+            description: "Set when the notice should be archived",
+          },
+        ],
+      },
+      {
+        stepNumber: 4,
+        title: "Set Visibility Options",
+        description: "Choose who can see your notice.",
+        subSteps: [
+          {
+            label: "All Family",
+            description: "Visible to all family members",
+          },
+          {
+            label: "Specific Groups",
+            description: "Limit to certain family branches or groups",
+          },
+          {
+            label: "Adults Only",
+            description: "Restrict to adult family members",
+          },
+        ],
+      },
+      {
+        stepNumber: 5,
+        title: "Submit for Review",
+        description:
+          "Submit your notice for publisher/admin approval if required.",
+      },
+    ],
+    actionButtons: [
+      { label: "Go to Notice Board", href: "/dashboard/notice-board" },
+      { label: "View Guidelines", href: "/dashboard/help", variant: "outline" },
+    ],
+    tips: [
+      "Keep notices concise but informative",
+      "Use appropriate priority levels to avoid notice fatigue",
+      "Include contact information if responses are needed",
+      "Proofread before submitting",
+    ],
+    warnings: [
+      "Avoid sharing sensitive personal information",
+      "Respect family privacy and boundaries",
+      "Follow community guidelines for appropriate content",
+    ],
+  },
+  {
+    id: "notice-board",
+    title: "Notice Board",
+    description:
+      "Stay updated with family announcements, news, and important information.",
+    icon: FileText,
+    color: "text-indigo-600",
+    userType: "user",
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Access Notice Board",
+        description: "Navigate to the Notice Board from your dashboard menu.",
+      },
+      {
+        stepNumber: 2,
+        title: "Browse Current Notices",
+        description: "Review all active family announcements and updates.",
+        subSteps: [
+          {
+            label: "Recent Notices",
+            description: "See the latest announcements at the top",
+          },
+          {
+            label: "Priority Notices",
+            description: "Important or urgent notices are highlighted",
+          },
+          {
+            label: "Categories",
+            description: "Filter notices by type or category",
+          },
+        ],
+      },
+      {
+        stepNumber: 3,
+        title: "Interact with Notices",
+        description: "Engage with family announcements appropriately.",
+        subSteps: [
+          {
+            label: "Read Full Details",
+            description: "Click on notices to see complete information",
+          },
+          {
+            label: "React or Comment",
+            description: "Show support or ask questions if enabled",
+          },
+          {
+            label: "Share or Forward",
+            description: "Share important notices with other family members",
+          },
+        ],
+      },
+      {
+        stepNumber: 4,
+        title: "Manage Your Notices",
+        description: "Keep track of notices you've posted or are following.",
+      },
+    ],
+    actionButtons: [
+      { label: "Go to Notice Board", href: "/dashboard/notice-board" },
+      {
+        label: "Add New Notice",
+        href: "/dashboard/notice-board",
+        variant: "outline",
+      },
+    ],
+    tips: [
+      "Check the notice board regularly for important updates",
+      "Use filters to find specific types of announcements",
+      "Set up notifications for high-priority notices",
+      "Archive or dismiss notices you've read",
+    ],
+  },
+  {
+    id: "gallery",
+    title: "Gallery",
+    description:
+      "Browse, view, and manage family photos and albums shared by family members.",
+    icon: ImageIcon,
+    color: "text-teal-600",
+    userType: "user",
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Access Gallery",
+        description:
+          "Navigate to the Gallery section from your dashboard menu.",
+      },
+      {
+        stepNumber: 2,
+        title: "Browse Photos and Albums",
+        description: "Explore family photos organized in various ways.",
+        subSteps: [
+          {
+            label: "Recent Photos",
+            description: "View the latest uploaded family photos",
+          },
+          {
+            label: "Albums",
+            description: "Browse photos organized by events or themes",
+          },
+          {
+            label: "Family Members",
+            description: "Find photos featuring specific family members",
+          },
+          {
+            label: "Timeline View",
+            description: "See photos organized chronologically",
+          },
+        ],
+      },
+      {
+        stepNumber: 3,
+        title: "View and Interact",
+        description: "Engage with family photos and memories.",
+        subSteps: [
+          {
+            label: "Full-Size Viewing",
+            description: "Click photos to see them in full resolution",
+          },
+          {
+            label: "Photo Details",
+            description: "Read captions, dates, and location information",
+          },
+          {
+            label: "Comments and Reactions",
+            description: "Share memories and reactions to photos",
+          },
+          {
+            label: "Download or Share",
+            description: "Save photos or share them with others",
+          },
+        ],
+      },
+      {
+        stepNumber: 4,
+        title: "Organize Your View",
+        description: "Customize how you browse and view family photos.",
+        subSteps: [
+          {
+            label: "Search Photos",
+            description: "Find specific photos using search filters",
+          },
+          {
+            label: "Sort Options",
+            description: "Sort by date, popularity, or family member",
+          },
+          {
+            label: "Create Collections",
+            description: "Save favorite photos to personal collections",
+          },
+        ],
+      },
+    ],
+    actionButtons: [
+      { label: "Go to Gallery", href: "/dashboard/gallery" },
+      {
+        label: "Upload Photos",
+        href: "/dashboard/gallery",
+        variant: "outline",
+      },
+    ],
+    tips: [
+      "Use search filters to quickly find specific photos",
+      "Create collections of your favorite family memories",
+      "Add meaningful comments to share your memories",
+      "Download important photos for personal backup",
+    ],
+  },
+  {
+    id: "settings",
+    title: "Settings",
+    description:
+      "Manage your account preferences, privacy settings, and notification options.",
+    icon: Settings,
+    color: "text-cyan-600",
+    userType: "user",
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Access Settings",
+        description:
+          "Navigate to Settings from your dashboard menu or profile.",
+      },
+      {
+        stepNumber: 2,
+        title: "Account Information",
+        description: "Update your personal information and account details.",
+        subSteps: [
+          {
+            label: "Profile Details",
+            description: "Update name, email, phone, and other personal info",
+          },
+          {
+            label: "Profile Photo",
+            description: "Upload or change your profile picture",
+          },
+          {
+            label: "Bio and About",
+            description: "Add or update your personal description",
+          },
+        ],
+      },
+      {
+        stepNumber: 3,
+        title: "Privacy Settings",
+        description: "Control who can see your information and activities.",
+        subSteps: [
+          {
+            label: "Profile Visibility",
+            description: "Choose who can view your profile information",
+          },
+          {
+            label: "Activity Sharing",
+            description: "Control what activities are visible to others",
+          },
+          {
+            label: "Contact Information",
+            description: "Set privacy levels for your contact details",
+          },
+        ],
+      },
+      {
+        stepNumber: 4,
+        title: "Notification Preferences",
+        description: "Customize how and when you receive notifications.",
+        subSteps: [
+          {
+            label: "Email Notifications",
+            description: "Choose which events trigger email alerts",
+          },
+          {
+            label: "Push Notifications",
+            description: "Configure mobile and browser notifications",
+          },
+          {
+            label: "Frequency Settings",
+            description: "Set how often you receive notification summaries",
+          },
+        ],
+      },
+      {
+        stepNumber: 5,
+        title: "Security Settings",
+        description: "Manage password and account security options.",
+        subSteps: [
+          {
+            label: "Change Password",
+            description: "Update your account password regularly",
+          },
+          {
+            label: "Two-Factor Authentication",
+            description: "Enable additional security for your account",
+          },
+          {
+            label: "Login History",
+            description: "Review recent account access and activity",
+          },
+        ],
+      },
+    ],
+    actionButtons: [
+      { label: "Go to Settings", href: "/dashboard/settings" },
+      { label: "View Profile", href: "/dashboard/profile", variant: "outline" },
+    ],
+    tips: [
+      "Review your privacy settings regularly",
+      "Use strong passwords and enable two-factor authentication",
+      "Keep your contact information up to date",
+      "Customize notifications to avoid information overload",
+    ],
+    warnings: [
+      "Be careful when changing email addresses as it affects login",
+      "Always log out from shared or public devices",
+      "Some privacy changes may affect how family members can contact you",
+      "Backup important information before making major changes",
+    ],
+  },
 
   // PUBLISHERS
   {
@@ -470,52 +1075,254 @@ export const helpTopicsData: HelpTopic[] = [
       },
     ],
   },
+
+  // PUBLISHERS
   {
-    id: "managing-events",
-    title: "Managing Events",
+    id: "notice-board-requests",
+    title: "Notice Board Requests",
     description:
-      "Create and manage family events, and handle event invitations.",
-    icon: Calendar,
+      "Review and manage notice board requests from family members before they go to admin approval.",
+    icon: Clock,
+    color: "text-green-600",
+    userType: "publisher",
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Navigate to Notice Board Requests",
+        description:
+          "Access Notice Board Requests via the side menu in your publisher dashboard.",
+      },
+      {
+        stepNumber: 2,
+        title: "Review Pending Requests",
+        description:
+          "View all pending notice board submissions from family members. Each request shows the title, content, and submitter information.",
+      },
+      {
+        stepNumber: 3,
+        title: "Approve or Decline Requests",
+        description:
+          "Use the action buttons to approve or decline requests based on content appropriateness and family guidelines.",
+        subSteps: [
+          {
+            label: "Approve",
+            description: "Approved requests move to admin review queue",
+          },
+          {
+            label: "Decline",
+            description:
+              "Declined requests are removed and submitter is notified",
+          },
+        ],
+      },
+      {
+        stepNumber: 4,
+        title: "Monitor Real-time Updates",
+        description:
+          "The page automatically updates when new requests are submitted, so you can stay on top of pending content.",
+      },
+    ],
+    actionButtons: [
+      {
+        label: "Go to Notice Board Requests",
+        href: "/publisher/notice-board-requests",
+      },
+      {
+        label: "View Notice Board",
+        href: "/publisher/notice-board",
+        variant: "outline",
+      },
+    ],
+    tips: [
+      "Review content for appropriateness and family-friendly language",
+      "Check for accuracy of information before approving",
+      "Provide feedback to family members when declining requests",
+      "Monitor the requests regularly to maintain good content flow",
+    ],
+  },
+  {
+    id: "photo-guidelines",
+    title: "Photo Guidelines",
+    description:
+      "Best practices for uploading and managing family photos to ensure quality and appropriateness.",
+    icon: ImageIcon,
     color: "text-teal-600",
     userType: "publisher",
     steps: [
       {
         stepNumber: 1,
-        title: "Navigate to Events",
+        title: "Photo Quality Standards",
         description:
-          "Access the Events section via the side menu in your publisher dashboard.",
+          "Ensure photos meet quality standards for the family gallery.",
+        subSteps: [
+          {
+            label: "Resolution",
+            description:
+              "Upload high-resolution images (minimum 800x600 pixels)",
+          },
+          {
+            label: "Format",
+            description: "Use common formats: JPEG, PNG, or WebP",
+          },
+          {
+            label: "File Size",
+            description: "Keep files under 10MB for optimal loading",
+          },
+        ],
       },
       {
         stepNumber: 2,
-        title: "Add New Event",
+        title: "Content Appropriateness",
         description:
-          "To create a new event, click 'Add New Event' and enter all event details including date, time, and description.",
+          "Review photos for family-appropriate content before uploading.",
+        subSteps: [
+          {
+            label: "Family-Friendly",
+            description:
+              "Ensure all content is appropriate for all family members",
+          },
+          {
+            label: "Privacy",
+            description: "Respect privacy preferences of family members",
+          },
+          {
+            label: "Consent",
+            description: "Ensure you have permission to share photos of others",
+          },
+        ],
       },
       {
         stepNumber: 3,
-        title: "Invite Family Members",
-        description:
-          "To invite family members to your event, enter their names and click invite.",
-      },
-      {
-        stepNumber: 4,
-        title: "Manage Invitations",
-        description:
-          "To view your invitations and RSVP to events, navigate to the invitations tab.",
+        title: "Organization and Captions",
+        description: "Properly organize and caption photos for easy discovery.",
+        subSteps: [
+          {
+            label: "Descriptive Captions",
+            description: "Add meaningful captions with context and dates",
+          },
+          {
+            label: "Album Organization",
+            description: "Group related photos into appropriate albums",
+          },
+          {
+            label: "Tagging",
+            description: "Tag family members when appropriate",
+          },
+        ],
       },
     ],
     actionButtons: [
-      { label: "Go to Events", href: "/publisher/events" },
+      { label: "Go to Gallery", href: "/publisher/gallery" },
       {
-        label: "View Invitations",
-        href: "/publisher/invitations",
+        label: "Gallery Requests",
+        href: "/publisher/gallery-requests",
         variant: "outline",
       },
     ],
     tips: [
-      "Include detailed event information to help family members plan",
-      "Send invitations well in advance for better attendance",
-      "Follow up on RSVPs closer to the event date",
+      "Always preview photos before uploading to check quality",
+      "Use descriptive filenames to help with organization",
+      "Consider creating themed albums for special events",
+      "Regularly review and organize existing photos",
+    ],
+    warnings: [
+      "Do not upload copyrighted images without permission",
+      "Avoid uploading blurry or low-quality photos",
+      "Respect family members who prefer not to be photographed",
+    ],
+  },
+  {
+    id: "publisher-settings",
+    title: "Publisher Settings",
+    description:
+      "Manage your publisher account preferences, notifications, and privacy settings.",
+    icon: Settings,
+    color: "text-cyan-600",
+    userType: "publisher",
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Access Settings",
+        description:
+          "Navigate to Settings via the side menu in your publisher dashboard.",
+      },
+      {
+        stepNumber: 2,
+        title: "Account Preferences",
+        description: "Configure your account settings and preferences.",
+        subSteps: [
+          {
+            label: "Profile Information",
+            description: "Update your name, email, and contact information",
+          },
+          {
+            label: "Password Security",
+            description:
+              "Change your password and enable two-factor authentication",
+          },
+          {
+            label: "Display Preferences",
+            description: "Customize how content appears in your dashboard",
+          },
+        ],
+      },
+      {
+        stepNumber: 3,
+        title: "Notification Settings",
+        description: "Control how and when you receive notifications.",
+        subSteps: [
+          {
+            label: "Email Notifications",
+            description: "Choose which events trigger email notifications",
+          },
+          {
+            label: "In-App Notifications",
+            description: "Configure dashboard notification preferences",
+          },
+          {
+            label: "Frequency Settings",
+            description: "Set how often you receive notification summaries",
+          },
+        ],
+      },
+      {
+        stepNumber: 4,
+        title: "Privacy Controls",
+        description: "Manage your privacy and visibility settings.",
+        subSteps: [
+          {
+            label: "Profile Visibility",
+            description: "Control who can see your publisher profile",
+          },
+          {
+            label: "Activity Tracking",
+            description: "Choose what activities are visible to others",
+          },
+          {
+            label: "Data Preferences",
+            description: "Manage how your data is used and stored",
+          },
+        ],
+      },
+    ],
+    actionButtons: [
+      { label: "Go to Settings", href: "/publisher/settings" },
+      {
+        label: "View Profile",
+        href: "/publisher/profile",
+        variant: "outline",
+      },
+    ],
+    tips: [
+      "Regularly review and update your notification preferences",
+      "Use strong passwords and enable two-factor authentication",
+      "Keep your contact information up to date",
+      "Review privacy settings periodically",
+    ],
+    warnings: [
+      "Be cautious when changing email addresses as it affects login",
+      "Always log out from shared devices after changing settings",
+      "Some settings changes may require admin approval",
     ],
   },
 
@@ -695,6 +1502,130 @@ export const helpTopicsData: HelpTopic[] = [
         href: "/admin/gallery-requests",
         variant: "outline",
       },
+    ],
+  },
+  {
+    id: "admin-management",
+    title: "Admin Management",
+    description:
+      "Manage administrator accounts and permissions. Control who has full system access and administrative privileges.",
+    icon: Crown,
+    color: "text-purple-600",
+    userType: "admin",
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Navigate to Admin Management",
+        description:
+          "Access Admin Management via the side menu in your admin dashboard.",
+      },
+      {
+        stepNumber: 2,
+        title: "View Current Administrators",
+        description:
+          "Review the list of current administrators and their account details.",
+        subSteps: [
+          {
+            label: "Admin Status",
+            description: "See who currently has admin privileges",
+          },
+          {
+            label: "Account Information",
+            description: "View admin names, emails, and join dates",
+          },
+          {
+            label: "Activity Status",
+            description: "Check when admins were last active",
+          },
+        ],
+      },
+      {
+        stepNumber: 3,
+        title: "Promote Users to Admin",
+        description:
+          "Grant administrator privileges to trusted family members.",
+        subSteps: [
+          {
+            label: "Search for User",
+            description:
+              "Find the user you want to promote using the search function",
+          },
+          {
+            label: "Review User Profile",
+            description:
+              "Verify the user's identity and activity before promoting",
+          },
+          {
+            label: "Confirm Promotion",
+            description: "Use the promote action to grant admin privileges",
+          },
+        ],
+      },
+      {
+        stepNumber: 4,
+        title: "Demote Administrators",
+        description:
+          "Remove admin privileges when necessary for security or role changes.",
+        subSteps: [
+          {
+            label: "Select Admin",
+            description: "Choose the administrator you want to demote",
+          },
+          {
+            label: "Confirm Demotion",
+            description: "Use the demote action to remove admin privileges",
+          },
+          {
+            label: "Notification",
+            description: "The user will be notified of their role change",
+          },
+        ],
+      },
+      {
+        stepNumber: 5,
+        title: "Monitor Admin Activity",
+        description:
+          "Keep track of administrative actions and maintain system security.",
+        subSteps: [
+          {
+            label: "Regular Reviews",
+            description: "Periodically review who has admin access",
+          },
+          {
+            label: "Activity Monitoring",
+            description: "Check admin activity logs and recent actions",
+          },
+          {
+            label: "Security Audits",
+            description: "Ensure only trusted individuals have admin access",
+          },
+        ],
+      },
+    ],
+    actionButtons: [
+      {
+        label: "Go to Admin Management",
+        href: "/admin/admin-management",
+      },
+      {
+        label: "View User Accounts",
+        href: "/admin/user-accounts",
+        variant: "outline",
+      },
+    ],
+    tips: [
+      "Only promote trusted family members who understand the responsibilities",
+      "Regularly review admin accounts to ensure security",
+      "Document reasons for promoting or demoting administrators",
+      "Ensure there are always at least 2 active administrators",
+      "Communicate role changes clearly to affected users",
+    ],
+    warnings: [
+      "Admin privileges grant full system access - use carefully",
+      "Always verify user identity before granting admin access",
+      "Demoting the last admin could lock you out of admin functions",
+      "Admin actions are logged and can be audited",
+      "Consider the impact on family dynamics when managing roles",
     ],
   },
 ];

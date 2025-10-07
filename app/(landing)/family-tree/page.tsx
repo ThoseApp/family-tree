@@ -1,7 +1,11 @@
+import { Metadata } from "next";
 import PageHeader from "@/components/page-header";
 import FamilyTreeVisualization from "@/components/family-tree-visualization";
 import React from "react";
 import FamilyTreeComponent from "@/components/family-tree-component";
+import { generatePageMetadata } from "@/lib/constants/metadata";
+
+export const metadata: Metadata = generatePageMetadata("familyTree");
 
 const FamilyTreePage = () => {
   return (
