@@ -21,7 +21,7 @@ export const DEFAULT_METADATA = {
   ],
   author: "Mosuro Family",
   siteName: "Mosuro Family Tree",
-  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://mosuro-family.com",
+  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://mosuro.com.ng",
   ogImage: "/images/og-image.png",
   twitterCard: "summary_large_image" as const,
 };
