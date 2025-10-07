@@ -108,16 +108,6 @@ const helpTopics = [
     adminOnly: true,
   },
   {
-    id: "managing-events",
-    icon: Calendar,
-    title: "Managing Events",
-    description:
-      "Approve or reject event requests from publishers. Manage all family events and gatherings.",
-    color: "text-teal-600",
-    href: "/admin/events",
-    adminOnly: true,
-  },
-  {
     id: "gallery-management",
     icon: ImageIcon,
     title: "Gallery Management",

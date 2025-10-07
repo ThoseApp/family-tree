@@ -16,15 +16,18 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import { LoadingIcon } from "@/components/loading-icon";
 import { toast } from "sonner";
-import { NoticeBoardStatusEnum, EventStatusEnum } from "@/lib/constants/enums";
+import {
+  NoticeBoardStatusEnum,
+  GalleryStatusEnum,
+} from "@/lib/constants/enums";
 
 const PublisherDashboard = () => {
   // State for dashboard statistics
   const [stats, setStats] = useState({
     pendingNotices: 0,
-    pendingEvents: 0,
+    pendingGallery: 0,
     publishedNoticesThisMonth: 0,
-    publicEvents: 0,
+    approvedGallery: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -41,13 +44,13 @@ const PublisherDashboard = () => {
 
       if (noticesError) throw noticesError;
 
-      // Fetch pending events count
-      const { count: pendingEventsCount, error: eventsError } = await supabase
-        .from("events")
+      // Fetch pending gallery count
+      const { count: pendingGalleryCount, error: galleryError } = await supabase
+        .from("galleries")
         .select("*", { count: "exact", head: true })
-        .eq("status", EventStatusEnum.pending);
+        .eq("status", GalleryStatusEnum.pending);
 
-      if (eventsError) throw eventsError;
+      if (galleryError) throw galleryError;
 
       // Fetch published notices this month
       const startOfMonth = new Date();
@@ -63,22 +66,21 @@ const PublisherDashboard = () => {
 
       if (publishedError) throw publishedError;
 
-      // Fetch public events count
-      const { count: publicEventsCount, error: publicEventsError } =
+      // Fetch approved gallery count
+      const { count: approvedGalleryCount, error: approvedGalleryError } =
         await supabase
-          .from("events")
+          .from("galleries")
           .select("*", { count: "exact", head: true })
-          .eq("status", EventStatusEnum.approved)
-          .eq("is_public", true);
+          .eq("status", GalleryStatusEnum.approved);
 
-      if (publicEventsError) throw publicEventsError;
+      if (approvedGalleryError) throw approvedGalleryError;
 
       // Update state with fetched data
       setStats({
         pendingNotices: pendingNoticesCount || 0,
-        pendingEvents: pendingEventsCount || 0,
+        pendingGallery: pendingGalleryCount || 0,
         publishedNoticesThisMonth: publishedThisMonthCount || 0,
-        publicEvents: publicEventsCount || 0,
+        approvedGallery: approvedGalleryCount || 0,
       });
     } catch (error: any) {
       console.error("Error fetching dashboard stats:", error);
@@ -110,7 +112,7 @@ const PublisherDashboard = () => {
         {
           event: "*",
           schema: "public",
-          table: "events",
+          table: "galleries",
         },
         () => {
           fetchDashboardStats();
@@ -138,8 +140,7 @@ const PublisherDashboard = () => {
         <div>
           <h1 className="text-2xl font-semibold">Welcome back, Publisher</h1>
           <p className="text-gray-600 text-sm">
-            Manage notice board posts and public events for the family
-            community.
+            Manage notice board posts and family gallery for the community.
           </p>
         </div>
       </div>
@@ -166,14 +167,14 @@ const PublisherDashboard = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Pending Events
+              Pending Gallery
             </CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.pendingEvents}</div>
+            <div className="text-2xl font-bold">{stats.pendingGallery}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.pendingEvents === 0 ? "No events" : "Events to review"}
+              {stats.pendingGallery === 0 ? "No photos" : "Photos to review"}
             </p>
           </CardContent>
         </Card>
@@ -195,12 +196,14 @@ const PublisherDashboard = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Public Events</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Approved Gallery
+            </CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.publicEvents}</div>
-            <p className="text-xs text-muted-foreground">Active events</p>
+            <div className="text-2xl font-bold">{stats.approvedGallery}</div>
+            <p className="text-xs text-muted-foreground">Published photos</p>
           </CardContent>
         </Card>
       </div>
@@ -235,21 +238,21 @@ const PublisherDashboard = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Event Management
+              <MessageSquare className="h-5 w-5" />
+              Gallery Management
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Create public events and review submissions from family members.
+              Manage family photos and review submissions from family members.
             </p>
             <div className="flex gap-2">
               <Button asChild>
-                <Link href="/publisher/events">Manage Events</Link>
+                <Link href="/publisher/gallery">Manage Gallery</Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link href="/publisher/event-requests">
-                  View Requests ({stats.pendingEvents})
+                <Link href="/publisher/gallery-requests">
+                  View Requests ({stats.pendingGallery})
                 </Link>
               </Button>
             </div>
@@ -290,25 +293,25 @@ const PublisherDashboard = () => {
             </Button>
 
             <Button
-              variant={stats.pendingEvents > 0 ? "default" : "outline"}
+              variant={stats.pendingGallery > 0 ? "default" : "outline"}
               className="h-auto p-4 flex flex-col items-start gap-2"
               asChild
             >
-              <Link href="/publisher/event-requests">
+              <Link href="/publisher/gallery-requests">
                 <div className="flex items-center gap-2 w-full">
-                  <Calendar className="h-4 w-4" />
-                  <span className="font-medium">Review Events</span>
-                  {stats.pendingEvents > 0 && (
+                  <MessageSquare className="h-4 w-4" />
+                  <span className="font-medium">Review Gallery</span>
+                  {stats.pendingGallery > 0 && (
                     <span className="ml-auto bg-primary-foreground text-primary px-2 py-1 rounded-full text-xs">
-                      {stats.pendingEvents}
+                      {stats.pendingGallery}
                     </span>
                   )}
                 </div>
                 <p className="text-sm text-left opacity-80">
-                  {stats.pendingEvents === 0
-                    ? "All events reviewed"
-                    : `${stats.pendingEvents} event${
-                        stats.pendingEvents !== 1 ? "s" : ""
+                  {stats.pendingGallery === 0
+                    ? "All photos reviewed"
+                    : `${stats.pendingGallery} photo${
+                        stats.pendingGallery !== 1 ? "s" : ""
                       } need review`}
                 </p>
               </Link>
@@ -319,13 +322,13 @@ const PublisherDashboard = () => {
               className="h-auto p-4 flex flex-col items-start gap-2"
               asChild
             >
-              <Link href="/publisher/notice-board">
+              <Link href="/publisher/gallery">
                 <div className="flex items-center gap-2 w-full">
-                  <FileText className="h-4 w-4" />
-                  <span className="font-medium">Create Notice</span>
+                  <MessageSquare className="h-4 w-4" />
+                  <span className="font-medium">Manage Gallery</span>
                 </div>
                 <p className="text-sm text-left opacity-80">
-                  Post a new notice for the family
+                  Upload and organize family photos
                 </p>
               </Link>
             </Button>

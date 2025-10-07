@@ -55,26 +55,6 @@ const helpTopics = [
     requiresApproval: false,
   },
   {
-    id: "managing-events",
-    icon: Calendar,
-    title: "Event Creation",
-    description:
-      "Create family events, gatherings, and important dates. Events may need admin approval before publishing.",
-    color: "text-purple-600",
-    href: "/publisher/events",
-    requiresApproval: true,
-  },
-  {
-    id: "event-requests",
-    icon: CheckCircle,
-    title: "Event Requests",
-    description:
-      "Review and manage event requests from family members. Help organize family gatherings and celebrations.",
-    color: "text-orange-600",
-    href: "/publisher/event-requests",
-    requiresApproval: false,
-  },
-  {
     id: "managing-gallery-uploads",
     icon: Upload,
     title: "Gallery Management",
@@ -84,16 +64,7 @@ const helpTopics = [
     href: "/publisher/gallery",
     requiresApproval: true,
   },
-  {
-    id: "content-approval-workflow",
-    icon: Bell,
-    title: "Content Approval Workflow",
-    description:
-      "Understand the approval process for notices, events, and photos. Track the status of your submissions.",
-    color: "text-indigo-600",
-    href: "/publisher/notice-board-requests",
-    requiresApproval: false,
-  },
+
   {
     id: "photo-guidelines",
     icon: ImageIcon,
@@ -115,7 +86,7 @@ const helpTopics = [
     requiresApproval: false,
   },
   {
-    id: "settings",
+    id: "publisher-settings",
     icon: Settings,
     title: "Settings",
     description:

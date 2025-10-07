@@ -4,7 +4,6 @@ import {
   FileText,
   Clock,
   Calendar,
-  CheckCircle,
   Settings,
   HomeIcon,
   ImageIcon,
@@ -38,11 +37,7 @@ export const navLinksTopSection: NavLink[] = [
     href: "/publisher/events",
     icon: Calendar,
   },
-  // {
-  //   label: "Event Requests",
-  //   href: "/publisher/event-requests",
-  //   icon: CheckCircle,
-  // },
+
   {
     label: "Gallery",
     href: "/publisher/gallery",

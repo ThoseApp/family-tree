@@ -175,7 +175,7 @@ const PublisherManagementPage = () => {
             ? "Publisher Role Granted"
             : "Publisher Role Removed",
           body: isPromoting
-            ? "You have been granted publisher permissions and can now manage notice boards and events."
+            ? "You have been granted publisher permissions and can now manage notice boards and gallery."
             : "Your publisher permissions have been removed. You now have regular user access.",
           type: "system",
           resource_id: null,
@@ -441,7 +441,7 @@ const PublisherManagementPage = () => {
             </AlertDialogTitle>
             <AlertDialogDescription>
               {actionDialog.action === "promote"
-                ? `Are you sure you want to promote ${actionDialog.user?.first_name} ${actionDialog.user?.last_name} to publisher? They will be able to approve content and create public events.`
+                ? `Are you sure you want to promote ${actionDialog.user?.first_name} ${actionDialog.user?.last_name} to publisher? They will be able to manage notice boards and gallery content.`
                 : `Are you sure you want to demote ${actionDialog.user?.first_name} ${actionDialog.user?.last_name} from publisher? They will lose their content management permissions.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
