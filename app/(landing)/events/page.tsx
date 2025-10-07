@@ -1,5 +1,6 @@
 "use client";
 
+import ClientMetadata from "@/components/seo/client-metadata";
 import EventCard from "@/components/cards/event-card";
 import PageHeader from "@/components/page-header";
 import { dummyProfileImage } from "@/lib/constants";
@@ -109,215 +110,232 @@ const EventsPage = () => {
   }, [events]);
 
   return (
-    <div className="pb-20">
-      <PageHeader
-        title="Upcoming Events"
-        description="Join us for upcoming family events, gatherings, celebrations, and milestones that bring us closer together!"
+    <>
+      <ClientMetadata
+        title="Family Events - Mosuro Family Gatherings"
+        description="Stay updated with upcoming Mosuro family events, reunions, celebrations, and special occasions. Never miss a family gathering."
+        keywords={["family events", "reunions", "celebrations", "gatherings"]}
       />
+      <div className="pb-20">
+        <PageHeader
+          title="Upcoming Events"
+          description="Join us for upcoming family events, gatherings, celebrations, and milestones that bring us closer together!"
+        />
 
-      {/* SEARCH AND FILTER SECTION */}
-      <div className="mb-8 space-y-4">
-        {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            placeholder="Search events by name, description, or category..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-4"
-          />
-          {searchQuery && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSearchQuery("")}
-              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
+        {/* SEARCH AND FILTER SECTION */}
+        <div className="mb-8 space-y-4">
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder="Search events by name, description, or category..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-4"
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+
+          {/* Category Filter */}
+          <div className="flex items-center gap-4">
+            <Label
+              htmlFor="category-filter"
+              className="text-sm font-medium whitespace-nowrap"
             >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
+              Filter by category:
+            </Label>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {availableCategories.map((category) => (
+                  <SelectItem key={category} value={category.toLowerCase()}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {(searchQuery || categoryFilter !== "all") && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSearchQuery("");
+                  setCategoryFilter("all");
+                }}
+              >
+                Clear Filters
+              </Button>
+            )}
+          </div>
 
-        {/* Category Filter */}
-        <div className="flex items-center gap-4">
-          <Label
-            htmlFor="category-filter"
-            className="text-sm font-medium whitespace-nowrap"
-          >
-            Filter by category:
-          </Label>
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {availableCategories.map((category) => (
-                <SelectItem key={category} value={category.toLowerCase()}>
-                  {category}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Results count */}
           {(searchQuery || categoryFilter !== "all") && (
-            <Button
-              variant="outline"
-              onClick={() => {
-                setSearchQuery("");
-                setCategoryFilter("all");
-              }}
-            >
-              Clear Filters
-            </Button>
+            <p className="text-sm text-muted-foreground">
+              Showing {filteredEvents.length} of {events.length} events
+            </p>
           )}
         </div>
 
-        {/* Results count */}
-        {(searchQuery || categoryFilter !== "all") && (
-          <p className="text-sm text-muted-foreground">
-            Showing {filteredEvents.length} of {events.length} events
-          </p>
-        )}
+        <div className="flex flex-col gap-y-8 lg:gap-y-12">
+          {/* BIRTHDAYS */}
+          {birthdays.length > 0 && (
+            <div className="flex flex-col gap-y-4">
+              <h2 className="text-2xl font-semibold">Birthdays</h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-8">
+                {birthdays.map((event, index) => (
+                  <EventCard
+                    key={index}
+                    image={event.image || dummyProfileImage}
+                    name={event.name}
+                    description={
+                      event.description || "No description available."
+                    }
+                    date={ensureDateAsObject(event.date)}
+                    onClick={() => handleEventClick(event)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ANNIVERSARIES */}
+          {anniversaries.length > 0 && (
+            <div className="flex flex-col gap-y-4">
+              <h2 className="text-2xl font-semibold">Anniversaries</h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-8">
+                {anniversaries.map((event, index) => (
+                  <EventCard
+                    key={index}
+                    image={event.image || dummyProfileImage}
+                    name={event.name}
+                    description={
+                      event.description || "No description available."
+                    }
+                    date={ensureDateAsObject(event.date)}
+                    onClick={() => handleEventClick(event)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* REUNIONS */}
+          {reunions.length > 0 && (
+            <div className="flex flex-col gap-y-4">
+              <h2 className="text-2xl font-semibold">Reunions</h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-8">
+                {reunions.map((event, index) => (
+                  <EventCard
+                    key={index}
+                    image={event.image || dummyProfileImage}
+                    name={event.name}
+                    description={
+                      event.description || "No description available."
+                    }
+                    date={ensureDateAsObject(event.date)}
+                    onClick={() => handleEventClick(event)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* WEDDINGS */}
+          {weddings.length > 0 && (
+            <div className="flex flex-col gap-y-4">
+              <h2 className="text-2xl font-semibold">Weddings</h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-8">
+                {weddings.map((event, index) => (
+                  <EventCard
+                    key={index}
+                    image={event.image || dummyProfileImage}
+                    name={event.name}
+                    description={
+                      event.description || "No description available."
+                    }
+                    date={ensureDateAsObject(event.date)}
+                    onClick={() => handleEventClick(event)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* OTHER EVENTS */}
+          {otherEvents.length > 0 && (
+            <div className="flex flex-col gap-y-4">
+              <h2 className="text-2xl font-semibold">Other Events</h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-8">
+                {otherEvents.map((event, index) => (
+                  <EventCard
+                    key={index}
+                    image={event.image || dummyProfileImage}
+                    name={event.name}
+                    description={
+                      event.description || "No description available."
+                    }
+                    date={ensureDateAsObject(event.date)}
+                    onClick={() => handleEventClick(event)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* NO RESULTS MESSAGE */}
+          {filteredEvents.length === 0 && events.length > 0 && (
+            <div className="text-center py-12">
+              <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-1">
+                No events found
+              </h3>
+              <p className="text-gray-500 mb-4">
+                Try adjusting your search terms or category filter.
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSearchQuery("");
+                  setCategoryFilter("all");
+                }}
+              >
+                Clear Filters
+              </Button>
+            </div>
+          )}
+
+          {/* NO EVENTS MESSAGE */}
+          {events.length === 0 && (
+            <div className="text-center py-12">
+              <h3 className="text-lg font-medium text-gray-900 mb-1">
+                No upcoming events available
+              </h3>
+              <p className="text-gray-500">
+                Check back later for upcoming family events.
+              </p>
+            </div>
+          )}
+        </div>
+
+        <EventDetailsModal event={selectedEvent} onClose={handleCloseModal} />
       </div>
-
-      <div className="flex flex-col gap-y-8 lg:gap-y-12">
-        {/* BIRTHDAYS */}
-        {birthdays.length > 0 && (
-          <div className="flex flex-col gap-y-4">
-            <h2 className="text-2xl font-semibold">Birthdays</h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-8">
-              {birthdays.map((event, index) => (
-                <EventCard
-                  key={index}
-                  image={event.image || dummyProfileImage}
-                  name={event.name}
-                  description={event.description || "No description available."}
-                  date={ensureDateAsObject(event.date)}
-                  onClick={() => handleEventClick(event)}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ANNIVERSARIES */}
-        {anniversaries.length > 0 && (
-          <div className="flex flex-col gap-y-4">
-            <h2 className="text-2xl font-semibold">Anniversaries</h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-8">
-              {anniversaries.map((event, index) => (
-                <EventCard
-                  key={index}
-                  image={event.image || dummyProfileImage}
-                  name={event.name}
-                  description={event.description || "No description available."}
-                  date={ensureDateAsObject(event.date)}
-                  onClick={() => handleEventClick(event)}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* REUNIONS */}
-        {reunions.length > 0 && (
-          <div className="flex flex-col gap-y-4">
-            <h2 className="text-2xl font-semibold">Reunions</h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-8">
-              {reunions.map((event, index) => (
-                <EventCard
-                  key={index}
-                  image={event.image || dummyProfileImage}
-                  name={event.name}
-                  description={event.description || "No description available."}
-                  date={ensureDateAsObject(event.date)}
-                  onClick={() => handleEventClick(event)}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* WEDDINGS */}
-        {weddings.length > 0 && (
-          <div className="flex flex-col gap-y-4">
-            <h2 className="text-2xl font-semibold">Weddings</h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-8">
-              {weddings.map((event, index) => (
-                <EventCard
-                  key={index}
-                  image={event.image || dummyProfileImage}
-                  name={event.name}
-                  description={event.description || "No description available."}
-                  date={ensureDateAsObject(event.date)}
-                  onClick={() => handleEventClick(event)}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* OTHER EVENTS */}
-        {otherEvents.length > 0 && (
-          <div className="flex flex-col gap-y-4">
-            <h2 className="text-2xl font-semibold">Other Events</h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-8">
-              {otherEvents.map((event, index) => (
-                <EventCard
-                  key={index}
-                  image={event.image || dummyProfileImage}
-                  name={event.name}
-                  description={event.description || "No description available."}
-                  date={ensureDateAsObject(event.date)}
-                  onClick={() => handleEventClick(event)}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* NO RESULTS MESSAGE */}
-        {filteredEvents.length === 0 && events.length > 0 && (
-          <div className="text-center py-12">
-            <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-1">
-              No events found
-            </h3>
-            <p className="text-gray-500 mb-4">
-              Try adjusting your search terms or category filter.
-            </p>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setSearchQuery("");
-                setCategoryFilter("all");
-              }}
-            >
-              Clear Filters
-            </Button>
-          </div>
-        )}
-
-        {/* NO EVENTS MESSAGE */}
-        {events.length === 0 && (
-          <div className="text-center py-12">
-            <h3 className="text-lg font-medium text-gray-900 mb-1">
-              No upcoming events available
-            </h3>
-            <p className="text-gray-500">
-              Check back later for upcoming family events.
-            </p>
-          </div>
-        )}
-      </div>
-
-      <EventDetailsModal event={selectedEvent} onClose={handleCloseModal} />
-    </div>
+    </>
   );
 };
 

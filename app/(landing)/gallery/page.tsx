@@ -1,5 +1,6 @@
 "use client";
 
+import ClientMetadata from "@/components/seo/client-metadata";
 import GalleryGrid from "@/components/gallery";
 import PageHeader from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -17,17 +18,29 @@ const GalleryPage = () => {
   }, [fetchGallery]);
 
   return (
-    <div className="pb-20">
-      {/* HEADER SECTION */}
-      <PageHeader
-        title="Cherished Family Moments"
-        description="A collection of treasured memories, from celebrations to everyday joys. Relive the moments that bring us closer."
-        searchBar
+    <>
+      <ClientMetadata
+        title="Photo Gallery - Mosuro Family Memories"
+        description="Browse through cherished Mosuro family photos and memories. Relive special moments and discover family history through pictures."
+        keywords={[
+          "family photos",
+          "memories",
+          "photo gallery",
+          "family pictures",
+        ]}
       />
+      <div className="pb-20">
+        {/* HEADER SECTION */}
+        <PageHeader
+          title="Cherished Family Moments"
+          description="A collection of treasured memories, from celebrations to everyday joys. Relive the moments that bring us closer."
+          searchBar
+        />
 
-      {/* GALLERY GRID */}
-      <GalleryGrid gallery={gallery} />
-    </div>
+        {/* GALLERY GRID */}
+        <GalleryGrid gallery={gallery} />
+      </div>
+    </>
   );
 };
 

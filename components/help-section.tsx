@@ -54,7 +54,7 @@ const HelpSection = ({ isCollapsed = false, className }: HelpSectionProps) => {
       icon: Calendar,
       title: "Create Events",
       description:
-        "Use the Events section to create family gatherings, birthdays, or important dates. Publisher users can submit events for approval.",
+        "Use the Events section to create family gatherings, birthdays, or important dates. Events may require admin approval.",
       color: "text-purple-600",
     },
     {
