@@ -34,6 +34,7 @@ import { EnhancedCalendar } from "@/components/ui/enhanced-calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { GalleryStatusEnum } from "@/lib/constants/enums";
+import { Calendar } from "./ui/calendar";
 
 const ProfileComponent = () => {
   const { user, getUserProfile } = useUserStore();
@@ -422,13 +423,14 @@ const ProfileComponent = () => {
                 <PopoverContent className="w-auto p-0" align="start">
                   <EnhancedCalendar
                     mode="single"
+                    maxYearIsCurrent={false}
                     selected={lifeEventFormData.date}
                     onSelect={(date) => {
                       setLifeEventFormData((prev) => ({ ...prev, date }));
                     }}
-                    disabled={(date) =>
-                      date > new Date() || date < new Date("1900-01-01")
-                    }
+                    // disabled={(date) =>
+                    //   date > new Date() || date < new Date("1900-01-01")
+                    // }
                     initialFocus
                   />
                 </PopoverContent>

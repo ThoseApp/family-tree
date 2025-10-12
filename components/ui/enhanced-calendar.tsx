@@ -14,12 +14,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export type EnhancedCalendarProps = React.ComponentProps<typeof DayPicker>;
+export type EnhancedCalendarProps = React.ComponentProps<typeof DayPicker> & {
+  maxYearIsCurrent?: boolean;
+};
 
 function EnhancedCalendar({
   className,
   classNames,
   showOutsideDays = true,
+  maxYearIsCurrent = true,
   ...props
 }: EnhancedCalendarProps) {
   // Default to a reasonable birth year (1980) if no date is selected
@@ -35,10 +38,11 @@ function EnhancedCalendar({
     getDefaultDate()
   );
 
-  // Generate years from 1900 to current year
+  // Generate years from 1900 to current year (or beyond if maxYearIsCurrent is false)
   const currentYear = new Date().getFullYear();
+  const maxYear = maxYearIsCurrent ? currentYear : currentYear + 10; // Allow 10 years in the future if not restricted
   const years = Array.from(
-    { length: currentYear - 1900 + 1 },
+    { length: maxYear - 1900 + 1 },
     (_, i) => 1900 + i
   ).reverse();
 
