@@ -38,6 +38,7 @@ import { BucketFolderEnum, LifeStatusEnum } from "@/lib/constants/enums";
 import { EnhancedCalendar } from "../ui/enhanced-calendar";
 import { useFamilyMemberDropdowns } from "@/hooks/use-family-member-dropdowns";
 import { generateUniqueId } from "@/lib/utils/unique-id-generator";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface FamilyMemberModalProps {
   isOpen: boolean;
@@ -118,6 +119,11 @@ export const FamilyMemberModal = ({
   const [selectedFatherId, setSelectedFatherId] = useState<string>("");
   const [selectedMotherId, setSelectedMotherId] = useState<string>("");
 
+  // Member type selection (descendant or spouse)
+  const [memberType, setMemberType] = useState<"descendant" | "spouse">(
+    "descendant"
+  );
+
   // Reset form function
   const resetForm = () => {
     setFormData({
@@ -142,6 +148,7 @@ export const FamilyMemberModal = ({
     setImagePreview("");
     setSelectedFatherId("");
     setSelectedMotherId("");
+    setMemberType("descendant");
   };
 
   // Initialize form data when modal opens or editData changes
@@ -368,15 +375,21 @@ export const FamilyMemberModal = ({
       return;
     }
 
-    // Validate that at least one parent is selected (not required for females)
+    // Validate based on member type
     const hasFather = (formData.fatherName || "").trim() !== "";
     const hasMother = (formData.motherName || "").trim() !== "";
 
-    if (!hasFather && !hasMother && formData.gender !== "Female") {
-      toast.error(
-        "At least one parent (Father or Mother) is required for male members"
-      );
-      return;
+    if (memberType === "descendant") {
+      // For descendants, at least one parent is required (regardless of gender)
+      if (!hasFather && !hasMother) {
+        toast.error(
+          "At least one parent (Father or Mother) is required for descendants"
+        );
+        return;
+      }
+    } else if (memberType === "spouse") {
+      // For spouses, parents are optional but if provided, validate
+      // Spouses typically don't need parent information in the family tree context
     }
 
     // Validate email format if provided
@@ -455,6 +468,37 @@ export const FamilyMemberModal = ({
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
+          {/* Member Type Selection */}
+          <div className="grid gap-3">
+            <Label className="text-sm font-medium">Member Type</Label>
+            <RadioGroup
+              value={memberType}
+              onValueChange={(value: "descendant" | "spouse") =>
+                setMemberType(value)
+              }
+              className="flex gap-6"
+              disabled={isLoading || dropdownsLoading}
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="descendant" id="descendant" />
+                <Label htmlFor="descendant" className="cursor-pointer">
+                  Descendant (Child)
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="spouse" id="spouse" />
+                <Label htmlFor="spouse" className="cursor-pointer">
+                  Spouse
+                </Label>
+              </div>
+            </RadioGroup>
+            <p className="text-xs text-muted-foreground">
+              {memberType === "descendant"
+                ? "Adding a child or descendant to the family tree. Can be male or female."
+                : "Adding a spouse to the family tree. Can be male or female."}
+            </p>
+          </div>
+
           {/* Image Upload */}
           <div className="grid gap-2">
             <Label>Profile Picture</Label>
@@ -657,16 +701,16 @@ export const FamilyMemberModal = ({
             </Popover>
           </div>
 
-          {/* Parents - At least one is required for males */}
+          {/* Parents - Required for descendants, optional for spouses */}
           <div className="grid gap-2">
             <div className="flex items-center gap-2">
               <Label className="text-sm font-medium">
-                Parents {formData.gender !== "Female" ? "*" : ""}
+                Parents {memberType === "descendant" ? "*" : ""}
               </Label>
               <span className="text-xs text-muted-foreground">
-                {formData.gender === "Female"
-                  ? "(Optional for female members)"
-                  : "(At least one parent is required for male members)"}
+                {memberType === "descendant"
+                  ? "(At least one parent is required for descendants)"
+                  : "(Optional for spouses - typically not needed)"}
               </span>
             </div>
 
@@ -860,7 +904,7 @@ export const FamilyMemberModal = ({
               imageUploading ||
               dropdownsLoading ||
               !formData.name.trim() ||
-              (formData.gender !== "Female" &&
+              (memberType === "descendant" &&
                 !formData.fatherName?.trim() &&
                 !formData.motherName?.trim())
             }

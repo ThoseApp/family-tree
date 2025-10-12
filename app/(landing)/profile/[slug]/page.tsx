@@ -1,12 +1,20 @@
 "use client";
 
 import { fetchMemberProfile } from "@/lib/utils/family-tree-helpers";
-import { ProcessedMember, UserProfile } from "@/lib/types";
+import {
+  ProcessedMember,
+  UserProfile,
+  LifeEvent,
+  GalleryType,
+} from "@/lib/types";
 import { useEffect, useState } from "react";
 import PageHeader from "@/components/page-header";
 import { dummyProfileImage, dummyFemaleProfileImage } from "@/lib/constants";
 import Image from "next/image";
-import { GalleryType } from "@/components/gallery";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { formatDate } from "@/lib/utils";
+import { supabase } from "@/lib/supabase/client";
+import { GalleryStatusEnum } from "@/lib/constants/enums";
 
 type ProfilePageProps = {
   params: { slug: string };
@@ -33,12 +41,84 @@ const InfoRow = ({
   </div>
 );
 
+// Helper function to fetch user's life events
+const fetchUserLifeEvents = async (uniqueId: string): Promise<LifeEvent[]> => {
+  try {
+    // Find user profile by family_tree_uid
+    const { data: profileData, error: profileError } = await supabase
+      .from("profiles")
+      .select("user_id, timeline")
+      .eq("family_tree_uid", uniqueId)
+      .single();
+
+    if (profileError || !profileData) {
+      return [];
+    }
+
+    // Parse the timeline JSONB data
+    const timelineData = profileData?.timeline || [];
+    const events: LifeEvent[] = Array.isArray(timelineData)
+      ? timelineData.map((event: any, index: number) => ({
+          id: event.id || `event-${index}`,
+          year: event.year || new Date().getFullYear().toString(),
+          title: event.title || event.event || "",
+          description: event.description || "",
+          date: event.date || "",
+          created_at: event.created_at || new Date().toISOString(),
+          updated_at: event.updated_at || new Date().toISOString(),
+        }))
+      : [];
+
+    return events;
+  } catch (error) {
+    console.error("Error fetching life events:", error);
+    return [];
+  }
+};
+
+// Helper function to fetch user's gallery
+const fetchUserGallery = async (uniqueId: string): Promise<GalleryType[]> => {
+  try {
+    // Find user profile by family_tree_uid
+    const { data: profileData, error: profileError } = await supabase
+      .from("profiles")
+      .select("user_id")
+      .eq("family_tree_uid", uniqueId)
+      .single();
+
+    if (profileError || !profileData) {
+      return [];
+    }
+
+    // Fetch approved gallery items for this user
+    const { data: galleryData, error: galleryError } = await supabase
+      .from("galleries")
+      .select("*")
+      .eq("user_id", profileData.user_id)
+      .eq("status", GalleryStatusEnum.approved)
+      .order("updated_at", { ascending: false });
+
+    if (galleryError) {
+      console.error("Error fetching gallery:", galleryError);
+      return [];
+    }
+
+    return galleryData || [];
+  } catch (error) {
+    console.error("Error fetching gallery:", error);
+    return [];
+  }
+};
+
 const ProfilePage = ({ params }: ProfilePageProps) => {
   const [profile, setProfile] = useState<ProcessedMember | UserProfile | null>(
     null
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lifeEvents, setLifeEvents] = useState<LifeEvent[]>([]);
+  const [gallery, setGallery] = useState<GalleryType[]>([]);
+  const [dataLoading, setDataLoading] = useState(false);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -48,6 +128,17 @@ const ProfilePage = ({ params }: ProfilePageProps) => {
         const memberProfile = await fetchMemberProfile(params.slug);
         if (memberProfile) {
           setProfile(memberProfile);
+
+          // Fetch additional data (life events and gallery) if available
+          setDataLoading(true);
+          const [events, galleryData] = await Promise.all([
+            fetchUserLifeEvents(params.slug),
+            fetchUserGallery(params.slug),
+          ]);
+
+          setLifeEvents(events);
+          setGallery(galleryData);
+          setDataLoading(false);
         } else {
           setError("Profile not found.");
         }
@@ -166,8 +257,99 @@ const ProfilePage = ({ params }: ProfilePageProps) => {
           </section>
         )}
 
-        {/* The following sections are placeholders and need to be implemented */}
-        {/* with actual data from the profile object when available.       */}
+        {/* Timeline / Life Events Section - Show if there are events OR if it's a detailed profile with account */}
+        {(lifeEvents.length > 0 || (isDetailedProfile && !dataLoading)) && (
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold border-b pb-2 mb-4">
+              Timeline / Life Events
+            </h2>
+            {dataLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                <span className="ml-2">Loading life events...</span>
+              </div>
+            ) : lifeEvents.length > 0 ? (
+              <div className="space-y-4">
+                {lifeEvents.map((event) => (
+                  <div
+                    key={event.id}
+                    className="flex items-start p-4 border rounded-lg bg-gray-50"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <CalendarIcon className="size-4 text-gray-500" />
+                        <span className="font-medium text-gray-900">
+                          {event.year}
+                        </span>
+                        <span className="text-lg font-semibold text-gray-900">
+                          {event.title}
+                        </span>
+                      </div>
+                      {event.description && (
+                        <p className="text-gray-600 text-sm ml-6">
+                          {event.description}
+                        </p>
+                      )}
+                      {event.date && (
+                        <p className="text-gray-500 text-xs ml-6 mt-1">
+                          Date: {formatDate(new Date(event.date))}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <CalendarIcon className="size-12 mx-auto mb-2 text-gray-300" />
+                <p>No life events have been added yet.</p>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* Gallery Section - Show if there are images OR if it's a detailed profile with account */}
+        {(gallery.length > 0 || (isDetailedProfile && !dataLoading)) && (
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold border-b pb-2 mb-4">
+              Gallery
+            </h2>
+            {dataLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                <span className="ml-2">Loading gallery...</span>
+              </div>
+            ) : gallery.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {gallery.map((imgSrc, index) => (
+                  <div
+                    key={imgSrc.id || index}
+                    className="aspect-square overflow-hidden rounded-lg hover:opacity-90 transition-opacity"
+                  >
+                    <Image
+                      src={imgSrc.url}
+                      alt={
+                        imgSrc.caption ||
+                        imgSrc.file_name ||
+                        `Gallery image ${index + 1}`
+                      }
+                      width={200}
+                      height={200}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <div className="size-12 mx-auto mb-2 bg-gray-200 rounded-lg flex items-center justify-center">
+                  <span className="text-2xl">🖼️</span>
+                </div>
+                <p>No gallery images have been shared yet.</p>
+              </div>
+            )}
+          </section>
+        )}
       </div>
     </div>
   );
