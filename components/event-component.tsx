@@ -524,6 +524,7 @@ const EventComponent = () => {
                         <PopoverContent className="w-auto p-0" align="start">
                           <EnhancedCalendar
                             mode="single"
+                            maxYearIsCurrent={false}
                             selected={selectedDate}
                             onSelect={setSelectedDate}
                             initialFocus

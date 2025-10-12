@@ -63,7 +63,9 @@ async function createFamilyMemberAccount(
     // Check if family member exists in family-tree table and is Account Eligible
     const { data: familyMember, error: familyError } = await adminClient
       .from("family-tree")
-      .select("unique_id, first_name, last_name, date_of_birth, life_status")
+      .select(
+        "unique_id, first_name, last_name, date_of_birth, life_status, gender, marital_status, email_address"
+      )
       .eq("unique_id", accountData.familyMemberId)
       .single();
 
@@ -107,6 +109,8 @@ async function createFamilyMemberAccount(
           last_name: accountData.lastName,
           full_name: `${accountData.firstName} ${accountData.lastName}`,
           date_of_birth: accountData.dateOfBirth || familyMember.date_of_birth,
+          gender: familyMember.gender,
+          marital_status: familyMember.marital_status,
           is_admin: false,
           is_publisher: false,
           created_by_admin: true,
@@ -131,6 +135,8 @@ async function createFamilyMemberAccount(
       email: accountData.email,
       phone_number: accountData.phoneNumber || null,
       date_of_birth: accountData.dateOfBirth || familyMember.date_of_birth,
+      gender: familyMember.gender,
+      marital_status: familyMember.marital_status,
       status: "approved", // Auto-approve accounts created by admin
       family_tree_uid: accountData.familyMemberId, // Link to family tree
       has_completed_onboarding_tour: false, // Ensure new users see the tour

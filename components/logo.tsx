@@ -12,7 +12,7 @@ interface LogoProps {
 const Logo = ({ component, hideText }: LogoProps) => {
   return (
     <Link href="/" className="flex items-center">
-      <div className="relative size-10 md:size-12 mr-2 md:mr-4 3xl:size-16">
+      <div className="relative size-10 md:size-12 mr-2 md:mr-4 3xl:size-14">
         <Image
           fill
           alt="logo"
