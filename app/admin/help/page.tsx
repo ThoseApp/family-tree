@@ -78,23 +78,13 @@ const helpTopics = [
     adminOnly: true,
   },
   {
-    id: "admin-management",
-    icon: Crown,
-    title: "Admin Management",
-    description:
-      "Manage administrator accounts and permissions. Promote users to admin role for full system access or demote admins to regular users.",
-    color: "text-purple-600",
-    href: "/admin/admin-management",
-    adminOnly: true,
-  },
-  {
-    id: "publisher-management",
+    id: "role-management",
     icon: Shield,
-    title: "Publisher Management",
+    title: "Role Management",
     description:
-      "Manage publisher accounts and permissions. Assign users to the publisher role for content creation capabilities.",
-    color: "text-red-600",
-    href: "/admin/publisher-management",
+      "Manage user roles including administrators and publishers. Promote or demote users to control their access levels and permissions throughout the application.",
+    color: "text-purple-600",
+    href: "/admin/role-management",
     adminOnly: true,
   },
   {

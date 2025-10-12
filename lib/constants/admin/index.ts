@@ -52,13 +52,8 @@ export const navLinksTopSection: NavLink[] = [
   //   icon: UserPlus,
   // },
   {
-    label: "Admin Management",
-    href: "/admin/admin-management",
-    icon: Crown,
-  },
-  {
-    label: "Publisher Management",
-    href: "/admin/publisher-management",
+    label: "Role Management",
+    href: "/admin/role-management",
     icon: Shield,
   },
   {

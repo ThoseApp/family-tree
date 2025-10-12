@@ -1370,43 +1370,89 @@ export const helpTopicsData: HelpTopic[] = [
     ],
   },
   {
-    id: "publisher-management",
-    title: "Publisher Management",
+    id: "role-management",
+    title: "Role Management",
     description:
-      "Manage publisher accounts and assign publishing permissions to family members.",
+      "Manage user roles including administrators and publishers. Control access levels and permissions throughout the application.",
     icon: Shield,
-    color: "text-red-600",
+    color: "text-purple-600",
     userType: "admin",
     steps: [
       {
         stepNumber: 1,
-        title: "Navigate to Publisher Management",
+        title: "Navigate to Role Management",
         description:
-          "Access Publisher Management via the side menu in your admin dashboard.",
+          "Access Role Management via the side menu in your admin dashboard.",
       },
       {
         stepNumber: 2,
-        title: "Search for User",
+        title: "Choose Management Tab",
         description:
-          "Search for the user you want to assign rights to using their name or email address.",
+          "Select either Admin Management or Publisher Management tab based on the role you want to manage.",
       },
       {
         stepNumber: 3,
-        title: "Promote or Demote",
+        title: "Search for User",
         description:
-          "Use the actions button on the far right to promote users to publisher or demote existing publishers.",
+          "Search for the user you want to manage using their name or email address.",
+      },
+      {
+        stepNumber: 4,
+        title: "Manage Admin Roles",
+        description:
+          "In the Admin Management tab, promote users to admin for full system access or demote existing admins.",
+        subSteps: [
+          {
+            label: "Promote to Admin",
+            description: "Grant administrator privileges to trusted users",
+          },
+          {
+            label: "Demote from Admin",
+            description: "Remove admin privileges when necessary",
+          },
+          {
+            label: "View Statistics",
+            description: "Monitor total admins, publishers, and regular users",
+          },
+        ],
+      },
+      {
+        stepNumber: 5,
+        title: "Manage Publisher Roles",
+        description:
+          "In the Publisher Management tab, assign or remove publisher permissions for content creation.",
+        subSteps: [
+          {
+            label: "Promote to Publisher",
+            description: "Grant publisher rights for managing content",
+          },
+          {
+            label: "Demote from Publisher",
+            description: "Remove publisher permissions when needed",
+          },
+          {
+            label: "Content Access",
+            description: "Publishers can manage notice boards and gallery",
+          },
+        ],
       },
     ],
     actionButtons: [
       {
-        label: "Go to Publisher Management",
-        href: "/admin/publisher-management",
+        label: "Go to Role Management",
+        href: "/admin/role-management",
       },
       {
         label: "View User Accounts",
         href: "/admin/user-accounts",
         variant: "outline",
       },
+    ],
+    tips: [
+      "Only promote trusted family members who understand their responsibilities",
+      "Regularly review role assignments to ensure security",
+      "Users are automatically notified when their role changes",
+      "Admin role includes all publisher permissions",
     ],
   },
   {
@@ -1502,130 +1548,6 @@ export const helpTopicsData: HelpTopic[] = [
         href: "/admin/gallery-requests",
         variant: "outline",
       },
-    ],
-  },
-  {
-    id: "admin-management",
-    title: "Admin Management",
-    description:
-      "Manage administrator accounts and permissions. Control who has full system access and administrative privileges.",
-    icon: Crown,
-    color: "text-purple-600",
-    userType: "admin",
-    steps: [
-      {
-        stepNumber: 1,
-        title: "Navigate to Admin Management",
-        description:
-          "Access Admin Management via the side menu in your admin dashboard.",
-      },
-      {
-        stepNumber: 2,
-        title: "View Current Administrators",
-        description:
-          "Review the list of current administrators and their account details.",
-        subSteps: [
-          {
-            label: "Admin Status",
-            description: "See who currently has admin privileges",
-          },
-          {
-            label: "Account Information",
-            description: "View admin names, emails, and join dates",
-          },
-          {
-            label: "Activity Status",
-            description: "Check when admins were last active",
-          },
-        ],
-      },
-      {
-        stepNumber: 3,
-        title: "Promote Users to Admin",
-        description:
-          "Grant administrator privileges to trusted family members.",
-        subSteps: [
-          {
-            label: "Search for User",
-            description:
-              "Find the user you want to promote using the search function",
-          },
-          {
-            label: "Review User Profile",
-            description:
-              "Verify the user's identity and activity before promoting",
-          },
-          {
-            label: "Confirm Promotion",
-            description: "Use the promote action to grant admin privileges",
-          },
-        ],
-      },
-      {
-        stepNumber: 4,
-        title: "Demote Administrators",
-        description:
-          "Remove admin privileges when necessary for security or role changes.",
-        subSteps: [
-          {
-            label: "Select Admin",
-            description: "Choose the administrator you want to demote",
-          },
-          {
-            label: "Confirm Demotion",
-            description: "Use the demote action to remove admin privileges",
-          },
-          {
-            label: "Notification",
-            description: "The user will be notified of their role change",
-          },
-        ],
-      },
-      {
-        stepNumber: 5,
-        title: "Monitor Admin Activity",
-        description:
-          "Keep track of administrative actions and maintain system security.",
-        subSteps: [
-          {
-            label: "Regular Reviews",
-            description: "Periodically review who has admin access",
-          },
-          {
-            label: "Activity Monitoring",
-            description: "Check admin activity logs and recent actions",
-          },
-          {
-            label: "Security Audits",
-            description: "Ensure only trusted individuals have admin access",
-          },
-        ],
-      },
-    ],
-    actionButtons: [
-      {
-        label: "Go to Admin Management",
-        href: "/admin/admin-management",
-      },
-      {
-        label: "View User Accounts",
-        href: "/admin/user-accounts",
-        variant: "outline",
-      },
-    ],
-    tips: [
-      "Only promote trusted family members who understand the responsibilities",
-      "Regularly review admin accounts to ensure security",
-      "Document reasons for promoting or demoting administrators",
-      "Ensure there are always at least 2 active administrators",
-      "Communicate role changes clearly to affected users",
-    ],
-    warnings: [
-      "Admin privileges grant full system access - use carefully",
-      "Always verify user identity before granting admin access",
-      "Demoting the last admin could lock you out of admin functions",
-      "Admin actions are logged and can be audited",
-      "Consider the impact on family dynamics when managing roles",
     ],
   },
 ];
