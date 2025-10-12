@@ -281,7 +281,7 @@ CREATE INDEX IF NOT EXISTS idx_notifications_type ON notifications(type);
 
 -- Link galleries to albums
 ALTER TABLE galleries 
-ADD CONSTRAINT IF NOT EXISTS fk_galleries_album_id 
+ADD CONSTRAINT fk_galleries_album_id 
     FOREIGN KEY (album_id) 
     REFERENCES albums(id) 
     ON DELETE SET NULL;
