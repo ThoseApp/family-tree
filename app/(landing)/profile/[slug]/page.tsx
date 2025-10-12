@@ -100,6 +100,7 @@ const ProfilePage = ({ params }: ProfilePageProps) => {
       ? dummyFemaleProfileImage
       : dummyProfileImage);
 
+  console.log(profile);
   return (
     <div className="pb-20">
       <PageHeader title="Profile" />
@@ -130,7 +131,9 @@ const ProfilePage = ({ params }: ProfilePageProps) => {
           </h2>
           <dl>
             <InfoRow label="Full Name" value={name} />
-            <InfoRow label="Date of Birth" value={profile.date_of_birth} />
+            {profile.date_of_birth && (
+              <InfoRow label="Date of Birth" value={profile.date_of_birth} />
+            )}
             <InfoRow label="Gender" value={profile.gender} />
             {isDetailedProfile && (profile as UserProfile).phone_number && (
               <InfoRow
