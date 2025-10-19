@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { NoticeBoard } from "@/lib/types";
 import {
@@ -25,6 +25,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
+import { NoticeDetailsModal } from "../modals/notice-details-modal";
 
 interface NoticeBoardCardProps {
   noticeBoard: NoticeBoard;
@@ -45,10 +46,19 @@ const NoticeBoardCard = ({
   showStatus = false,
   canEdit = false,
 }: NoticeBoardCardProps) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const formattedDate =
     typeof noticeBoard.posteddate === "string"
       ? noticeBoard.posteddate
       : new Date(noticeBoard.posteddate).toLocaleString();
+
+  // Truncation logic
+  const DESCRIPTION_LIMIT = 150;
+  const isDescriptionLong = noticeBoard.description.length > DESCRIPTION_LIMIT;
+  const truncatedDescription = isDescriptionLong
+    ? noticeBoard.description.substring(0, DESCRIPTION_LIMIT) + "..."
+    : noticeBoard.description;
 
   // Check if the image is a valid URL
   const isValidImageUrl = (url: string) => {
@@ -147,7 +157,17 @@ const NoticeBoardCard = ({
             <ImageIcon className="h-12 w-12 text-gray-400" />
           </div>
         ) : null}
-        <p className="text-gray-700 mb-3">{noticeBoard.description}</p>
+        <div className="text-gray-700 mb-3">
+          <p className="leading-relaxed">{truncatedDescription}</p>
+          {isDescriptionLong && (
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="text-blue-600 hover:text-blue-800 text-sm font-medium mt-1 transition-colors"
+            >
+              Read more
+            </button>
+          )}
+        </div>
         <p className="text-sm text-gray-500">
           Published by: {noticeBoard.editor}
         </p>
@@ -173,6 +193,14 @@ const NoticeBoardCard = ({
             ))}
         </div>
       </CardFooter>
+
+      {/* Notice Details Modal */}
+      <NoticeDetailsModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        noticeBoard={noticeBoard}
+        showStatus={showStatus}
+      />
     </Card>
   );
 };
