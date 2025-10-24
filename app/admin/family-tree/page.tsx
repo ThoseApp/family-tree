@@ -163,12 +163,17 @@ interface ValidationError {
   row: number;
   field: string;
   message: string;
+  recordData: FamilyMember;
+  value: string | number | null;
 }
 
 interface FailedRecord {
   record: ProcessedMember;
   error: string;
   originalRow: number;
+  errorCode?: string;
+  errorDetails?: any;
+  timestamp?: string;
 }
 
 interface AccountCreationResult {
@@ -227,6 +232,15 @@ const FamilyTreeUploadPage = () => {
     boolean | null
   >(null);
   const lineageColorCache = useRef(new Map<string, string>());
+
+  // State for managing excluded records
+  const [excludedRows, setExcludedRows] = useState<Set<number>>(new Set());
+  const [filteredExcelData, setFilteredExcelData] = useState<FamilyMember[]>(
+    []
+  );
+  const [filteredValidationErrors, setFilteredValidationErrors] = useState<
+    ValidationError[]
+  >([]);
 
   // Search functionality state
   const [searchQuery, setSearchQuery] = useState("");
@@ -377,9 +391,16 @@ const FamilyTreeUploadPage = () => {
 
       setUploadProgress(50);
 
+      // Reset excluded rows when parsing new file
+      setExcludedRows(new Set());
+
       const errors = validateExcelData(jsonData);
       setValidationErrors(errors);
       setExcelData(jsonData);
+
+      // Initialize filtered data
+      updateFilteredData(jsonData, errors, new Set());
+
       setUploadProgress(75);
 
       if (errors.length === 0) {
@@ -416,6 +437,8 @@ const FamilyTreeUploadPage = () => {
           row: index + 1,
           field: "Unique ID",
           message: "Unique ID is required",
+          recordData: row,
+          value: row["Unique ID"] || null,
         });
       }
 
@@ -430,6 +453,8 @@ const FamilyTreeUploadPage = () => {
             message: `Duplicate Unique ID in upload: '${currentId}' already used in row ${
               firstRow + 1
             }`,
+            recordData: row,
+            value: currentId,
           });
         } else {
           seenIdsInUpload.set(currentId, index);
@@ -441,6 +466,8 @@ const FamilyTreeUploadPage = () => {
           row: index + 1,
           field: "Date of Birth",
           message: "Invalid date format",
+          recordData: row,
+          value: row["Date of Birth"],
         });
       }
 
@@ -452,6 +479,8 @@ const FamilyTreeUploadPage = () => {
           row: index + 1,
           field: "Gender",
           message: "Gender must be Male, Female, Other, M, or F",
+          recordData: row,
+          value: row["Gender"],
         });
       }
 
@@ -472,6 +501,8 @@ const FamilyTreeUploadPage = () => {
           field: "Life Status",
           message:
             "Life Status must be 'Account Eligible', 'Deceased', or 'Child'",
+          recordData: row,
+          value: row["Life Status"],
         });
       }
 
@@ -483,6 +514,8 @@ const FamilyTreeUploadPage = () => {
             row: index + 1,
             field: "Email Address",
             message: "Invalid email format",
+            recordData: row,
+            value: row["Email Address"],
           });
         }
       }
@@ -495,6 +528,75 @@ const FamilyTreeUploadPage = () => {
     const date = new Date(dateString);
     return !isNaN(date.getTime());
   };
+
+  // Function to update filtered data based on excluded rows
+  const updateFilteredData = useCallback(
+    (
+      data: FamilyMember[],
+      errors: ValidationError[],
+      excludedRowSet: Set<number>
+    ) => {
+      // Filter out excluded rows from data
+      const filtered = data.filter(
+        (_, index) => !excludedRowSet.has(index + 1)
+      );
+      setFilteredExcelData(filtered);
+
+      // Filter out errors for excluded rows
+      const filteredErrors = errors.filter(
+        (error) => !excludedRowSet.has(error.row)
+      );
+      setFilteredValidationErrors(filteredErrors);
+    },
+    []
+  );
+
+  // Function to exclude a specific row
+  const excludeRow = useCallback(
+    (rowNumber: number) => {
+      const newExcludedRows = new Set(excludedRows);
+      newExcludedRows.add(rowNumber);
+      setExcludedRows(newExcludedRows);
+      updateFilteredData(excelData, validationErrors, newExcludedRows);
+
+      toast.info(`Excluded row ${rowNumber} from upload`);
+    },
+    [excludedRows, excelData, validationErrors, updateFilteredData]
+  );
+
+  // Function to include a previously excluded row
+  const includeRow = useCallback(
+    (rowNumber: number) => {
+      const newExcludedRows = new Set(excludedRows);
+      newExcludedRows.delete(rowNumber);
+      setExcludedRows(newExcludedRows);
+      updateFilteredData(excelData, validationErrors, newExcludedRows);
+
+      toast.info(`Included row ${rowNumber} back to upload`);
+    },
+    [excludedRows, excelData, validationErrors, updateFilteredData]
+  );
+
+  // Function to exclude all rows with errors
+  const excludeAllErrorRows = useCallback(() => {
+    const errorRows = new Set(validationErrors.map((error) => error.row));
+    const newExcludedRows = new Set([
+      ...Array.from(excludedRows),
+      ...Array.from(errorRows),
+    ]);
+    setExcludedRows(newExcludedRows);
+    updateFilteredData(excelData, validationErrors, newExcludedRows);
+
+    toast.info(`Excluded ${errorRows.size} rows with validation errors`);
+  }, [excludedRows, excelData, validationErrors, updateFilteredData]);
+
+  // Function to include all excluded rows
+  const includeAllRows = useCallback(() => {
+    setExcludedRows(new Set());
+    updateFilteredData(excelData, validationErrors, new Set());
+
+    toast.info("Included all rows back to upload");
+  }, [excelData, validationErrors, updateFilteredData]);
 
   const processDataForDatabase = (data: FamilyMember[]): ProcessedMember[] => {
     return data.map((row) => ({
@@ -533,21 +635,21 @@ const FamilyTreeUploadPage = () => {
   };
 
   const uploadToSupabase = useCallback(async () => {
-    if (!excelData.length) {
+    if (!filteredExcelData.length) {
       toast.error("No data to upload");
       return;
     }
 
-    // Re-run validation at upload time to catch any duplicates or changes
-    const freshValidationErrors = validateExcelData(excelData);
-    if (freshValidationErrors.length > 0) {
-      setValidationErrors(freshValidationErrors);
-      toast.error("Please fix validation errors before uploading");
+    // Check if there are any remaining validation errors in filtered data
+    if (filteredValidationErrors.length > 0) {
+      toast.error(
+        `Please fix ${filteredValidationErrors.length} validation errors or exclude those records before uploading`
+      );
       return;
     }
 
     setIsLoading(true);
-    const processedData = processDataForDatabase(excelData);
+    const processedData = processDataForDatabase(filteredExcelData);
 
     // Separate records into new inserts vs existing updates
     const existingRecordsMap = new Map(
@@ -566,10 +668,21 @@ const FamilyTreeUploadPage = () => {
         const existingRecord = existingRecordsMap.get(
           (newRecord.unique_id || "").trim()
         )!;
-        // Preserve picture_link, first_name, last_name from existing record
+
+        // Determine which picture_link to use
+        const shouldUpdatePictureLink =
+          (!existingRecord.picture_link ||
+            existingRecord.picture_link.trim() === "") &&
+          newRecord.picture_link &&
+          newRecord.picture_link.trim() !== "";
+
+        // Preserve first_name, last_name from existing record
+        // Update picture_link if existing is null/empty and new one is provided
         return {
           ...newRecord,
-          picture_link: existingRecord.picture_link,
+          picture_link: shouldUpdatePictureLink
+            ? newRecord.picture_link
+            : existingRecord.picture_link,
           first_name: existingRecord.first_name,
           last_name: existingRecord.last_name,
         };
@@ -596,7 +709,7 @@ const FamilyTreeUploadPage = () => {
       // Inform about records to be updated
       if (toUpdate.length > 0) {
         toast.info(
-          `Updating ${toUpdate.length} existing record(s) while preserving names and pictures`
+          `Updating ${toUpdate.length} existing record(s) while preserving names and updating pictures where needed`
         );
       }
 
@@ -611,14 +724,24 @@ const FamilyTreeUploadPage = () => {
 
         if (error) {
           failedCount += batch.length;
-          errors.push(
-            `Batch ${Math.floor(i / batchSize) + 1}: ${error.message}`
-          );
+          const errorMessage = `Batch ${Math.floor(i / batchSize) + 1}: ${
+            error.message
+          }${error.code ? ` (Code: ${error.code})` : ""}${
+            error.hint ? ` - Hint: ${error.hint}` : ""
+          }`;
+          errors.push(errorMessage);
           batch.forEach((record, index) => {
             failedRecords.push({
               record,
               error: error.message,
               originalRow: i + index + 1,
+              errorCode: error.code,
+              errorDetails: {
+                hint: error.hint,
+                details: error.details,
+                supabaseError: error,
+              },
+              timestamp: new Date().toISOString(),
             });
           });
         } else {
@@ -638,6 +761,7 @@ const FamilyTreeUploadPage = () => {
           const { data, error } = await supabase
             .from("family-tree")
             .update({
+              picture_link: record.picture_link, // Now included since we conditionally update it
               gender: record.gender,
               fathers_first_name: record.fathers_first_name,
               fathers_last_name: record.fathers_last_name,
@@ -654,20 +778,31 @@ const FamilyTreeUploadPage = () => {
               date_of_birth: record.date_of_birth,
               life_status: record.life_status,
               email_address: record.email_address,
-              // Note: picture_link, first_name, last_name are intentionally excluded
+              // Note: first_name, last_name are intentionally excluded (always preserved)
             })
             .eq("unique_id", record.unique_id)
             .select();
 
           if (error) {
             failedCount += 1;
-            errors.push(
-              `Update failed for ${record.unique_id}: ${error.message}`
-            );
+            const errorMessage = `Update failed for ${record.unique_id}: ${
+              error.message
+            }${error.code ? ` (Code: ${error.code})` : ""}${
+              error.hint ? ` - Hint: ${error.hint}` : ""
+            }`;
+            errors.push(errorMessage);
             failedRecords.push({
               record,
               error: error.message,
               originalRow: i + 1, // Approximate row number
+              errorCode: error.code,
+              errorDetails: {
+                hint: error.hint,
+                details: error.details,
+                supabaseError: error,
+                operation: "UPDATE",
+              },
+              timestamp: new Date().toISOString(),
             });
           } else {
             updatedCount += 1;
@@ -836,7 +971,7 @@ const FamilyTreeUploadPage = () => {
       setUploadProgress(100);
       setTimeout(() => setUploadProgress(0), 1000);
     }
-  }, [excelData, validationErrors]);
+  }, [filteredExcelData, filteredValidationErrors]);
 
   const downloadTemplate = () => {
     const templateHeader = requiredColumns.join(",");
@@ -3082,11 +3217,12 @@ const FamilyTreeUploadPage = () => {
               Records with a Unique ID that already exists in the database will
               be
               <span className="font-semibold"> updated</span> during upload. The{" "}
-              <span className="font-semibold">picture_link</span>,{" "}
-              <span className="font-semibold">first_name</span>, and{" "}
+              <span className="font-semibold">first_name</span> and{" "}
               <span className="font-semibold">last_name</span> fields will be
-              preserved from the existing record, while all other fields will be
-              updated with the new data.
+              preserved from the existing record. The{" "}
+              <span className="font-semibold">picture_link</span> will be
+              updated if the existing record has no picture and the new sheet
+              provides one. All other fields will be updated with the new data.
             </AlertDescription>
           </Alert> */}
           <div className="grid w-full items-center gap-2">
@@ -3138,16 +3274,266 @@ const FamilyTreeUploadPage = () => {
               <AlertTriangle className="h-5 w-5" />
               Validation Errors ({validationErrors.length})
             </CardTitle>
+            <CardDescription>
+              These errors must be fixed before uploading to the database
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {validationErrors.map((error, index) => (
-                <Alert key={index} variant="destructive">
-                  <AlertDescription>
-                    Row {error.row}, {error.field}: {error.message}
-                  </AlertDescription>
-                </Alert>
-              ))}
+            {/* Error Summary */}
+            <div className="mb-4 p-4 bg-orange-50 rounded-lg">
+              <div className="flex justify-between items-start mb-2">
+                <h4 className="font-semibold text-orange-800">
+                  Error Summary:
+                </h4>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={excludeAllErrorRows}
+                    className="text-xs"
+                    disabled={validationErrors.length === 0}
+                  >
+                    Exclude All Error Records
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={includeAllRows}
+                    className="text-xs"
+                    disabled={excludedRows.size === 0}
+                  >
+                    Include All Records
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm mb-3">
+                <div>
+                  <span className="font-medium">Total Records:</span>{" "}
+                  {excelData.length}
+                </div>
+                <div>
+                  <span className="font-medium">Excluded Records:</span>{" "}
+                  {excludedRows.size}
+                </div>
+                <div>
+                  <span className="font-medium">Records to Upload:</span>{" "}
+                  {filteredExcelData.length}
+                </div>
+                <div>
+                  <span className="font-medium">Remaining Errors:</span>{" "}
+                  {filteredValidationErrors.length}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span className="font-medium">Unique ID Errors:</span>{" "}
+                  {
+                    validationErrors.filter((e) => e.field === "Unique ID")
+                      .length
+                  }
+                </div>
+                <div>
+                  <span className="font-medium">Date Format Errors:</span>{" "}
+                  {
+                    validationErrors.filter((e) => e.field === "Date of Birth")
+                      .length
+                  }
+                </div>
+                <div>
+                  <span className="font-medium">Gender Errors:</span>{" "}
+                  {validationErrors.filter((e) => e.field === "Gender").length}
+                </div>
+                <div>
+                  <span className="font-medium">Life Status Errors:</span>{" "}
+                  {
+                    validationErrors.filter((e) => e.field === "Life Status")
+                      .length
+                  }
+                </div>
+                <div>
+                  <span className="font-medium">Email Format Errors:</span>{" "}
+                  {
+                    validationErrors.filter((e) => e.field === "Email Address")
+                      .length
+                  }
+                </div>
+                <div>
+                  <span className="font-medium">Other Errors:</span>{" "}
+                  {
+                    validationErrors.filter(
+                      (e) =>
+                        ![
+                          "Unique ID",
+                          "Date of Birth",
+                          "Gender",
+                          "Life Status",
+                          "Email Address",
+                        ].includes(e.field)
+                    ).length
+                  }
+                </div>
+              </div>
+            </div>
+
+            {/* Detailed Error List */}
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              <h4 className="font-medium mb-2">
+                Detailed Errors with Record Data:
+              </h4>
+              <div className="text-xs text-gray-600 mb-2">
+                This table shows the complete record data for each validation
+                error to help you identify and fix the issues.
+              </div>
+              <div className="border rounded-lg overflow-hidden">
+                <div className="max-h-96 overflow-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Actions</TableHead>
+                        <TableHead>Row #</TableHead>
+                        <TableHead>Field</TableHead>
+                        <TableHead>Error Message</TableHead>
+                        <TableHead>Invalid Value</TableHead>
+                        <TableHead>Full Name</TableHead>
+                        <TableHead>Unique ID</TableHead>
+                        <TableHead>Gender</TableHead>
+                        <TableHead>Date of Birth</TableHead>
+                        <TableHead>Life Status</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Father</TableHead>
+                        <TableHead>Mother</TableHead>
+                        <TableHead>Spouse</TableHead>
+                        <TableHead>Severity</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {validationErrors.map((error, index) => {
+                        const isExcluded = excludedRows.has(error.row);
+                        return (
+                          <TableRow
+                            key={index}
+                            className={`hover:bg-gray-50 ${
+                              isExcluded ? "opacity-50 bg-gray-100" : ""
+                            }`}
+                          >
+                            <TableCell className="w-32">
+                              {isExcluded ? (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => includeRow(error.row)}
+                                  className="text-xs text-green-600 border-green-200"
+                                >
+                                  Include
+                                </Button>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => excludeRow(error.row)}
+                                  className="text-xs text-red-600 border-red-200"
+                                >
+                                  Exclude
+                                </Button>
+                              )}
+                            </TableCell>
+                            <TableCell className="font-medium">
+                              {error.row}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{error.field}</Badge>
+                            </TableCell>
+                            <TableCell className="text-red-600 max-w-xs">
+                              <div className="truncate" title={error.message}>
+                                {error.message}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-red-700 font-mono text-xs max-w-xs">
+                              <div
+                                className="truncate bg-red-50 p-1 rounded"
+                                title={String(error.value)}
+                              >
+                                {error.value ? `"${error.value}"` : "<empty>"}
+                              </div>
+                            </TableCell>
+                            <TableCell className="max-w-xs">
+                              <div className="truncate">
+                                {error.recordData["First Name"]}{" "}
+                                {error.recordData["Last Name"]}
+                              </div>
+                            </TableCell>
+                            <TableCell className="font-mono text-xs max-w-xs">
+                              <div className="truncate">
+                                {error.recordData["Unique ID"] || "<empty>"}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-xs max-w-xs">
+                              <div className="truncate">
+                                {error.recordData["Gender"] || "<empty>"}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-xs max-w-xs">
+                              <div className="truncate">
+                                {error.recordData["Date of Birth"] || "<empty>"}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-xs max-w-xs">
+                              <div className="truncate">
+                                {error.recordData["Life Status"] || "<empty>"}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-xs max-w-xs">
+                              <div className="truncate">
+                                {error.recordData["Email Address"] || "<empty>"}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-xs max-w-xs">
+                              <div className="truncate">
+                                {error.recordData["Fathers' First Name"]}{" "}
+                                {error.recordData["Fathers' Last Name"]}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-xs max-w-xs">
+                              <div className="truncate">
+                                {error.recordData["Mothers' First Name"]}{" "}
+                                {error.recordData["Mothers' Last Name"]}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-xs max-w-xs">
+                              <div className="truncate">
+                                {error.recordData["Spouses' First Name"]}{" "}
+                                {error.recordData["Spouses' Last Name"]}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={
+                                  error.field === "Unique ID"
+                                    ? "destructive"
+                                    : [
+                                        "Date of Birth",
+                                        "Gender",
+                                        "Life Status",
+                                        "Email Address",
+                                      ].includes(error.field)
+                                    ? "default"
+                                    : "secondary"
+                                }
+                              >
+                                {error.field === "Unique ID"
+                                  ? "Critical"
+                                  : "High"}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -3160,19 +3546,26 @@ const FamilyTreeUploadPage = () => {
             <CardTitle className="flex items-center justify-between">
               <span className="flex items-center gap-2">
                 <CheckCircle className="h-5 w-5 text-green-600" />
-                Data Preview ({excelData.length} records)
+                Data Preview ({filteredExcelData.length} records to upload,{" "}
+                {excludedRows.size} excluded)
               </span>
               <div className="flex gap-2">
                 <Badge
                   variant={
-                    validationErrors.length > 0 ? "destructive" : "default"
+                    filteredValidationErrors.length > 0
+                      ? "destructive"
+                      : "default"
                   }
                 >
-                  {validationErrors.length} Errors
+                  {filteredValidationErrors.length} Remaining Errors
                 </Badge>
                 <Button
                   onClick={uploadToSupabase}
-                  disabled={isLoading || validationErrors.length > 0}
+                  disabled={
+                    isLoading ||
+                    filteredValidationErrors.length > 0 ||
+                    filteredExcelData.length === 0
+                  }
                   className="flex items-center gap-2"
                 >
                   {isLoading ? "Uploading..." : "Upload to Database"}
@@ -3181,6 +3574,15 @@ const FamilyTreeUploadPage = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {excludedRows.size > 0 && (
+              <Alert className="mb-4">
+                <AlertDescription>
+                  {excludedRows.size} record(s) are excluded from upload. Only
+                  the {filteredExcelData.length} records shown below will be
+                  uploaded.
+                </AlertDescription>
+              </Alert>
+            )}
             <div className="border rounded-lg overflow-hidden">
               <div className="max-h-96 overflow-auto">
                 <Table>
@@ -3201,7 +3603,7 @@ const FamilyTreeUploadPage = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {excelData.slice(0, 10).map((member, index) => (
+                    {filteredExcelData.slice(0, 10).map((member, index) => (
                       <TableRow key={index}>
                         <TableCell className="font-medium">
                           {member["Unique ID"]}
@@ -3249,9 +3651,10 @@ const FamilyTreeUploadPage = () => {
                   </TableBody>
                 </Table>
               </div>
-              {excelData.length > 10 && (
+              {filteredExcelData.length > 10 && (
                 <div className="p-4 text-center text-muted-foreground border-t">
-                  Showing first 10 of {excelData.length} records
+                  Showing first 10 of {filteredExcelData.length} records to
+                  upload
                 </div>
               )}
             </div>
@@ -3273,6 +3676,7 @@ const FamilyTreeUploadPage = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Upload Results Summary */}
             <div className="grid grid-cols-3 gap-4">
               <div className="p-4 border rounded-lg text-center">
                 <div className="text-2xl font-bold text-green-600">
@@ -3299,6 +3703,69 @@ const FamilyTreeUploadPage = () => {
                 </div>
               </div>
             </div>
+
+            {/* Error Analysis (if there are errors) */}
+            {uploadResults.failed > 0 && (
+              <div className="p-4 bg-red-50 rounded-lg">
+                <h4 className="font-semibold text-red-800 mb-2">
+                  Error Analysis:
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium">Insert Failures:</span>{" "}
+                    {
+                      uploadResults.failedRecords.filter(
+                        (r) =>
+                          !r.errorDetails?.operation ||
+                          r.errorDetails?.operation === "INSERT"
+                      ).length
+                    }
+                  </div>
+                  <div>
+                    <span className="font-medium">Update Failures:</span>{" "}
+                    {
+                      uploadResults.failedRecords.filter(
+                        (r) => r.errorDetails?.operation === "UPDATE"
+                      ).length
+                    }
+                  </div>
+                  <div>
+                    <span className="font-medium">Constraint Violations:</span>{" "}
+                    {
+                      uploadResults.failedRecords.filter((r) =>
+                        r.errorCode?.includes("23")
+                      ).length
+                    }
+                  </div>
+                  <div>
+                    <span className="font-medium">Permission Errors:</span>{" "}
+                    {
+                      uploadResults.failedRecords.filter((r) =>
+                        r.errorCode?.includes("42501")
+                      ).length
+                    }
+                  </div>
+                </div>
+                {uploadResults.errors.length > 0 && (
+                  <div className="mt-3">
+                    <span className="font-medium">Most Recent Errors:</span>
+                    <ul className="list-disc list-inside mt-1 text-xs space-y-1">
+                      {uploadResults.errors.slice(0, 3).map((error, idx) => (
+                        <li key={idx} className="text-red-700">
+                          {error}
+                        </li>
+                      ))}
+                      {uploadResults.errors.length > 3 && (
+                        <li className="text-red-600">
+                          ...and {uploadResults.errors.length - 3} more errors
+                          (see detailed list below)
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Account Creation Results */}
             {uploadResults.accountResults && (
@@ -3449,6 +3916,11 @@ const FamilyTreeUploadPage = () => {
                 <h4 className="font-medium">
                   Failed Records ({uploadResults.failedRecords.length}):
                 </h4>
+                <div className="text-xs text-gray-600 mb-2">
+                  Detailed information about each record that failed to upload,
+                  including the complete record data and technical error
+                  details.
+                </div>
                 <div className="border rounded-lg overflow-hidden">
                   <div className="max-h-96 overflow-auto">
                     <Table>
@@ -3457,7 +3929,12 @@ const FamilyTreeUploadPage = () => {
                           <TableHead>Row #</TableHead>
                           <TableHead>Unique ID</TableHead>
                           <TableHead>Name</TableHead>
-                          <TableHead>Error</TableHead>
+                          <TableHead>Operation</TableHead>
+                          <TableHead>Error Code</TableHead>
+                          <TableHead>Error Message</TableHead>
+                          <TableHead>Failed Record Data</TableHead>
+                          <TableHead>Error Details</TableHead>
+                          <TableHead>Timestamp</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -3474,8 +3951,121 @@ const FamilyTreeUploadPage = () => {
                                 {failedRecord.record.first_name}{" "}
                                 {failedRecord.record.last_name}
                               </TableCell>
-                              <TableCell className="text-red-600 text-sm">
-                                {failedRecord.error}
+                              <TableCell>
+                                <Badge
+                                  variant={
+                                    failedRecord.errorDetails?.operation ===
+                                    "UPDATE"
+                                      ? "secondary"
+                                      : "default"
+                                  }
+                                >
+                                  {failedRecord.errorDetails?.operation ||
+                                    "INSERT"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-red-600 text-sm font-mono">
+                                {failedRecord.errorCode || "N/A"}
+                              </TableCell>
+                              <TableCell className="text-red-600 text-sm max-w-xs">
+                                <div
+                                  className="truncate"
+                                  title={failedRecord.error}
+                                >
+                                  {failedRecord.error}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-xs max-w-md">
+                                <div className="space-y-1 bg-gray-50 p-2 rounded">
+                                  <div>
+                                    <span className="font-semibold">
+                                      Gender:
+                                    </span>{" "}
+                                    {failedRecord.record.gender}
+                                  </div>
+                                  <div>
+                                    <span className="font-semibold">DOB:</span>{" "}
+                                    {failedRecord.record.date_of_birth || "N/A"}
+                                  </div>
+                                  <div>
+                                    <span className="font-semibold">
+                                      Father:
+                                    </span>{" "}
+                                    {failedRecord.record.fathers_first_name}{" "}
+                                    {failedRecord.record.fathers_last_name}
+                                  </div>
+                                  <div>
+                                    <span className="font-semibold">
+                                      Mother:
+                                    </span>{" "}
+                                    {failedRecord.record.mothers_first_name}{" "}
+                                    {failedRecord.record.mothers_last_name}
+                                  </div>
+                                  <div>
+                                    <span className="font-semibold">
+                                      Spouse:
+                                    </span>{" "}
+                                    {failedRecord.record.spouses_first_name}{" "}
+                                    {failedRecord.record.spouses_last_name}
+                                  </div>
+                                  <div>
+                                    <span className="font-semibold">
+                                      Status:
+                                    </span>{" "}
+                                    {failedRecord.record.life_status}
+                                  </div>
+                                  <div>
+                                    <span className="font-semibold">
+                                      Email:
+                                    </span>{" "}
+                                    {failedRecord.record.email_address || "N/A"}
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-sm max-w-md">
+                                {failedRecord.errorDetails && (
+                                  <div className="space-y-1">
+                                    {failedRecord.errorDetails.hint && (
+                                      <div className="text-blue-600">
+                                        <span className="font-semibold">
+                                          Hint:
+                                        </span>{" "}
+                                        {failedRecord.errorDetails.hint}
+                                      </div>
+                                    )}
+                                    {failedRecord.errorDetails.details && (
+                                      <div className="text-gray-600 text-xs">
+                                        <span className="font-semibold">
+                                          Details:
+                                        </span>{" "}
+                                        {failedRecord.errorDetails.details}
+                                      </div>
+                                    )}
+                                    {failedRecord.errorDetails.supabaseError
+                                      ?.message && (
+                                      <div className="text-orange-600 text-xs">
+                                        <span className="font-semibold">
+                                          Full Error:
+                                        </span>
+                                        <pre className="whitespace-pre-wrap mt-1 p-2 bg-gray-100 rounded text-xs max-h-20 overflow-auto">
+                                          {JSON.stringify(
+                                            failedRecord.errorDetails
+                                              .supabaseError,
+                                            null,
+                                            2
+                                          )}
+                                        </pre>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-xs text-gray-500">
+                                {failedRecord.timestamp
+                                  ? new Date(
+                                      failedRecord.timestamp
+                                    ).toLocaleString()
+                                  : "N/A"}
                               </TableCell>
                             </TableRow>
                           )
