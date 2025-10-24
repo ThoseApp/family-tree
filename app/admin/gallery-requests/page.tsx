@@ -56,7 +56,7 @@ const GalleryRequestsPage = () => {
           table: "galleries",
           filter: `status=eq.${GalleryStatusEnum.pending}`,
         },
-        (payload) => {
+        (payload: any) => {
           const newGallery = payload.new as GalleryType;
           setPendingGalleries((prev) => [newGallery, ...prev]);
           toast.info(
