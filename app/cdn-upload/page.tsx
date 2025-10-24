@@ -67,7 +67,8 @@ const CDNUploadPage = () => {
       // Check against environment variables
       const validUsername =
         process.env.NEXT_PUBLIC_CDN_USERNAME || "mosuroAdmin123";
-      const validPassword = process.env.NEXT_PUBLIC_CDN_PASSWORD || "Demo@123.";
+      const validPassword =
+        process.env.NEXT_PUBLIC_CDN_PASSWORD || "Demo@123..";
 
       if (username === validUsername && password === validPassword) {
         setIsAuthenticated(true);

@@ -4,7 +4,7 @@ import Image from "next/image";
 import React from "react";
 import { Card, CardContent } from "../ui/card";
 import { useRouter } from "next/navigation";
-import { dummyProfileImage } from "@/lib/constants";
+import { dummyFemaleProfileImage, dummyProfileImage } from "@/lib/constants";
 import { FamilyMember } from "@/lib/types";
 
 interface FamilyMemberCardProps {
@@ -26,7 +26,11 @@ const FamilyMemberCard = ({ member }: FamilyMemberCardProps) => {
       {/* TOP IMAGE */}
       <div className="relative group-hover:cursor-pointer h-[30vh] bg-border w-full">
         <Image
-          src={member.imageSrc || dummyProfileImage}
+          src={
+            member.gender === "female"
+              ? dummyFemaleProfileImage
+              : dummyProfileImage
+          }
           fill
           alt={member.name}
           className=" w-full h-full object-cover rounded-t-xl  transition-all duration-200 ease-in-out"

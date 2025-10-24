@@ -1,0 +1,56 @@
+[
+    {
+        "id": "album-001",
+        "name": "Family Reunions",
+        "description": "Photos from our annual family reunion gatherings",
+        "createdBy": "admin-user-id-001",
+        "createdAt": "2024-01-05T00:00:00Z",
+        "coverImageUrl": "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800",
+        "mediaItems": []
+    },
+    {
+        "id": "album-002",
+        "name": "Celebrations",
+        "description": "Birthday parties, anniversaries, and special occasions",
+        "createdBy": "publisher-user-id-001",
+        "createdAt": "2024-01-08T00:00:00Z",
+        "coverImageUrl": "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800",
+        "mediaItems": []
+    },
+    {
+        "id": "album-003",
+        "name": "Weddings",
+        "description": "Wedding celebrations through the generations",
+        "createdBy": "admin-user-id-001",
+        "createdAt": "2024-02-15T00:00:00Z",
+        "coverImageUrl": "https://images.unsplash.com/photo-1519741497674-611481863552?w=800",
+        "mediaItems": []
+    },
+    {
+        "id": "album-004",
+        "name": "Historical Photos",
+        "description": "Precious photos from our family's past",
+        "createdBy": "publisher-user-id-001",
+        "createdAt": "2024-02-20T00:00:00Z",
+        "coverImageUrl": "https://images.unsplash.com/photo-1516802273409-68526ee1bdd6?w=800",
+        "mediaItems": []
+    },
+    {
+        "id": "album-005",
+        "name": "Holidays",
+        "description": "Christmas, Thanksgiving, and other holiday celebrations",
+        "createdBy": "admin-user-id-001",
+        "createdAt": "2024-03-01T00:00:00Z",
+        "coverImageUrl": "https://images.unsplash.com/photo-1512389142860-9c449e58a543?w=800",
+        "mediaItems": []
+    },
+    {
+        "id": "album-006",
+        "name": "Kids & Youth",
+        "description": "Photos of the youngest generation growing up",
+        "createdBy": "publisher-user-id-001",
+        "createdAt": "2024-04-01T00:00:00Z",
+        "coverImageUrl": "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800",
+        "mediaItems": []
+    }
+]

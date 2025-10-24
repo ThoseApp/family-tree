@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { isMockMode, simulateDelay } from "@/lib/mock-data/api-helpers";
+import users from "@/lib/mock-data/fixtures/users.json";
 
 const createAdminClient = () => {
   return createClient(
@@ -50,7 +52,38 @@ export async function GET(request: NextRequest) {
   try {
     console.log("🔍 API: Getting admin users...");
 
-    // Verify admin user
+    // Handle mock mode
+    if (isMockMode()) {
+      await simulateDelay();
+
+      console.log("🧪 API: Using mock data for admin users");
+
+      // Filter mock users who have is_admin = true
+      const adminUsers = users.filter(
+        (user) => user.user_metadata?.is_admin === true
+      );
+
+      console.log(`👥 API: Found ${adminUsers.length} mock admin users`);
+
+      const adminUserData = adminUsers.map((user) => ({
+        id: user.id,
+        email: user.email || "",
+        user_metadata: {
+          is_admin: true,
+          ...(user.user_metadata || {}),
+        },
+      }));
+
+      const response = {
+        adminUsers: adminUserData,
+        adminIds: adminUserData.map((user) => user.id),
+      };
+
+      console.log(`✅ API: Returning ${response.adminIds.length} admin IDs`);
+      return NextResponse.json(response);
+    }
+
+    // Verify admin user (real mode only)
     const adminUser = await verifyAdminUser(request);
     if (!adminUser) {
       console.log("❌ API: User not authorized as admin");
@@ -114,6 +147,19 @@ export async function GET(request: NextRequest) {
 // This endpoint is for server-side calls from other API routes
 export async function POST(request: NextRequest) {
   try {
+    // Handle mock mode
+    if (isMockMode()) {
+      await simulateDelay();
+
+      // Filter mock users who have is_admin = true
+      const adminUsers = users.filter(
+        (user) => user.user_metadata?.is_admin === true
+      );
+
+      const adminIds = adminUsers.map((user) => user.id);
+      return NextResponse.json({ adminIds });
+    }
+
     // Check if this is an internal server call by checking for a special header
     const internalKey = request.headers.get("x-internal-key");
     if (internalKey !== process.env.INTERNAL_API_KEY) {

@@ -2,25 +2,81 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import { fadeInUp } from "@/lib/animaitons";
 import ProfileHistoryCard from "@/components/cards/profile-history-card";
 import { historyCards } from "@/lib/constants/landing";
 import { Button } from "@/components/ui/button";
 import { useLandingPageContent } from "@/hooks/use-landing-page-content";
+import { isMockMode } from "@/lib/mock-data/initialize";
+import { mockDataService } from "@/lib/mock-data/mock-service";
 import Link from "next/link";
+import { dummyFemaleProfileImage, dummyProfileImage } from "@/lib/constants";
 
 const HistorySection = () => {
   const { sections, loading, error } = useLandingPageContent();
   const historySection = sections.history;
+  const [mockHistoryCards, setMockHistoryCards] = useState<any[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Fallback content
-  const defaultContent = {
-    title: "Every Person Makes His Own History",
-    subtitle: "The Legacy of the Mosuro Family",
-    description:
-      "Explore the rich heritage and stories that shaped our family through generations.",
-    image_url: "/images/landing/makes_history.webp",
-  };
+  // Load mock family members for history cards if in mock mode
+  useEffect(() => {
+    const loadMockData = async () => {
+      if (isMockMode()) {
+        try {
+          console.log("[Mock Landing] Loading history cards from mock data");
+          await mockDataService.initialize();
+          const members = mockDataService.query(
+            "family-tree",
+            [],
+            [{ column: "birth_date", ascending: true }]
+          );
+
+          // Take first 4 members for history cards
+          const featuredHistoryMembers = members
+            .slice(0, 4)
+            .map((member: any) => ({
+              imageSrc:
+                member.profile_image_url ||
+                (member.gender === "female"
+                  ? dummyFemaleProfileImage
+                  : dummyProfileImage),
+              name: `${member.first_name} ${member.last_name}`,
+              description: member.biography || "",
+            }));
+
+          setMockHistoryCards(featuredHistoryMembers);
+          console.log(
+            `[Mock Landing] Loaded ${featuredHistoryMembers.length} history cards`
+          );
+        } catch (error) {
+          console.error("[Mock Landing] Error loading history cards:", error);
+        }
+      }
+      setIsInitialized(true);
+    };
+
+    loadMockData();
+  }, []);
+
+  const displayHistoryCards = isMockMode() ? mockHistoryCards : historyCards;
+
+  // Fallback content (different for mock vs production)
+  const defaultContent = isMockMode()
+    ? {
+        title: "Every Person Makes His Own History",
+        subtitle: "The Legacy of the Smith Family",
+        description:
+          "Explore the rich heritage and stories that shaped our family through generations.",
+        image_url: "/images/landing/makes_history.webp",
+      }
+    : {
+        title: "Every Person Makes His Own History",
+        subtitle: "The Legacy of the Mosuro Family",
+        description:
+          "Explore the rich heritage and stories that shaped our family through generations.",
+        image_url: "/images/landing/makes_history.webp",
+      };
 
   const content = historySection || defaultContent;
 
@@ -61,9 +117,10 @@ const HistorySection = () => {
       <div className=" -mt-32  px-4 md:px-10 xl:px-16">
         <motion.div variants={fadeInUp} className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {historyCards.map((card, index) => (
-              <ProfileHistoryCard key={index} {...card} />
-            ))}
+            {isInitialized &&
+              displayHistoryCards.map((card, index) => (
+                <ProfileHistoryCard key={index} {...card} />
+              ))}
           </div>
         </motion.div>
       </div>

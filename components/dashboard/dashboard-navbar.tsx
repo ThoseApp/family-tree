@@ -402,7 +402,7 @@ const DashboardNavbar = () => {
                 className="rounded-full relative"
                 asChild
               >
-                <Link href="/admin/member-requests">
+                <Link href="/admin/family-member-requests">
                   <Mail className="size-6" />
                   {pendingMemberRequestsCount > 0 && (
                     <Badge

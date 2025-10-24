@@ -2,6 +2,8 @@ import { ProcessedMember, FamilyMember } from "@/lib/types";
 import { supabase } from "@/lib/supabase/client";
 import { dummyProfileImage, dummyFemaleProfileImage } from "../constants";
 import { LifeStatusEnum } from "../constants/enums";
+import { isMockMode } from "@/lib/mock-data/initialize";
+import { mockDataService } from "@/lib/mock-data/mock-service";
 
 /**
  * Utility function to safely truncate strings to database field limits
@@ -102,6 +104,27 @@ export function familyMemberToProcessedMember(
  * Fetch all family members from the family-tree table
  */
 export async function fetchFamilyMembers(): Promise<ProcessedMember[]> {
+  // Handle mock mode
+  if (isMockMode()) {
+    console.log("[Mock API] Fetching family members from mock data");
+
+    try {
+      await mockDataService.initialize();
+      const members = mockDataService.query(
+        "family-tree",
+        [],
+        [{ column: "created_at", ascending: false }]
+      );
+
+      console.log(`[Mock API] Found ${members.length} family members`);
+      return members as ProcessedMember[];
+    } catch (error: any) {
+      console.error("[Mock API] Error fetching family members:", error);
+      throw new Error(`Failed to fetch family members: ${error.message}`);
+    }
+  }
+
+  // Real Supabase mode
   const { data, error } = await supabase
     .from("family-tree")
     .select("*")

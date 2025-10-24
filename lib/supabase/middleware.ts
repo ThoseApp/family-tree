@@ -2,6 +2,9 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { UserRole } from "@/lib/types";
 
+// Check if mock mode is enabled
+const isMockMode = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true";
+
 // Helper function to determine user role from user metadata and profile
 function getUserRole(user: any, userProfile: any): UserRole {
   // Check user metadata first (for admin/publisher flags)
@@ -47,6 +50,12 @@ export async function updateSession(request: NextRequest) {
   });
 
   try {
+    // In mock mode, skip middleware checks and allow all routes
+    if (isMockMode) {
+      console.log("[Mock Middleware] Bypassing auth checks in mock mode");
+      return response;
+    }
+
     // Create the Supabase client with proper cookie handling
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

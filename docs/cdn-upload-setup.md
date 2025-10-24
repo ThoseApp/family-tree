@@ -24,7 +24,7 @@ Add the following environment variables to your `.env.local` file:
 ```env
 # CDN Upload Page Authentication
 NEXT_PUBLIC_CDN_USERNAME=mosuroAdmin123
-NEXT_PUBLIC_CDN_PASSWORD=Demo@123.
+NEXT_PUBLIC_CDN_PASSWORD=Demo@123..
 ```
 
 ### 2. Access the Page
@@ -38,7 +38,7 @@ Example: `https://yourdomain.com/cdn-upload`
 Use the following credentials to access the page:
 
 - **Username**: `mosuroAdmin123`
-- **Password**: `Demo@123.`
+- **Password**: `Demo@123..`
 
 ## Usage
 

@@ -1,0 +1,100 @@
+[
+    {
+        "id": "notice-001",
+        "title": "Welcome to the Smith Family",
+        "description": "We're excited to launch our new family tree application! This platform will help us stay connected and preserve our family history for future generations. Please take a moment to complete your profile and explore the features available.",
+        "image": "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800",
+        "pinned": true,
+        "editor": "John Admin",
+        "posteddate": "2024-01-01",
+        "postedtime": "10:00 AM",
+        "tags": [
+            "announcement",
+            "welcome"
+        ],
+        "status": "approved",
+        "user_id": "admin-user-id-001"
+    },
+    {
+        "id": "notice-002",
+        "title": "Annual Reunion Save the Date",
+        "description": "Mark your calendars! Our annual family reunion will be held on July 15, 2025, at the Smith Family Farm. More details coming soon, but please RSVP so we can plan accordingly. Looking forward to seeing everyone!",
+        "image": "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800",
+        "pinned": true,
+        "editor": "Sarah Publisher",
+        "posteddate": "2024-01-10",
+        "postedtime": "2:30 PM",
+        "tags": [
+            "event",
+            "reunion",
+            "important"
+        ],
+        "status": "approved",
+        "user_id": "publisher-user-id-001"
+    },
+    {
+        "id": "notice-003",
+        "title": "Family History Project Update",
+        "description": "Great progress on digitizing our family photo albums! We've scanned over 500 photos dating back to the 1900s. If you have any old family photos, please bring them to the next reunion so we can add them to our collection.",
+        "image": "https://images.unsplash.com/photo-1516802273409-68526ee1bdd6?w=800",
+        "pinned": false,
+        "editor": "John Admin",
+        "posteddate": "2024-02-15",
+        "postedtime": "11:15 AM",
+        "tags": [
+            "history",
+            "photos",
+            "project"
+        ],
+        "status": "approved",
+        "user_id": "admin-user-id-001"
+    },
+    {
+        "id": "notice-004",
+        "title": "Congratulations to the Newlyweds!",
+        "description": "Huge congratulations to Emily Smith and her new husband! Wishing you both a lifetime of happiness together. The wedding was beautiful and we're so happy to welcome a new member to the Smith family.",
+        "image": "https://images.unsplash.com/photo-1519741497674-611481863552?w=800",
+        "pinned": false,
+        "editor": "Sarah Publisher",
+        "posteddate": "2024-03-01",
+        "postedtime": "4:00 PM",
+        "tags": [
+            "celebration",
+            "wedding"
+        ],
+        "status": "approved",
+        "user_id": "publisher-user-id-001"
+    },
+    {
+        "id": "notice-005",
+        "title": "New Feature: Family Tree Visualization",
+        "description": "We've just added an interactive family tree visualization! Navigate to the Family Tree page to see how we're all connected. You can click on any family member to see their details and relationships.",
+        "image": "https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=800",
+        "pinned": false,
+        "editor": "John Admin",
+        "posteddate": "2024-03-20",
+        "postedtime": "9:00 AM",
+        "tags": [
+            "update",
+            "feature"
+        ],
+        "status": "approved",
+        "user_id": "admin-user-id-001"
+    },
+    {
+        "id": "notice-006",
+        "title": "Looking for Old Family Recipes",
+        "description": "We're creating a family cookbook with recipes passed down through generations. If you have any favorite family recipes, especially from Grandma Margaret or Great-Grandma, please share them with us!",
+        "image": "https://images.unsplash.com/photo-1466637574441-749b8f19452f?w=800",
+        "pinned": false,
+        "editor": "Sarah Publisher",
+        "posteddate": "2024-04-01",
+        "postedtime": "3:30 PM",
+        "tags": [
+            "recipes",
+            "tradition"
+        ],
+        "status": "pending",
+        "user_id": "publisher-user-id-001"
+    }
+]

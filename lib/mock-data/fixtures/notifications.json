@@ -1,0 +1,86 @@
+[
+    {
+        "id": "notification-001",
+        "title": "Welcome to the Family Tree!",
+        "body": "Your account has been approved. Start exploring and connecting with family members.",
+        "type": "account_approved",
+        "read": false,
+        "image": "https://ui-avatars.com/api/?name=Welcome&background=10b981&color=fff",
+        "user_id": "regular-user-id-001",
+        "resource_id": null,
+        "created_at": "2024-02-01T00:00:00Z",
+        "updated_at": "2024-02-01T00:00:00Z"
+    },
+    {
+        "id": "notification-002",
+        "title": "New Event Request",
+        "body": "Michael Johnson has submitted 'Spring Picnic at Central Park' for approval.",
+        "type": "event_request",
+        "read": false,
+        "image": "https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=200",
+        "user_id": "admin-user-id-001",
+        "resource_id": "event-004",
+        "created_at": "2024-04-01T00:00:00Z",
+        "updated_at": "2024-04-01T00:00:00Z"
+    },
+    {
+        "id": "notification-003",
+        "title": "Gallery Upload Approved",
+        "body": "Your photo 'Wedding day of Emily and her husband' has been approved and is now visible to everyone.",
+        "type": "gallery_approved",
+        "read": true,
+        "image": "https://images.unsplash.com/photo-1519741497674-611481863552?w=200",
+        "user_id": "admin-user-id-001",
+        "resource_id": "gallery-003",
+        "created_at": "2024-02-15T12:00:00Z",
+        "updated_at": "2024-02-16T00:00:00Z"
+    },
+    {
+        "id": "notification-004",
+        "title": "Event Invitation",
+        "body": "You've been invited to 'Annual Family Reunion' on July 15, 2025.",
+        "type": "event_invitation",
+        "read": false,
+        "image": "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=200",
+        "user_id": "regular-user-id-001",
+        "resource_id": "event-001",
+        "created_at": "2024-01-11T00:00:00Z",
+        "updated_at": "2024-01-11T00:00:00Z"
+    },
+    {
+        "id": "notification-005",
+        "title": "New Notice Board Post",
+        "body": "Sarah Publisher posted 'Looking for Old Family Recipes'. Check it out!",
+        "type": "notice_board_post",
+        "read": false,
+        "image": "https://images.unsplash.com/photo-1466637574441-749b8f19452f?w=200",
+        "user_id": "admin-user-id-001",
+        "resource_id": "notice-006",
+        "created_at": "2024-04-01T15:30:00Z",
+        "updated_at": "2024-04-01T15:30:00Z"
+    },
+    {
+        "id": "notification-006",
+        "title": "Event Declined",
+        "body": "Your event 'Kids' Summer Camp' has been declined. Please check if it meets our community guidelines.",
+        "type": "event_declined",
+        "read": true,
+        "image": "https://images.unsplash.com/photo-1504805572947-34fad45aed93?w=200",
+        "user_id": "regular-user-id-001",
+        "resource_id": "event-006",
+        "created_at": "2024-05-02T10:00:00Z",
+        "updated_at": "2024-05-02T11:00:00Z"
+    },
+    {
+        "id": "notification-007",
+        "title": "Family Member Request",
+        "body": "A new family member addition has been requested and needs your review.",
+        "type": "family_member_request",
+        "read": false,
+        "image": null,
+        "user_id": "admin-user-id-001",
+        "resource_id": "member-request-001",
+        "created_at": "2024-04-15T00:00:00Z",
+        "updated_at": "2024-04-15T00:00:00Z"
+    }
+]

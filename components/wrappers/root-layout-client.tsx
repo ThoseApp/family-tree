@@ -3,6 +3,7 @@
 import { Montserrat } from "next/font/google";
 import { Toaster } from "sonner";
 import { ConnectionStatusBanner } from "@/components/connection-status-banner";
+import { MockDataBanner } from "@/components/mock-data-banner";
 import { useEffect } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useUserStore } from "@/stores/user-store";
@@ -67,6 +68,7 @@ export default function RootLayoutClient({ children }: RootLayoutClientProps) {
       <body className={`${font.className}`}>
         {/* <UIToaster /> */}
         <Toaster position="top-center" richColors />
+        {process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true" && <MockDataBanner />}
         <ConnectionStatusBanner />
         {/* //TODO: ADD THEME PROVIDER */}
         {children}

@@ -1,0 +1,57 @@
+[
+    {
+        "id": "invitation-001",
+        "event_id": "event-001",
+        "inviter_id": "admin-user-id-001",
+        "invitee_id": "regular-user-id-001",
+        "status": "pending",
+        "message": "Hope you can make it to the reunion this year! It's going to be a great time.",
+        "responded_at": null,
+        "created_at": "2024-01-11T00:00:00Z",
+        "updated_at": "2024-01-11T00:00:00Z"
+    },
+    {
+        "id": "invitation-002",
+        "event_id": "event-001",
+        "inviter_id": "admin-user-id-001",
+        "invitee_id": "publisher-user-id-001",
+        "status": "accepted",
+        "message": "Looking forward to seeing you at the reunion!",
+        "responded_at": "2024-01-12T10:00:00Z",
+        "created_at": "2024-01-11T00:00:00Z",
+        "updated_at": "2024-01-12T10:00:00Z"
+    },
+    {
+        "id": "invitation-003",
+        "event_id": "event-002",
+        "inviter_id": "publisher-user-id-001",
+        "invitee_id": "admin-user-id-001",
+        "status": "accepted",
+        "message": "Let's honor Grandma Margaret's memory together.",
+        "responded_at": "2024-02-02T00:00:00Z",
+        "created_at": "2024-02-01T12:00:00Z",
+        "updated_at": "2024-02-02T00:00:00Z"
+    },
+    {
+        "id": "invitation-004",
+        "event_id": "event-003",
+        "inviter_id": "admin-user-id-001",
+        "invitee_id": "regular-user-id-001",
+        "status": "declined",
+        "message": "Christmas party at our house! Bring the kids!",
+        "responded_at": "2024-03-02T00:00:00Z",
+        "created_at": "2024-03-01T12:00:00Z",
+        "updated_at": "2024-03-02T00:00:00Z"
+    },
+    {
+        "id": "invitation-005",
+        "event_id": "event-005",
+        "inviter_id": "publisher-user-id-001",
+        "invitee_id": "admin-user-id-001",
+        "status": "accepted",
+        "message": "This genealogy workshop should be really interesting!",
+        "responded_at": "2024-04-16T00:00:00Z",
+        "created_at": "2024-04-15T14:00:00Z",
+        "updated_at": "2024-04-16T00:00:00Z"
+    }
+]

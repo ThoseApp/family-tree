@@ -54,7 +54,7 @@ const helpTopics = [
     description:
       "Review and approve family member requests from users. Check the Member Requests section for pending approvals.",
     color: "text-green-600",
-    href: "/admin/member-requests",
+    href: "/admin/family-member-requests",
     adminOnly: true,
   },
   {

@@ -1356,7 +1356,7 @@ export const helpTopicsData: HelpTopic[] = [
       },
     ],
     actionButtons: [
-      { label: "Go to Member Requests", href: "/admin/member-requests" },
+      { label: "Go to Member Requests", href: "/admin/family-member-requests" },
       {
         label: "View Family Tree",
         href: "/admin/family-tree",

@@ -1,0 +1,92 @@
+[
+    {
+        "id": "section-hero",
+        "section_type": "hero",
+        "title": "Welcome to the Smith Family",
+        "subtitle": "Connecting Generations, Preserving Legacy",
+        "description": "Discover your roots, share your stories, and stay connected with family members across the world. Our digital family tree brings generations together in one beautiful platform.",
+        "image_url": "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=1200",
+        "content": {
+            "cta_text": "Explore Family Tree",
+            "cta_link": "/family-tree"
+        },
+        "is_published": true,
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+        "id": "section-gallery",
+        "section_type": "gallery_preview",
+        "title": "Family Memories",
+        "subtitle": "Cherished Moments Through the Years",
+        "description": "Browse through our collection of family photos spanning generations. From vintage black and white portraits to modern celebrations, every image tells a story.",
+        "image_url": "https://images.unsplash.com/photo-1516802273409-68526ee1bdd6?w=800",
+        "content": {
+            "preview_count": 6,
+            "show_latest": true
+        },
+        "is_published": true,
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+        "id": "section-events",
+        "section_type": "upcoming_events",
+        "title": "Upcoming Events",
+        "subtitle": "Join Us for Family Gatherings",
+        "description": "Stay updated on family reunions, celebrations, and special occasions. RSVP to events and never miss a chance to connect with loved ones.",
+        "image_url": "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800",
+        "content": {
+            "show_count": 3,
+            "include_past": false
+        },
+        "is_published": true,
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+        "id": "section-history",
+        "section_type": "history",
+        "title": "Our Family History",
+        "subtitle": "A Legacy Spanning Generations",
+        "description": "Explore the rich history of the Smith family from our humble beginnings to the present day. Learn about the events, people, and moments that shaped our family.",
+        "image_url": "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=800",
+        "content": {
+            "timeline_enabled": true,
+            "highlight_count": 5
+        },
+        "is_published": true,
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+        "id": "section-members",
+        "section_type": "family_members",
+        "title": "Meet the Family",
+        "subtitle": "Four Generations Strong",
+        "description": "Get to know your relatives! Browse profiles, see how everyone is connected, and discover interesting facts about family members.",
+        "image_url": "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800",
+        "content": {
+            "show_count": 8,
+            "sort_by": "generation"
+        },
+        "is_published": true,
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+        "id": "section-tree",
+        "section_type": "family_tree",
+        "title": "Interactive Family Tree",
+        "subtitle": "See How We're All Connected",
+        "description": "Explore our interactive family tree visualization. Click on any family member to see their details, relationships, and place in the family lineage.",
+        "image_url": "https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=800",
+        "content": {
+            "tree_style": "hierarchical",
+            "starting_generation": 1
+        },
+        "is_published": true,
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z"
+    }
+]

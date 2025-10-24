@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { isMockMode, simulateDelay } from "@/lib/mock-data/api-helpers";
+import { mockDataService } from "@/lib/mock-data/mock-service";
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,6 +17,55 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // Handle mock mode
+    if (isMockMode()) {
+      await simulateDelay();
+      console.log(`[Mock API] Searching family members for: "${q}"`);
+
+      try {
+        await mockDataService.initialize();
+
+        // Search in mock data - case insensitive search
+        const allMembers = mockDataService.getAll("family-tree");
+        const lowerQ = q.toLowerCase();
+
+        const results = allMembers.filter((member: any) => {
+          const firstName = (member.first_name || "").toLowerCase();
+          const lastName = (member.last_name || "").toLowerCase();
+          const uniqueId = (member.unique_id || "").toLowerCase();
+
+          return (
+            firstName.includes(lowerQ) ||
+            lastName.includes(lowerQ) ||
+            uniqueId.includes(lowerQ)
+          );
+        });
+
+        console.log(
+          `[Mock API] Found ${results.length} matching family members`
+        );
+
+        return NextResponse.json({
+          data: results,
+          success: true,
+          errors: [],
+          message: "",
+        });
+      } catch (error: any) {
+        console.error("[Mock API] Error searching family members:", error);
+        return NextResponse.json(
+          {
+            data: [],
+            success: false,
+            errors: [error.message],
+            message: "Failed to search family members",
+          },
+          { status: 500 }
+        );
+      }
+    }
+
+    // Real Supabase mode
     const supabase = await createClient();
 
     // Escape special characters for ILIKE pattern

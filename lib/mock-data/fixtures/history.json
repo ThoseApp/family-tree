@@ -1,0 +1,91 @@
+[
+    {
+        "id": "history-001",
+        "year": "1920",
+        "title": "Birth of James Smith",
+        "description": "James Smith, the patriarch of our family tree, was born in rural Pennsylvania. He would go on to serve in World War II and establish the Smith Family Farm.",
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+        "id": "history-002",
+        "year": "1942",
+        "title": "James and Margaret's Wedding",
+        "description": "James Smith married Margaret Wilson in a small ceremony during World War II. Their love story spanned over 60 years and produced a large, loving family.",
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+        "id": "history-003",
+        "year": "1945",
+        "title": "Purchase of the Smith Family Farm",
+        "description": "After returning from WWII, James purchased 50 acres of land that would become the Smith Family Farm, a gathering place for generations to come.",
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+        "id": "history-004",
+        "year": "1945-1950",
+        "title": "The Second Generation",
+        "description": "James and Margaret welcomed their children: Robert (1945) and Mary (1947). The family thrived on the farm, raising livestock and crops.",
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+        "id": "history-005",
+        "year": "1970",
+        "title": "First Family Reunion",
+        "description": "The first official Smith Family Reunion was held at the farm, establishing a tradition that continues to this day. Over 30 family members attended.",
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+        "id": "history-006",
+        "year": "1980-1990",
+        "title": "The Third Generation Arrives",
+        "description": "The 1980s and 90s saw the arrival of the third generation, including John, Sarah, and Michael. The family continued to grow and flourish.",
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+        "id": "history-007",
+        "year": "2000",
+        "title": "New Millennium Celebration",
+        "description": "The family gathered for a special millennium celebration at the farm. James and Margaret, both in their 80s, were surrounded by over 50 descendants.",
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+        "id": "history-008",
+        "year": "2010-2015",
+        "title": "The Fourth Generation",
+        "description": "The fourth generation began arriving, with Emily (2010) and James Jr. (2013) among the first. The family tree continues to grow and branch out.",
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+        "id": "history-009",
+        "year": "2015",
+        "title": "Loss of Patriarch James",
+        "description": "James Smith passed away peacefully at age 95, surrounded by family. His legacy lives on through his descendants and the farm he built.",
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+        "id": "history-010",
+        "year": "2020",
+        "title": "Loss of Matriarch Margaret",
+        "gender": "female",
+        "description": "Margaret Smith joined her beloved husband, passing away at age 98. She was remembered for her kindness, wisdom, and the love she showed to all.",
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z"
+    },
+    {
+        "id": "history-011",
+        "year": "2024",
+        "title": "Launch of Digital Family Tree",
+        "description": "The family launched this digital platform to preserve our history and keep our growing family connected across the miles.",
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z"
+    }
+]

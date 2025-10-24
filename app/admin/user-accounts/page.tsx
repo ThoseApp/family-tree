@@ -40,6 +40,8 @@ import { CreateAccountModal } from "@/components/modals/create-account-modal";
 import { BulkCreateAccountsModal } from "@/components/modals/bulk-create-accounts-modal";
 import { processedMemberToFamilyMember } from "@/lib/utils/family-tree-helpers";
 import { LifeStatusEnum } from "@/lib/constants/enums";
+import { isMockMode } from "@/lib/mock-data/initialize";
+import { mockDataService } from "@/lib/mock-data/mock-service";
 
 interface UserAccountWithFamily extends UserProfile {
   hasAccount: boolean;
@@ -69,22 +71,53 @@ const UserAccountsPage = () => {
     try {
       setLoading(true);
 
-      // Get all family members from family-tree table
-      const { data: familyTreeData, error: familyTreeError } = await supabase
-        .from("family-tree")
-        .select("*")
-        .order("first_name");
+      let familyTreeData: any[] = [];
+      let profilesData: any[] = [];
 
-      if (familyTreeError) throw familyTreeError;
+      // Handle mock mode
+      if (isMockMode()) {
+        console.log(
+          "[Mock UI] Fetching family members and profiles from mock data"
+        );
 
-      // Get all user profiles linked to family tree
-      const { data: profilesData, error: profilesError } = await supabase
-        .from("profiles")
-        .select("*")
-        .not("family_tree_uid", "is", null)
-        .order("created_at", { ascending: false });
+        await mockDataService.initialize();
 
-      if (profilesError) throw profilesError;
+        // Get all family members from mock data
+        familyTreeData = mockDataService.query(
+          "family-tree",
+          [],
+          [{ column: "first_name", ascending: true }]
+        );
+
+        // Get all user profiles linked to family tree from mock data
+        profilesData = mockDataService.query(
+          "profiles",
+          [{ column: "family_tree_uid", operator: "neq", value: null }],
+          [{ column: "created_at", ascending: false }]
+        );
+
+        console.log(
+          `[Mock UI] Found ${familyTreeData.length} family members and ${profilesData.length} profiles`
+        );
+      } else {
+        // Real Supabase mode
+        // Get all family members from family-tree table
+        const { data: familyTreeResult, error: familyTreeError } =
+          await supabase.from("family-tree").select("*").order("first_name");
+
+        if (familyTreeError) throw familyTreeError;
+        familyTreeData = familyTreeResult || [];
+
+        // Get all user profiles linked to family tree
+        const { data: profilesResult, error: profilesError } = await supabase
+          .from("profiles")
+          .select("*")
+          .not("family_tree_uid", "is", null)
+          .order("created_at", { ascending: false });
+
+        if (profilesError) throw profilesError;
+        profilesData = profilesResult || [];
+      }
 
       // Combine data to show which family members have accounts
       const combinedData: UserAccountWithFamily[] = [];

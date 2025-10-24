@@ -42,7 +42,7 @@ const AdminSideBar = ({ forceMobileExpanded = false }: AdminSideBarProps) => {
         return counts.noticeBoardRequests;
       case "/admin/events":
         return counts.eventRequests;
-      case "/admin/member-requests":
+      case "/admin/family-member-requests":
         return counts.memberRequests;
       case "/admin/family-member-requests":
         return counts.familyMemberRequests;

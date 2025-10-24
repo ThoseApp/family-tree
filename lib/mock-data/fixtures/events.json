@@ -1,0 +1,83 @@
+[
+    {
+        "id": "event-001",
+        "name": "Annual Family Reunion",
+        "user_id": "admin-user-id-001",
+        "date": "2025-07-15",
+        "category": "Reunion",
+        "description": "Join us for our annual family gathering at the Smith Family Farm. BBQ, games, and great memories!",
+        "image": "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800",
+        "status": "approved",
+        "is_public": true,
+        "created_at": "2024-01-10T00:00:00Z",
+        "updated_at": "2024-01-10T00:00:00Z"
+    },
+    {
+        "id": "event-002",
+        "name": "Grandma Margaret's Birthday Celebration",
+        "user_id": "publisher-user-id-001",
+        "date": {
+            "month": "July",
+            "day": "22"
+        },
+        "category": "Birthday",
+        "description": "Celebrating what would have been Grandma Margaret's 102nd birthday. Let's share our favorite memories of her.",
+        "image": "https://images.unsplash.com/photo-1558636508-e0db3814bd1d?w=800",
+        "status": "approved",
+        "is_public": true,
+        "created_at": "2024-02-01T00:00:00Z",
+        "updated_at": "2024-02-01T00:00:00Z"
+    },
+    {
+        "id": "event-003",
+        "name": "Smith Family Christmas Party",
+        "user_id": "admin-user-id-001",
+        "date": "2025-12-20",
+        "category": "Holiday",
+        "description": "Annual Christmas celebration at John and Jennifer's house. Secret Santa gift exchange ($50 limit).",
+        "image": "https://images.unsplash.com/photo-1512389142860-9c449e58a543?w=800",
+        "status": "approved",
+        "is_public": true,
+        "created_at": "2024-03-01T00:00:00Z",
+        "updated_at": "2024-03-01T00:00:00Z"
+    },
+    {
+        "id": "event-004",
+        "name": "Spring Picnic at Central Park",
+        "user_id": "regular-user-id-001",
+        "date": "2025-05-10",
+        "category": "Gathering",
+        "description": "Casual spring picnic for family members. Bring your favorite dish to share!",
+        "image": "https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=800",
+        "status": "pending",
+        "is_public": false,
+        "created_at": "2024-04-01T00:00:00Z",
+        "updated_at": "2024-04-01T00:00:00Z"
+    },
+    {
+        "id": "event-005",
+        "name": "Family Genealogy Workshop",
+        "user_id": "publisher-user-id-001",
+        "date": "2025-06-05",
+        "category": "Educational",
+        "description": "Learn about our family history and how to research genealogy. Guest speaker from the local historical society.",
+        "image": "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=800",
+        "status": "approved",
+        "is_public": true,
+        "created_at": "2024-04-15T00:00:00Z",
+        "updated_at": "2024-04-15T00:00:00Z"
+    },
+    {
+        "id": "event-006",
+        "name": "Kids' Summer Camp",
+        "user_id": "regular-user-id-001",
+        "date": "2025-08-01",
+        "category": "Youth",
+        "description": "Week-long summer camp for the younger generation at Lake Smith.",
+        "image": "https://images.unsplash.com/photo-1504805572947-34fad45aed93?w=800",
+        "status": "rejected",
+        "is_public": false,
+        "created_at": "2024-05-01T00:00:00Z",
+        "updated_at": "2024-05-02T00:00:00Z"
+    }
+]
