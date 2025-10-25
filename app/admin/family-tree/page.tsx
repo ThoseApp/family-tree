@@ -43,6 +43,7 @@ import {
 import { supabase } from "@/lib/supabase/client";
 import FamilyTreeErrorBoundary from "@/components/family-tree-error-boundary";
 import { LifeStatusEnum } from "@/lib/constants/enums";
+import { syncFamilyTreeImageToProfile } from "@/lib/utils/profile-sync-helpers";
 
 // Import family-chart library
 // @ts-ignore - family-chart doesn't have type definitions
@@ -746,6 +747,22 @@ const FamilyTreeUploadPage = () => {
           });
         } else {
           successCount += batch.length;
+
+          // Sync profile images for newly inserted records that have picture_link
+          batch.forEach((record) => {
+            if (record.picture_link && record.picture_link.trim() !== "") {
+              // Async call to sync profile image - don't await to avoid slowing down bulk upload
+              syncFamilyTreeImageToProfile(
+                record.unique_id,
+                record.picture_link
+              ).catch((error) => {
+                console.warn(
+                  `Failed to sync profile image for new record ${record.unique_id}:`,
+                  error
+                );
+              });
+            }
+          });
         }
 
         currentStep += batch.length;
@@ -806,6 +823,29 @@ const FamilyTreeUploadPage = () => {
             });
           } else {
             updatedCount += 1;
+
+            // Sync profile image if picture_link was updated for this record
+            const existingRecord = existingRecordsMap.get(
+              (record.unique_id || "").trim()
+            );
+            const shouldSyncProfile =
+              (!existingRecord?.picture_link ||
+                existingRecord.picture_link.trim() === "") &&
+              record.picture_link &&
+              record.picture_link.trim() !== "";
+
+            if (shouldSyncProfile) {
+              // Async call to sync profile image - don't await to avoid slowing down bulk upload
+              syncFamilyTreeImageToProfile(
+                record.unique_id,
+                record.picture_link
+              ).catch((error) => {
+                console.warn(
+                  `Failed to sync profile image for ${record.unique_id}:`,
+                  error
+                );
+              });
+            }
           }
         }
 

@@ -4,10 +4,10 @@ import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Checkbox } from "../ui/checkbox";
 import { Badge } from "../ui/badge";
-import { Paperclip, X, Upload, Trash2 } from "lucide-react";
+import { Paperclip, X, Upload, Trash2, FileText } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
-import { uploadImage } from "@/lib/file-upload";
+import { uploadImage, uploadDocument } from "@/lib/file-upload";
 import { BucketFolderEnum } from "@/lib/constants/enums";
 import { NoticeBoard } from "@/lib/types";
 import { LoadingIcon } from "../loading-icon";
@@ -35,10 +35,13 @@ const NewNoticeCard = ({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [image, setImage] = useState("");
+  const [pdfUrl, setPdfUrl] = useState("");
+  const [pdfName, setPdfName] = useState("");
   const [pinned, setPinned] = useState(false);
   const [tags, setTags] = useState<string[]>(["#Event"]);
   const [tagInput, setTagInput] = useState<string>("");
   const [uploading, setUploading] = useState(false);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
 
   const handleTagInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter" && tagInput.trim() !== "") {
@@ -85,6 +88,45 @@ const NewNoticeCard = ({
     setImage("");
   };
 
+  const handlePdfUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      toast.error("Please select a PDF file");
+      return;
+    }
+
+    // Check file size (50MB limit for PDFs)
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    if (file.size > maxSize) {
+      toast.error("PDF file size exceeds 50MB limit");
+      return;
+    }
+
+    setUploadingPdf(true);
+    try {
+      const pdfUrl = await uploadDocument(file, BucketFolderEnum.notice_boards);
+      if (pdfUrl) {
+        setPdfUrl(pdfUrl);
+        setPdfName(file.name);
+        toast.success("PDF uploaded successfully");
+      }
+    } catch (error) {
+      console.error("Error uploading PDF:", error);
+      toast.error("Failed to upload PDF");
+    } finally {
+      setUploadingPdf(false);
+    }
+  };
+
+  const handleRemovePdf = () => {
+    setPdfUrl("");
+    setPdfName("");
+  };
+
   const handleSubmit = async () => {
     if (!title.trim()) {
       toast.error("Please enter a title");
@@ -100,6 +142,8 @@ const NewNoticeCard = ({
       title: title.trim(),
       description: description.trim(),
       image,
+      pdf_url: pdfUrl,
+      pdf_name: pdfName,
       pinned,
       tags,
       editor: "", // This will be set by the parent component
@@ -114,6 +158,8 @@ const NewNoticeCard = ({
         setTitle("");
         setDescription("");
         setImage("");
+        setPdfUrl("");
+        setPdfName("");
         setPinned(false);
         setTags(["#Event"]);
         setTagInput("");
@@ -150,7 +196,7 @@ const NewNoticeCard = ({
               placeholder="Enter notice title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              disabled={loading || uploading}
+              disabled={loading || uploading || uploadingPdf}
             />
           </div>
           <div className="space-y-2">
@@ -161,7 +207,7 @@ const NewNoticeCard = ({
               className="min-h-[100px]"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              disabled={loading || uploading}
+              disabled={loading || uploading || uploadingPdf}
             />
           </div>
 
@@ -182,7 +228,7 @@ const NewNoticeCard = ({
                   size="icon"
                   className="absolute top-2 right-2 h-8 w-8 rounded-full"
                   onClick={handleRemoveImage}
-                  disabled={loading || uploading}
+                  disabled={loading || uploading || uploadingPdf}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -193,7 +239,7 @@ const NewNoticeCard = ({
                   type="file"
                   accept="image/*"
                   onChange={handleImageUpload}
-                  disabled={loading || uploading}
+                  disabled={loading || uploading || uploadingPdf}
                   className="hidden"
                   id="image-upload"
                 />
@@ -210,6 +256,61 @@ const NewNoticeCard = ({
                     <>
                       <Paperclip className="h-4 w-4" />
                       <span>Attach Image</span>
+                    </>
+                  )}
+                </label>
+              </div>
+            )}
+          </div>
+
+          {/* PDF Upload Section */}
+          <div className="space-y-2">
+            <Label>PDF Attachment (Optional)</Label>
+            {pdfUrl ? (
+              <div className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
+                <div className="flex items-center space-x-2">
+                  <FileText className="h-5 w-5 text-red-600" />
+                  <div>
+                    <p className="text-sm font-medium">
+                      {pdfName || "PDF Document"}
+                    </p>
+                    <p className="text-xs text-gray-500">PDF File</p>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleRemovePdf}
+                  disabled={loading || uploading || uploadingPdf}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Remove
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2 cursor-pointer text-sm text-muted-foreground hover:text-foreground">
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  onChange={handlePdfUpload}
+                  disabled={loading || uploading || uploadingPdf}
+                  className="hidden"
+                  id="pdf-upload"
+                />
+                <label
+                  htmlFor="pdf-upload"
+                  className="flex items-center space-x-2 cursor-pointer"
+                >
+                  {uploadingPdf ? (
+                    <>
+                      <LoadingIcon className="h-4 w-4" />
+                      <span>Uploading PDF...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="h-4 w-4" />
+                      <span>Attach PDF</span>
                     </>
                   )}
                 </label>
@@ -239,7 +340,7 @@ const NewNoticeCard = ({
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyDown={handleTagInputKeyDown}
-                disabled={loading || uploading}
+                disabled={loading || uploading || uploadingPdf}
                 className="flex-1 border-none shadow-none focus-visible:ring-0 h-auto py-0 px-1 text-sm min-w-[80px]"
               />
             </div>
@@ -250,7 +351,7 @@ const NewNoticeCard = ({
               id="pin"
               checked={pinned}
               onCheckedChange={(checked) => setPinned(checked as boolean)}
-              disabled={loading || uploading}
+              disabled={loading || uploading || uploadingPdf}
             />
             <Label
               htmlFor="pin"
@@ -265,7 +366,7 @@ const NewNoticeCard = ({
         <Button
           variant="outline"
           onClick={onClose}
-          disabled={loading || uploading}
+          disabled={loading || uploading || uploadingPdf}
         >
           Cancel
         </Button>
@@ -273,13 +374,17 @@ const NewNoticeCard = ({
           className="bg-foreground hover:bg-foreground/80 text-background"
           onClick={handleSubmit}
           disabled={
-            loading || uploading || !title.trim() || !description.trim()
+            loading ||
+            uploading ||
+            uploadingPdf ||
+            !title.trim() ||
+            !description.trim()
           }
         >
-          {loading ? (
+          {loading || uploadingPdf ? (
             <>
               <LoadingIcon className="h-4 w-4 mr-2" />
-              Posting...
+              {uploadingPdf ? "Uploading PDF..." : "Posting..."}
             </>
           ) : (
             "Post"

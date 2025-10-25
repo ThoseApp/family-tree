@@ -18,6 +18,7 @@ import {
   Pin,
   PinOff,
   MoreVertical,
+  FileText,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -157,6 +158,29 @@ const NoticeBoardCard = ({
             <ImageIcon className="h-12 w-12 text-gray-400" />
           </div>
         ) : null}
+
+        {/* PDF Attachment */}
+        {noticeBoard.pdf_url && (
+          <div className="mb-4 p-3 border rounded-lg bg-gray-50">
+            <div className="flex items-center space-x-2">
+              <FileText className="h-5 w-5 text-red-600" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">
+                  {noticeBoard.pdf_name || "PDF Document"}
+                </p>
+                <p className="text-xs text-gray-500">PDF Attachment</p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => window.open(noticeBoard.pdf_url, "_blank")}
+                className="text-xs"
+              >
+                View PDF
+              </Button>
+            </div>
+          </div>
+        )}
         <div className="text-gray-700 mb-3">
           <p className="leading-relaxed">{truncatedDescription}</p>
           {isDescriptionLong && (
