@@ -15,6 +15,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { X, ImageIcon } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import PDFViewer from "@/components/ui/pdf-viewer";
 
 interface NoticeDetailsModalProps {
   isOpen: boolean;
@@ -106,6 +107,18 @@ export const NoticeDetailsModal: React.FC<NoticeDetailsModalProps> = ({
                     <ImageIcon className="h-12 w-12 text-gray-400" />
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* PDF Section */}
+            {noticeBoard.pdf_url && (
+              <div className="w-full">
+                <PDFViewer
+                  pdfUrl={noticeBoard.pdf_url}
+                  pdfName={noticeBoard.pdf_name}
+                  showPreview={true}
+                  allowDownload={true}
+                />
               </div>
             )}
 

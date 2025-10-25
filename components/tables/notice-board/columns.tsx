@@ -1,7 +1,7 @@
 import { NoticeBoard } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash, Pin, PinOff } from "lucide-react";
+import { Edit, Trash, Pin, PinOff, FileText, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { format } from "date-fns";
@@ -49,6 +49,54 @@ export const createColumns = (
         );
       },
       sortingFn: "alphanumeric",
+    },
+    {
+      accessorKey: "pdf_url",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Attachments" />
+      ),
+      cell: ({ row }) => {
+        const noticeBoard = row.original;
+        const hasPDF = !!noticeBoard.pdf_url;
+        const hasImage = !!noticeBoard.image;
+
+        return (
+          <div className="flex items-center gap-1">
+            {hasPDF && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.open(noticeBoard.pdf_url, "_blank")}
+                className="h-8 px-2 text-xs"
+                title={`View PDF: ${noticeBoard.pdf_name || "PDF Document"}`}
+              >
+                <FileText className="h-3 w-3 mr-1 text-red-600" />
+                PDF
+              </Button>
+            )}
+            {hasImage && (
+              <Badge variant="outline" className="text-xs">
+                Image
+              </Badge>
+            )}
+            {!hasPDF && !hasImage && (
+              <span className="text-xs text-gray-400">None</span>
+            )}
+          </div>
+        );
+      },
+      sortingFn: (rowA, rowB, columnId) => {
+        const hasPdfA = !!rowA.original.pdf_url;
+        const hasPdfB = !!rowB.original.pdf_url;
+        const hasImageA = !!rowA.original.image;
+        const hasImageB = !!rowB.original.image;
+
+        // Sort by: PDFs first, then images, then none
+        const scoreA = (hasPdfA ? 2 : 0) + (hasImageA ? 1 : 0);
+        const scoreB = (hasPdfB ? 2 : 0) + (hasImageB ? 1 : 0);
+
+        return scoreB - scoreA;
+      },
     },
     {
       accessorKey: "editor",

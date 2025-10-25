@@ -172,6 +172,74 @@ export async function linkProfileToFamilyTree(
 }
 
 /**
+ * Synchronizes family tree image changes with the profiles table
+ * Updates profile image if the profile currently has no image and the family tree record has a new image
+ * @param familyTreeUid - The unique ID of the family tree record
+ * @param imageUrl - The new image URL from family tree
+ */
+export async function syncFamilyTreeImageToProfile(
+  familyTreeUid: string,
+  imageUrl: string
+): Promise<void> {
+  try {
+    // Find profile linked to this family tree record
+    const { data: profile, error: fetchError } = await supabase
+      .from("profiles")
+      .select("user_id, image")
+      .eq("family_tree_uid", familyTreeUid)
+      .single();
+
+    if (fetchError) {
+      // No profile linked to this family tree record - this is normal
+      if (fetchError.code === "PGRST116") {
+        return;
+      }
+      console.warn(
+        "Could not fetch profile for family tree image sync:",
+        fetchError
+      );
+      return;
+    }
+
+    if (!profile) {
+      // No profile linked to this family tree record
+      return;
+    }
+
+    // Only update profile image if it's currently empty/null and we have a new image
+    const shouldUpdateProfileImage =
+      (!profile.image || profile.image.trim() === "") &&
+      imageUrl &&
+      imageUrl.trim() !== "";
+
+    if (!shouldUpdateProfileImage) {
+      // Profile already has an image or no new image to sync
+      return;
+    }
+
+    // Update profile with new image URL
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update({
+        image: imageUrl,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", profile.user_id);
+
+    if (profileError) {
+      console.warn("Could not update profile image:", {
+        error: profileError,
+        familyTreeUid,
+        userId: profile.user_id,
+        imageUrl,
+      });
+    }
+  } catch (error) {
+    console.error("Error syncing family tree image to profile:", error);
+  }
+}
+
+/**
  * Unlinks a user profile from a family tree record
  * @param userId - The user's ID
  */
