@@ -18,7 +18,7 @@ const HistoryPage = () => {
     <div className="pb-20">
       {/* HEADER SECTION */}
       <div className="px-4 md:px-10 xl:px-16">
-        <PageHeader title="History" />
+        <PageHeader title="Family History" />
       </div>
 
       {/* HERO SECTION */}
@@ -35,7 +35,7 @@ const HistoryPage = () => {
         {/* Centered Heading */}
         <div className="absolute inset-0 flex items-center justify-center">
           <h2 className="text-4xl md:text-6xl font-bold text-center text-background px-4">
-            Our History
+            Our Family History
           </h2>
         </div>
       </div>
@@ -46,7 +46,7 @@ const HistoryPage = () => {
           {/* PREFACE SECTION */}
           <AccordionItem value="preface" className="border rounded-lg px-4">
             <AccordionTrigger className="text-2xl md:text-3xl font-bold hover:no-underline">
-              PREFACE
+              INTRODUCTION
             </AccordionTrigger>
             <AccordionContent className="text-justify space-y-4 pt-4">
               <p>
@@ -87,7 +87,7 @@ const HistoryPage = () => {
             className="border rounded-lg px-4"
           >
             <AccordionTrigger className="text-2xl md:text-3xl font-bold hover:no-underline">
-              PATRON&apos;S MESSAGE
+              PATRON MESSAGE
             </AccordionTrigger>
             <AccordionContent className="text-justify space-y-4 pt-4">
               <p>
@@ -128,7 +128,7 @@ const HistoryPage = () => {
             className="border rounded-lg px-4"
           >
             <AccordionTrigger className="text-2xl md:text-3xl font-bold hover:no-underline">
-              THE PRESIDENT&apos;S MESSAGE
+              PRESIDENT MESSAGE
             </AccordionTrigger>
             <AccordionContent className="text-justify space-y-4 pt-4">
               <p>
@@ -157,7 +157,7 @@ const HistoryPage = () => {
           {/* THE STORY SECTION */}
           <AccordionItem value="the-story" className="border rounded-lg px-4">
             <AccordionTrigger className="text-2xl md:text-3xl font-bold hover:no-underline">
-              THE STORY
+              FAMILY STORY
             </AccordionTrigger>
             <AccordionContent className="text-justify space-y-6 pt-4">
               <div className="space-y-4">
@@ -356,7 +356,7 @@ const HistoryPage = () => {
           {/* ORÍKÌ ILÉ MOSURO SECTION */}
           <AccordionItem value="oriki" className="border rounded-lg px-4">
             <AccordionTrigger className="text-2xl md:text-3xl font-bold hover:no-underline">
-              ORÍKÌ ILÉ MOSURO
+              FAMILY PRAISES
             </AccordionTrigger>
             <AccordionContent className="text-justify space-y-4 pt-4">
               <p>
@@ -428,7 +428,7 @@ const HistoryPage = () => {
           {/* PEDIGREE SECTION */}
           <AccordionItem value="pedigree" className="border rounded-lg px-4">
             <AccordionTrigger className="text-2xl md:text-3xl font-bold hover:no-underline">
-              PEDIGREE
+              FAMILY TREE
             </AccordionTrigger>
             <AccordionContent className="text-justify space-y-4 pt-4">
               <p>
