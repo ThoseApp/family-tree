@@ -16,8 +16,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import React, { useState, useEffect, useRef } from "react";
 import { LoadingIcon } from "@/components/loading-icon";
 import { Badge } from "@/components/ui/badge";
-import { ImageIcon, X, Upload, Trash2 } from "lucide-react";
-import { uploadImage } from "@/lib/file-upload";
+import {
+  ImageIcon,
+  X,
+  Upload,
+  Trash2,
+  FileText,
+  Paperclip,
+} from "lucide-react";
+import { uploadImage, uploadDocument } from "@/lib/file-upload";
 import { BucketFolderEnum } from "@/lib/constants/enums";
 import Image from "next/image";
 import { toast } from "sonner";
@@ -37,12 +44,16 @@ const NoticeBoardForm = ({
 }: NoticeBoardFormProps) => {
   const isEditing = !!defaultValues?.id;
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
 
   const [formData, setFormData] = useState<Omit<NoticeBoard, "id">>({
     title: defaultValues?.title || "",
     description: defaultValues?.description || "",
     image: defaultValues?.image || "",
+    pdf_url: defaultValues?.pdf_url || "",
+    pdf_name: defaultValues?.pdf_name || "",
     pinned: defaultValues?.pinned || false,
     editor: defaultValues?.editor || "",
     posteddate:
@@ -123,6 +134,60 @@ const NoticeBoardForm = ({
     fileInputRef.current?.click();
   };
 
+  const handlePdfUploadClick = () => {
+    pdfInputRef.current?.click();
+  };
+
+  const handlePdfFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check if file is a PDF
+    if (file.type !== "application/pdf") {
+      toast.error("Please select a PDF file");
+      return;
+    }
+
+    // Check file size (50MB limit for PDFs)
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    if (file.size > maxSize) {
+      toast.error("PDF file size exceeds 50MB limit");
+      return;
+    }
+
+    setUploadingPdf(true);
+    try {
+      const pdfUrl = await uploadDocument(file, BucketFolderEnum.notice_boards);
+      if (pdfUrl) {
+        setFormData((prev) => ({
+          ...prev,
+          pdf_url: pdfUrl,
+          pdf_name: file.name,
+        }));
+        toast.success("PDF uploaded successfully");
+      }
+    } catch (error) {
+      console.error("Error uploading PDF:", error);
+      toast.error("Failed to upload PDF");
+    } finally {
+      setUploadingPdf(false);
+      // Clear the input so the same file can be selected again if needed
+      if (pdfInputRef.current) {
+        pdfInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleRemovePdf = () => {
+    setFormData((prev) => ({
+      ...prev,
+      pdf_url: "",
+      pdf_name: "",
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
@@ -149,6 +214,8 @@ const NoticeBoardForm = ({
         title: defaultValues.title || "",
         description: defaultValues.description || "",
         image: defaultValues.image || "",
+        pdf_url: defaultValues.pdf_url || "",
+        pdf_name: defaultValues.pdf_name || "",
         pinned: defaultValues.pinned || false,
         editor: defaultValues.editor || "",
         posteddate:
@@ -243,6 +310,59 @@ const NoticeBoardForm = ({
           </div>
 
           <div className="space-y-2">
+            <Label>PDF Attachment (Optional)</Label>
+            <input
+              type="file"
+              ref={pdfInputRef}
+              onChange={handlePdfFileChange}
+              accept="application/pdf"
+              className="hidden"
+            />
+
+            {formData.pdf_url ? (
+              <div className="flex items-center justify-between p-3 border rounded-md bg-gray-50">
+                <div className="flex items-center space-x-2">
+                  <FileText className="h-5 w-5 text-red-600" />
+                  <div>
+                    <p className="text-sm font-medium">
+                      {formData.pdf_name || "PDF Document"}
+                    </p>
+                    <p className="text-xs text-gray-500">PDF File</p>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleRemovePdf}
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Remove
+                </Button>
+              </div>
+            ) : (
+              <div
+                onClick={handlePdfUploadClick}
+                className="cursor-pointer border-2 border-dashed border-gray-300 rounded-md p-6 flex flex-col items-center justify-center hover:border-primary transition-colors"
+              >
+                <Paperclip className="h-8 w-8 text-gray-400 mb-2" />
+                <p className="text-sm text-gray-500">
+                  {uploadingPdf ? (
+                    <span className="flex items-center">
+                      <LoadingIcon className="mr-2" /> Uploading PDF...
+                    </span>
+                  ) : (
+                    "Click to upload a PDF document"
+                  )}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  PDF files up to 50MB
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="editor">Posted By</Label>
             <Input
               id="editor"
@@ -299,12 +419,12 @@ const NoticeBoardForm = ({
             type="button"
             variant="outline"
             onClick={onCancel}
-            disabled={loading || uploading}
+            disabled={loading || uploading || uploadingPdf}
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={loading || uploading}>
-            {loading || uploading ? (
+          <Button type="submit" disabled={loading || uploading || uploadingPdf}>
+            {loading || uploading || uploadingPdf ? (
               <LoadingIcon />
             ) : isEditing ? (
               "Update"

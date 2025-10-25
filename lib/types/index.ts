@@ -171,6 +171,8 @@ export interface NoticeBoard {
   title: string;
   description: string;
   image: string;
+  pdf_url?: string;
+  pdf_name?: string;
   pinned: boolean;
   editor: string;
   posteddate: string;
