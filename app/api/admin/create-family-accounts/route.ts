@@ -204,7 +204,7 @@ async function sendInvitationEmail(
         
         <p>We trust this meets you well.</p>
         
-        <p>The Kith & Kin Family History book, published in 1987, has been converted to digital format with a robust family tree & other engaging features as a way for us to preserve our family history & keep the family closely connected together.</p>
+        <p>The Family Tree Family History book, published in 1987, has been converted to digital format with a robust family tree & other engaging features as a way for us to preserve our family history & keep the family closely connected together.</p>
         
         <p>We have granted you access to the platform & you may claim your profile using the log-in details below:</p>
         

@@ -14,7 +14,7 @@ interface MobileRedirectScreenProps {
 
 const MobileRedirectScreen: React.FC<MobileRedirectScreenProps> = ({
   title = "Desktop Experience Required",
-  subtitle = "Kith & Kin Family Tree",
+  subtitle = "Family Tree",
   showRotateHint = true,
 }) => {
   return (
@@ -122,8 +122,8 @@ const MobileRedirectScreen: React.FC<MobileRedirectScreenProps> = ({
             {/* Footer Text */}
             <div className="text-center pt-2">
               <p className="text-xs text-muted-foreground">
-                Thank you for understanding. We&apos;re working to improve mobile
-                support.
+                Thank you for understanding. We&apos;re working to improve
+                mobile support.
               </p>
             </div>
           </CardContent>

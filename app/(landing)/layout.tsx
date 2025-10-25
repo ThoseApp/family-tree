@@ -13,7 +13,7 @@ const LandingLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <MobileResponsiveWrapper
       mobileTitle="Desktop Experience Required"
-      mobileSubtitle="Kith & Kin Family Tree"
+      mobileSubtitle="Family Tree Family Tree"
       showRotateHint={true}
     >
       <main className="h-full overflow-auto">

@@ -31,7 +31,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <MobileResponsiveWrapper
       mobileTitle="Dashboard Access Required"
-      mobileSubtitle="Kith & Kin Dashboard"
+      mobileSubtitle="Family Tree Dashboard"
       showRotateHint={true}
     >
       <div className="h-full flex flex-col relative">

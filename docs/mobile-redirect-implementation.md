@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Kith & Kin Family Tree application now includes a comprehensive mobile redirect system that guides **all mobile users** to view the application on desktop devices for the optimal experience. The entire platform redirects mobile users except for authentication pages, maintaining the application's aesthetics while providing clear instructions for mobile users.
+The Family Tree Family Tree application now includes a comprehensive mobile redirect system that guides **all mobile users** to view the application on desktop devices for the optimal experience. The entire platform redirects mobile users except for authentication pages, maintaining the application's aesthetics while providing clear instructions for mobile users.
 
 ## Features
 
@@ -165,7 +165,7 @@ const MyLayout = ({ children }) => {
 | Prop             | Type      | Default                       | Description                                 |
 | ---------------- | --------- | ----------------------------- | ------------------------------------------- |
 | `mobileTitle`    | `string`  | "Desktop Experience Required" | Title shown on mobile redirect screen       |
-| `mobileSubtitle` | `string`  | "Kith & Kin Family Tree"      | Subtitle/app name                           |
+| `mobileSubtitle` | `string`  | "Family Tree Family Tree"     | Subtitle/app name                           |
 | `showRotateHint` | `boolean` | `true`                        | Show rotation hint for tablets              |
 | `forceRedirect`  | `boolean` | `false`                       | Always show redirect (for testing)          |
 | `allowMobile`    | `boolean` | `false`                       | Never show redirect (mobile-friendly pages) |
@@ -175,7 +175,7 @@ const MyLayout = ({ children }) => {
 | Prop             | Type      | Default                       | Description               |
 | ---------------- | --------- | ----------------------------- | ------------------------- |
 | `title`          | `string`  | "Desktop Experience Required" | Main title                |
-| `subtitle`       | `string`  | "Kith & Kin Family Tree"      | App subtitle              |
+| `subtitle`       | `string`  | "Family Tree Family Tree"     | App subtitle              |
 | `showRotateHint` | `boolean` | `true`                        | Show tablet rotation hint |
 
 ## Testing

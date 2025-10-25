@@ -16,13 +16,13 @@ const Logo = ({ component, hideText }: LogoProps) => {
         <Image
           fill
           alt="logo"
-          src="/images/kith_logo.webp"
+          src="/images/family_tree_logo.png"
           className="object-cover object-center rounded-full"
         />
       </div>
 
       {!hideText && (
-        <h1 className="text-base 3xl:text-2xl font-bold">Kith & Kin</h1>
+        <h1 className="text-base 3xl:text-2xl font-bold">Family Tree</h1>
       )}
     </Link>
   );

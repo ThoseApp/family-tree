@@ -132,7 +132,7 @@ const Footer = () => {
 
       <div className="items-center flex justify-center bg-foreground py-4">
         <p className="text-xs md:text-sm text-background font-normal text-center">
-          &copy; {new Date().getFullYear()} Kith & Kin - All Rights Reserved.
+          &copy; {new Date().getFullYear()} Family Tree - All Rights Reserved.
         </p>
       </div>
     </footer>

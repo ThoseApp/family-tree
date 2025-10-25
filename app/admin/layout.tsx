@@ -23,7 +23,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <MobileResponsiveWrapper
       mobileTitle="Admin Panel Access Required"
-      mobileSubtitle="Kith & Kin Admin"
+      mobileSubtitle="Family Tree Admin"
       showRotateHint={true}
     >
       <div className="h-full flex flex-col relative">

@@ -23,7 +23,7 @@ const PublisherLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <MobileResponsiveWrapper
       mobileTitle="Publisher Panel Access Required"
-      mobileSubtitle="Kith & Kin Publisher"
+      mobileSubtitle="Family Tree Publisher"
       showRotateHint={true}
     >
       <div className="h-full flex flex-col relative">
