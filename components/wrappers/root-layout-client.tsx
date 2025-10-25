@@ -38,7 +38,7 @@ export default function RootLayoutClient({ children }: RootLayoutClientProps) {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
       useUserStore.setState({ user: session?.user ?? null });
 
       if (event === "SIGNED_IN" && session?.user) {

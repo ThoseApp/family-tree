@@ -55,7 +55,7 @@ const PublisherNoticeBoardRequestsPage = () => {
           table: "notice_boards",
           filter: `status=eq.${NoticeBoardStatusEnum.pending}`,
         },
-        (payload) => {
+        (payload: any) => {
           const newNoticeBoard = payload.new as NoticeBoard;
           setPendingNoticeBoards((prev) => [newNoticeBoard, ...prev]);
           toast.info(`New notice board request: "${newNoticeBoard.title}"`);
@@ -68,7 +68,7 @@ const PublisherNoticeBoardRequestsPage = () => {
           schema: "public",
           table: "notice_boards",
         },
-        (payload) => {
+        (payload: any) => {
           const updatedNoticeBoard = payload.new as NoticeBoard;
 
           // Remove from pending if status changed from pending
@@ -86,7 +86,7 @@ const PublisherNoticeBoardRequestsPage = () => {
           schema: "public",
           table: "notice_boards",
         },
-        (payload) => {
+        (payload: any) => {
           const deletedNoticeBoard = payload.old as NoticeBoard;
           setPendingNoticeBoards((prev) =>
             prev.filter((nb) => nb.id !== deletedNoticeBoard.id)

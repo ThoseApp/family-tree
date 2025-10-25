@@ -100,7 +100,7 @@ const DashboardPage = () => {
       }
 
       return (
-        data?.map((member) => ({
+        data?.map((member: any) => ({
           id: member.user_id,
           first_name: member.first_name || "Unknown",
           last_name: member.last_name || "",

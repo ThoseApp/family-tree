@@ -56,7 +56,7 @@ const GalleryRequestsPage = () => {
           table: "galleries",
           filter: `status=eq.${GalleryStatusEnum.pending}`,
         },
-        (payload) => {
+        (payload: any) => {
           const newGallery = payload.new as GalleryType;
           setPendingGalleries((prev) => [newGallery, ...prev]);
           toast.info(
@@ -71,7 +71,7 @@ const GalleryRequestsPage = () => {
           schema: "public",
           table: "galleries",
         },
-        (payload) => {
+        (payload: any) => {
           const updatedGallery = payload.new as GalleryType;
 
           // Remove from pending if status changed from pending
@@ -89,7 +89,7 @@ const GalleryRequestsPage = () => {
           schema: "public",
           table: "galleries",
         },
-        (payload) => {
+        (payload: any) => {
           const deletedGallery = payload.old as GalleryType;
           setPendingGalleries((prev) =>
             prev.filter((g) => g.id !== deletedGallery.id)

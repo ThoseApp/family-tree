@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Debug utilities for testing the notification system
  */

@@ -71,7 +71,7 @@ const GalleryRequestsPage = () => {
           schema: "public",
           table: "galleries",
         },
-        (payload) => {
+        (payload: any) => {
           const updatedGallery = payload.new as GalleryType;
 
           // Remove from pending if status changed from pending
@@ -89,7 +89,7 @@ const GalleryRequestsPage = () => {
           schema: "public",
           table: "galleries",
         },
-        (payload) => {
+        (payload: any) => {
           const deletedGallery = payload.old as GalleryType;
           setPendingGalleries((prev) =>
             prev.filter((g) => g.id !== deletedGallery.id)
@@ -183,7 +183,7 @@ const GalleryRequestsPage = () => {
       }
 
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Test operation failed:", error);
       return false;
     }
@@ -229,7 +229,7 @@ const GalleryRequestsPage = () => {
           statusUpdateFailed = true;
         } else {
         }
-      } catch (updateErr) {
+      } catch (updateErr: any) {
         console.error("Failed to update status:", updateErr);
         statusUpdateFailed = true;
       }
@@ -270,7 +270,7 @@ const GalleryRequestsPage = () => {
           // Don't fail the whole operation if notification fails
         } else {
         }
-      } catch (notificationErr) {
+      } catch (notificationErr: any) {
         console.warn("Notification creation failed:", notificationErr);
       }
 
@@ -286,7 +286,7 @@ const GalleryRequestsPage = () => {
             // Don't fail the whole operation if storage deletion fails
           } else {
           }
-        } catch (storageErr) {
+        } catch (storageErr: any) {
           console.warn("Storage deletion failed:", storageErr);
           // Don't fail the whole operation if storage deletion fails
         }

@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
 
       console.log(`👥 API: Found ${adminUsers.length} mock admin users`);
 
-      const adminUserData = adminUsers.map((user) => ({
+      const adminUserData = adminUsers.map((user: any) => ({
         id: user.id,
         email: user.email || "",
         user_metadata: {
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
 
       const response = {
         adminUsers: adminUserData,
-        adminIds: adminUserData.map((user) => user.id),
+        adminIds: adminUserData.map((user: any) => user.id),
       };
 
       console.log(`✅ API: Returning ${response.adminIds.length} admin IDs`);

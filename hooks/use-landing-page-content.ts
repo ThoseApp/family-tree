@@ -32,7 +32,7 @@ export const useLandingPageContent = (): UseLandingPageContentReturn => {
 
         // Convert array to object keyed by section_type
         const sectionsMap: Record<string, LandingPageSection> = {};
-        data?.forEach((section) => {
+        data?.forEach((section: any) => {
           sectionsMap[section.section_type] = section;
         });
 

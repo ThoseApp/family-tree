@@ -83,7 +83,7 @@ const DashboardPage = () => {
         if (upcomingEvents && upcomingEvents.length > 0) {
           setFeaturedEvent(upcomingEvents[0]); // Get the next upcoming event
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching dashboard data:", error);
       } finally {
         setIsLoading(false);
@@ -124,7 +124,7 @@ const DashboardPage = () => {
           })
           .in(
             "id",
-            pendingGalleries.map((g) => g.id)
+            pendingGalleries.map((g: any) => g.id)
           );
 
         if (updateError) {
@@ -147,7 +147,7 @@ const DashboardPage = () => {
       } else {
         toast.info("No pending gallery requests to approve");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error approving gallery requests:", error);
       toast.error("Failed to approve gallery requests");
     }
@@ -175,7 +175,7 @@ const DashboardPage = () => {
           })
           .in(
             "id",
-            pendingNoticeBoards.map((nb) => nb.id)
+            pendingNoticeBoards.map((nb: any) => nb.id)
           );
 
         if (updateError) {
@@ -198,7 +198,7 @@ const DashboardPage = () => {
       } else {
         toast.info("No pending notice board requests to approve");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error approving notice board requests:", error);
       toast.error("Failed to approve notice board requests");
     }

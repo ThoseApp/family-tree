@@ -116,7 +116,7 @@ export function testRealtimeSubscription() {
         schema: "public",
         table: "galleries",
       },
-      (payload) => {
+      (payload: any) => {
         console.log("📡 Real-time change detected:", {
           eventType: payload.eventType,
           table: payload.table,
@@ -125,7 +125,7 @@ export function testRealtimeSubscription() {
         });
       }
     )
-    .subscribe((status) => {
+    .subscribe((status: any) => {
       console.log("📡 Subscription status:", status);
     });
 

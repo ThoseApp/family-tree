@@ -125,7 +125,7 @@ export function usePendingCounts() {
           schema: "public",
           table: "galleries",
         },
-        (payload) => {
+        (payload: any) => {
           console.log("Gallery change detected:", payload);
           debouncedFetchCounts();
         }
@@ -141,7 +141,7 @@ export function usePendingCounts() {
           schema: "public",
           table: "notice_boards",
         },
-        (payload) => {
+        (payload: any) => {
           console.log("Notice board change detected:", payload);
           debouncedFetchCounts();
         }
@@ -157,7 +157,7 @@ export function usePendingCounts() {
           schema: "public",
           table: "events",
         },
-        (payload) => {
+        (payload: any) => {
           console.log("Event change detected:", payload);
           debouncedFetchCounts();
         }
@@ -173,7 +173,7 @@ export function usePendingCounts() {
           schema: "public",
           table: "profiles",
         },
-        (payload) => {
+        (payload: any) => {
           console.log("Profile change detected:", payload);
           debouncedFetchCounts();
         }
@@ -189,7 +189,7 @@ export function usePendingCounts() {
           schema: "public",
           table: "family_member_requests",
         },
-        (payload) => {
+        (payload: any) => {
           console.log("Family member request change detected:", payload);
           debouncedFetchCounts();
         }

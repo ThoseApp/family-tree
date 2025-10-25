@@ -41,17 +41,19 @@ export async function verifyLandingPageSync(): Promise<SyncVerificationResult> {
     result.sectionsCount = sections?.length || 0;
 
     // Count published sections
-    const publishedSections = sections?.filter((s) => s.is_published) || [];
+    const publishedSections =
+      sections?.filter((s: any) => s.is_published) || [];
     result.publishedSectionsCount = publishedSections.length;
 
     // Check for missing sections
-    const existingSectionTypes = sections?.map((s) => s.section_type) || [];
+    const existingSectionTypes =
+      sections?.map((s: any) => s.section_type) || [];
     result.missingDefaultSections = expectedSections.filter(
       (sectionType) => !existingSectionTypes.includes(sectionType)
     );
 
     // Validate each section has required fields
-    sections?.forEach((section) => {
+    sections?.forEach((section: any) => {
       if (!section.title && section.section_type !== "gallery_preview") {
         result.errors.push(`Section ${section.section_type} is missing title`);
       }

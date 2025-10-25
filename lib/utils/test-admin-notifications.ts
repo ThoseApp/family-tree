@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Test utility for debugging admin notifications
  * This file helps test and debug the multi-admin notification system

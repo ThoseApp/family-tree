@@ -58,9 +58,9 @@ class MockRealtimeService {
    * Remove all channels (cleanup)
    */
   removeAllChannels(): void {
-    for (const channel of this.channels.values()) {
+    this.channels.forEach((channel) => {
       channel.unsubscribe();
-    }
+    });
     this.channels.clear();
   }
 }
