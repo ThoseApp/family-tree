@@ -37,7 +37,7 @@ const response = await fetch("https://api.resend.com/emails", {
   body: JSON.stringify({
     from: "noreply@yourdomain.com", // Replace with your verified domain
     to: credentials.email,
-    subject: "Welcome to Mosuro Family Tree - Your Account Details",
+    subject: "Welcome to  Family Tree - Your Account Details",
     html: emailHtml,
   }),
 });

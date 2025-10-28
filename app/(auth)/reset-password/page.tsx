@@ -5,8 +5,9 @@ import { generatePageMetadata } from "@/lib/constants/metadata";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = generatePageMetadata("signIn", {
-  title: "Reset Password - Mosuro Family Tree",
-  description: "Create a new password for your Mosuro family tree account. Enter your new password to regain access to your account.",
+  title: "Reset Password -  Family Tree",
+  description:
+    "Create a new password for your  family tree account. Enter your new password to regain access to your account.",
 });
 
 const ResetPasswordPage = () => {

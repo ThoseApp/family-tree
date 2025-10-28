@@ -46,7 +46,7 @@ export const useLandingPageContent = (): UseLandingPageContentReturn => {
           hero: {
             section_type: "hero",
             title: "THE MOSURO FAMILY",
-            subtitle: "The Story Behind the Mosuro Name",
+            subtitle: "The Story Behind the  Name",
             description:
               "Discover our rich family heritage, share precious moments, and stay connected with family members across the world.",
             image_url: "/images/landing/hero_section.webp",
@@ -69,7 +69,7 @@ export const useLandingPageContent = (): UseLandingPageContentReturn => {
           history: {
             section_type: "history",
             title: "Every Person Makes His Own History",
-            subtitle: "The Legacy of the Mosuro Family",
+            subtitle: "The Legacy of the  Family",
             description:
               "Explore the rich heritage and stories that shaped our family through generations.",
             image_url: "/images/landing/makes_history.webp",
@@ -83,7 +83,7 @@ export const useLandingPageContent = (): UseLandingPageContentReturn => {
           },
           family_tree: {
             section_type: "family_tree",
-            title: "Mosuro's Family Tree",
+            title: "'s Family Tree",
             subtitle: "Discover Your Roots",
             description:
               "The informality of family life is a blessed condition that allows us all to become our best while looking our worst.",

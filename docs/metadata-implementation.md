@@ -1,6 +1,6 @@
 # Metadata Implementation Guide
 
-This document outlines the comprehensive metadata implementation for the Mosuro Family Tree application, providing SEO optimization and social media sharing capabilities.
+This document outlines the comprehensive metadata implementation for the Family Tree application, providing SEO optimization and social media sharing capabilities.
 
 ## Overview
 
@@ -122,8 +122,8 @@ export const metadata: Metadata = generatePageMetadata("familyMembers");
 
 // Client component
 <ClientMetadata
-  title="Family Members - Meet the Mosuro Family"
-  description="Meet all members of the Mosuro family..."
+  title="Family Members - Meet the  Family"
+  description="Meet all members of the  family..."
   keywords={["family members", "profiles"]}
 />;
 ```
@@ -135,8 +135,8 @@ export const metadata: Metadata = generatePageMetadata("familyMembers");
 import { generateProfileMetadata } from "@/lib/constants/metadata";
 
 export const metadata: Metadata = generateProfileMetadata(
-  "John Mosuro",
-  "John is a beloved member of the Mosuro family..."
+  "John ",
+  "John is a beloved member of the  family..."
 );
 ```
 
@@ -144,7 +144,7 @@ export const metadata: Metadata = generateProfileMetadata(
 
 ```typescript
 export const metadata: Metadata = generatePageMetadata("signIn", {
-  title: "Custom Title - Mosuro Family Tree",
+  title: "Custom Title -  Family Tree",
   description: "Custom description for this specific page",
   keywords: ["custom", "keywords"],
 });
@@ -161,7 +161,7 @@ import StructuredData from "@/components/seo/structured-data";
 import { generatePersonStructuredData } from "@/lib/utils/metadata-helpers";
 
 const personData = generatePersonStructuredData({
-  name: "John Mosuro",
+  name: "John ",
   image: "/images/john.jpg",
   description: "Family member description",
 });
@@ -187,7 +187,7 @@ return (
 
 - Keep titles under 60 characters
 - Include primary keywords
-- Use consistent branding ("- Mosuro Family Tree")
+- Use consistent branding ("- Family Tree")
 - Make titles descriptive and compelling
 
 ### 2. Meta Descriptions

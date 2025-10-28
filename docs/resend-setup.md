@@ -33,7 +33,7 @@ RESEND_API_KEY=re_your_actual_api_key_here
 3. Follow DNS verification steps
 4. Update the "from" field in the code to use your domain:
    ```typescript
-   from: "Mosuro Family Tree <noreply@yourdomain.com>";
+   from: " Family Tree <noreply@yourdomain.com>";
    ```
 
 ### Step 5: Test

@@ -40,8 +40,8 @@ const NoticeBoardPage = () => {
   return (
     <>
       <ClientMetadata
-        title="Notice Board - Mosuro Family Announcements"
-        description="Stay informed with the latest Mosuro family announcements, news, and important updates. Your central hub for family communications."
+        title="Notice Board -  Family Announcements"
+        description="Stay informed with the latest  family announcements, news, and important updates. Your central hub for family communications."
         keywords={["announcements", "family news", "updates", "communications"]}
       />
       <FrameWrapper>

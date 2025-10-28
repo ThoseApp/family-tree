@@ -170,8 +170,8 @@ const DashboardPage = () => {
   return (
     <>
       <ClientMetadata
-        title="Dashboard - Mosuro Family Portal"
-        description="Your personal Mosuro family dashboard. Access family information, upcoming events, recent updates, and manage your family connections."
+        title="Dashboard -  Family Portal"
+        description="Your personal  family dashboard. Access family information, upcoming events, recent updates, and manage your family connections."
         keywords={["dashboard", "family portal", "personal hub"]}
       />
       <div className="flex flex-col  gap-y-8 lg:gap-y-12">

@@ -138,7 +138,7 @@ const PublisherDashboard = () => {
     <>
       <ClientMetadata
         title="Publisher Dashboard - Content Management"
-        description="Publisher dashboard for managing Mosuro family content. Create and moderate notice board posts, manage photo galleries, and publish family updates."
+        description="Publisher dashboard for managing  family content. Create and moderate notice board posts, manage photo galleries, and publish family updates."
         keywords={["publisher", "content management", "moderation"]}
         noIndex={true}
       />

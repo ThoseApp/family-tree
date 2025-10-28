@@ -83,7 +83,7 @@ export default function Home() {
 
   // Fallback content
   const defaultFamilyTree = {
-    title: "Mosuro's Family Tree",
+    title: "'s Family Tree",
     description:
       "The informality of family life is a blessed condition that allows us all to become our best while looking our worst.",
     image_url: "/images/landing/makes_history.webp",
@@ -149,7 +149,7 @@ export default function Home() {
             {/* Centered Heading */}
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-y-8">
               <h2 className="text-4xl md:text-6xl font-bold text-center text-background px-4">
-                {loading ? "Mosuro's Family Tree" : familyTreeContent.title}
+                {loading ? "'s Family Tree" : familyTreeContent.title}
               </h2>
               {familyTreeContent.subtitle && (
                 <h3 className="text-xl md:text-2xl text-background/90 font-medium text-center px-4">

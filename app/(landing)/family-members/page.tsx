@@ -243,13 +243,13 @@ const FamilyMembersPage = () => {
   return (
     <>
       <ClientMetadata
-        title="Family Members - Meet the Mosuro Family"
-        description="Meet all members of the Mosuro family. Browse profiles, learn about family members, and discover the people who make our family special."
+        title="Family Members - Meet the  Family"
+        description="Meet all members of the  family. Browse profiles, learn about family members, and discover the people who make our family special."
         keywords={["family members", "family profiles", "meet the family"]}
       />
       <div className="pb-20">
         <PageHeader
-          title="The Mosuro Family"
+          title="The  Family"
           description="Get to know the amazing individuals that make up our family tree"
         />
 

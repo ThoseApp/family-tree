@@ -196,7 +196,7 @@ async function sendInvitationEmail(
     <html>
     <head>
       <meta charset="utf-8">
-      <title>Welcome to Mosuro Family Tree</title>
+      <title>Welcome to  Family Tree</title>
     </head>
     <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
       <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -222,7 +222,7 @@ async function sendInvitationEmail(
         </div>
         
         <p style="margin-top: 30px;">Yours,</p>
-        <p><strong>Mosuro Family Tree</strong></p>
+        <p><strong> Family Tree</strong></p>
         
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
         <p style="font-size: 12px; color: #6b7280;">This email was sent automatically. Please do not reply to this email.</p>
@@ -240,7 +240,7 @@ async function sendInvitationEmail(
     );
     console.log("Email would be sent to:", credentials.email);
     console.log(
-      "Email subject: Welcome to Mosuro Family Tree - Your Account Details"
+      "Email subject: Welcome to  Family Tree - Your Account Details"
     );
     console.log("Login credentials:", {
       email: credentials.email,
@@ -260,9 +260,9 @@ async function sendInvitationEmail(
           Authorization: `Bearer ${resendApiKey}`,
         },
         body: JSON.stringify({
-          from: "Mosuro Family Tree <onboarding@mosuro.com.ng>",
+          from: " Family Tree <onboarding@mosuro.com.ng>",
           to: recipient,
-          subject: "Welcome to Mosuro Family Tree - Your Account Details",
+          subject: "Welcome to  Family Tree - Your Account Details",
           html: emailHtml,
         }),
       });

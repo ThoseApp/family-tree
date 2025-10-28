@@ -223,8 +223,8 @@ const DashboardPage = () => {
   return (
     <>
       <ClientMetadata
-        title="Admin Dashboard - Mosuro Family Management"
-        description="Administrative dashboard for managing the Mosuro family tree application. Handle member requests, content moderation, and system administration."
+        title="Admin Dashboard -  Family Management"
+        description="Administrative dashboard for managing the  family tree application. Handle member requests, content moderation, and system administration."
         keywords={["admin", "management", "administration"]}
         noIndex={true}
       />

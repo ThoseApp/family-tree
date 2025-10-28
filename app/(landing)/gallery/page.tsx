@@ -20,8 +20,8 @@ const GalleryPage = () => {
   return (
     <>
       <ClientMetadata
-        title="Photo Gallery - Mosuro Family Memories"
-        description="Browse through cherished Mosuro family photos and memories. Relive special moments and discover family history through pictures."
+        title="Photo Gallery -  Family Memories"
+        description="Browse through cherished  family photos and memories. Relive special moments and discover family history through pictures."
         keywords={[
           "family photos",
           "memories",

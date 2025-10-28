@@ -4,12 +4,12 @@
  */
 
 export const DEFAULT_METADATA = {
-  title: "Mosuro Family Tree - Connecting Generations",
+  title: " Family Tree - Connecting Generations",
   description:
-    "Explore the rich heritage of the Mosuro family. Discover our family tree, share memories, view photo galleries, and stay connected with upcoming events and announcements.",
+    "Explore the rich heritage of the  family. Discover our family tree, share memories, view photo galleries, and stay connected with upcoming events and announcements.",
   keywords: [
     "family tree",
-    "Mosuro family",
+    " family",
     "genealogy",
     "family history",
     "family photos",
@@ -19,8 +19,8 @@ export const DEFAULT_METADATA = {
     "ancestry",
     "family legacy",
   ],
-  author: "Mosuro Family",
-  siteName: "Mosuro Family Tree",
+  author: " Family",
+  siteName: " Family Tree",
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://mosuro.com.ng",
   ogImage: "/images/og-image.png",
   twitterCard: "summary_large_image" as const,
@@ -29,16 +29,16 @@ export const DEFAULT_METADATA = {
 export const PAGE_METADATA = {
   // Landing Pages
   home: {
-    title: "Mosuro Family Tree - Welcome Home",
+    title: " Family Tree - Welcome Home",
     description:
-      "Welcome to the Mosuro family tree. Discover our rich heritage, explore family connections, and stay updated with family events and announcements.",
+      "Welcome to the  family tree. Discover our rich heritage, explore family connections, and stay updated with family events and announcements.",
     keywords: [...DEFAULT_METADATA.keywords, "family home", "welcome"],
   },
 
   familyTree: {
-    title: "Family Tree - Mosuro Family Legacy",
+    title: "Family Tree -  Family Legacy",
     description:
-      "Explore the complete Mosuro family tree. Trace our lineage, discover family connections, and learn about our ancestors and their stories.",
+      "Explore the complete  family tree. Trace our lineage, discover family connections, and learn about our ancestors and their stories.",
     keywords: [
       ...DEFAULT_METADATA.keywords,
       "family lineage",
@@ -48,9 +48,9 @@ export const PAGE_METADATA = {
   },
 
   familyMembers: {
-    title: "Family Members - Meet the Mosuro Family",
+    title: "Family Members - Meet the  Family",
     description:
-      "Meet all members of the Mosuro family. Browse profiles, learn about family members, and discover the people who make our family special.",
+      "Meet all members of the  family. Browse profiles, learn about family members, and discover the people who make our family special.",
     keywords: [
       ...DEFAULT_METADATA.keywords,
       "family members",
@@ -60,9 +60,9 @@ export const PAGE_METADATA = {
   },
 
   events: {
-    title: "Family Events - Mosuro Family Gatherings",
+    title: "Family Events -  Family Gatherings",
     description:
-      "Stay updated with upcoming Mosuro family events, reunions, celebrations, and special occasions. Never miss a family gathering.",
+      "Stay updated with upcoming  family events, reunions, celebrations, and special occasions. Never miss a family gathering.",
     keywords: [
       ...DEFAULT_METADATA.keywords,
       "family events",
@@ -73,9 +73,9 @@ export const PAGE_METADATA = {
   },
 
   gallery: {
-    title: "Photo Gallery - Mosuro Family Memories",
+    title: "Photo Gallery -  Family Memories",
     description:
-      "Browse through cherished Mosuro family photos and memories. Relive special moments and discover family history through pictures.",
+      "Browse through cherished  family photos and memories. Relive special moments and discover family history through pictures.",
     keywords: [
       ...DEFAULT_METADATA.keywords,
       "family photos",
@@ -86,9 +86,9 @@ export const PAGE_METADATA = {
   },
 
   history: {
-    title: "Family History - Mosuro Heritage & Stories",
+    title: "Family History -  Heritage & Stories",
     description:
-      "Discover the rich history and heritage of the Mosuro family. Read stories, learn about our origins, and explore our family's journey through time.",
+      "Discover the rich history and heritage of the  family. Read stories, learn about our origins, and explore our family's journey through time.",
     keywords: [
       ...DEFAULT_METADATA.keywords,
       "family stories",
@@ -99,9 +99,9 @@ export const PAGE_METADATA = {
   },
 
   noticeBoard: {
-    title: "Notice Board - Mosuro Family Announcements",
+    title: "Notice Board -  Family Announcements",
     description:
-      "Stay informed with the latest Mosuro family announcements, news, and important updates. Your central hub for family communications.",
+      "Stay informed with the latest  family announcements, news, and important updates. Your central hub for family communications.",
     keywords: [
       ...DEFAULT_METADATA.keywords,
       "announcements",
@@ -113,9 +113,9 @@ export const PAGE_METADATA = {
 
   // Dashboard Pages
   dashboard: {
-    title: "Dashboard - Mosuro Family Portal",
+    title: "Dashboard -  Family Portal",
     description:
-      "Your personal Mosuro family dashboard. Access family information, upcoming events, recent updates, and manage your family connections.",
+      "Your personal  family dashboard. Access family information, upcoming events, recent updates, and manage your family connections.",
     keywords: [
       ...DEFAULT_METADATA.keywords,
       "dashboard",
@@ -126,9 +126,9 @@ export const PAGE_METADATA = {
 
   // Admin Pages
   adminDashboard: {
-    title: "Admin Dashboard - Mosuro Family Management",
+    title: "Admin Dashboard -  Family Management",
     description:
-      "Administrative dashboard for managing the Mosuro family tree application. Handle member requests, content moderation, and system administration.",
+      "Administrative dashboard for managing the  family tree application. Handle member requests, content moderation, and system administration.",
     keywords: [
       ...DEFAULT_METADATA.keywords,
       "admin",
@@ -141,7 +141,7 @@ export const PAGE_METADATA = {
   publisherDashboard: {
     title: "Publisher Dashboard - Content Management",
     description:
-      "Publisher dashboard for managing Mosuro family content. Create and moderate notice board posts, manage photo galleries, and publish family updates.",
+      "Publisher dashboard for managing  family content. Create and moderate notice board posts, manage photo galleries, and publish family updates.",
     keywords: [
       ...DEFAULT_METADATA.keywords,
       "publisher",
@@ -152,9 +152,9 @@ export const PAGE_METADATA = {
 
   // Auth Pages
   signIn: {
-    title: "Sign In - Mosuro Family Tree",
+    title: "Sign In -  Family Tree",
     description:
-      "Sign in to access your Mosuro family account. Connect with family members, view exclusive content, and participate in family activities.",
+      "Sign in to access your  family account. Connect with family members, view exclusive content, and participate in family activities.",
     keywords: [
       ...DEFAULT_METADATA.keywords,
       "sign in",
@@ -164,9 +164,9 @@ export const PAGE_METADATA = {
   },
 
   signUp: {
-    title: "Join the Family - Mosuro Family Tree Registration",
+    title: "Join the Family -  Family Tree Registration",
     description:
-      "Join the Mosuro family tree community. Create your account to connect with family members and access exclusive family content.",
+      "Join the  family tree community. Create your account to connect with family members and access exclusive family content.",
     keywords: [
       ...DEFAULT_METADATA.keywords,
       "sign up",
@@ -177,7 +177,7 @@ export const PAGE_METADATA = {
 
   // Profile Pages
   profile: {
-    title: "Family Profile - Mosuro Family Member",
+    title: "Family Profile -  Family Member",
     description:
       "View detailed family member profile information, including personal details, family connections, and shared memories.",
     keywords: [
@@ -190,9 +190,9 @@ export const PAGE_METADATA = {
 
   // Help Pages
   help: {
-    title: "Help & Support - Mosuro Family Tree",
+    title: "Help & Support -  Family Tree",
     description:
-      "Get help and support for using the Mosuro family tree application. Find answers to common questions and contact support.",
+      "Get help and support for using the  family tree application. Find answers to common questions and contact support.",
     keywords: [
       ...DEFAULT_METADATA.keywords,
       "help",
@@ -204,9 +204,9 @@ export const PAGE_METADATA = {
 
   // Settings Pages
   settings: {
-    title: "Settings - Mosuro Family Tree",
+    title: "Settings -  Family Tree",
     description:
-      "Manage your Mosuro family tree account settings, preferences, and privacy options.",
+      "Manage your  family tree account settings, preferences, and privacy options.",
     keywords: [
       ...DEFAULT_METADATA.keywords,
       "settings",
@@ -217,9 +217,9 @@ export const PAGE_METADATA = {
 
   // Timeline Pages
   timeline: {
-    title: "Family Timeline - Mosuro Family Journey",
+    title: "Family Timeline -  Family Journey",
     description:
-      "Explore the Mosuro family timeline. Discover important milestones, events, and moments that shaped our family history.",
+      "Explore the  family timeline. Discover important milestones, events, and moments that shaped our family history.",
     keywords: [
       ...DEFAULT_METADATA.keywords,
       "timeline",
@@ -230,9 +230,9 @@ export const PAGE_METADATA = {
 
   // Invitations Pages
   invitations: {
-    title: "Family Invitations - Mosuro Family Events",
+    title: "Family Invitations -  Family Events",
     description:
-      "View and manage your Mosuro family event invitations. RSVP to family gatherings and special occasions.",
+      "View and manage your  family event invitations. RSVP to family gatherings and special occasions.",
     keywords: [
       ...DEFAULT_METADATA.keywords,
       "invitations",
@@ -243,9 +243,9 @@ export const PAGE_METADATA = {
 
   // Notifications Pages
   notifications: {
-    title: "Notifications - Mosuro Family Updates",
+    title: "Notifications -  Family Updates",
     description:
-      "Stay updated with your Mosuro family notifications. View recent activity, announcements, and important family updates.",
+      "Stay updated with your  family notifications. View recent activity, announcements, and important family updates.",
     keywords: [
       ...DEFAULT_METADATA.keywords,
       "notifications",
@@ -331,10 +331,10 @@ export function generateProfileMetadata(
   memberDescription?: string
 ) {
   return generatePageMetadata("profile", {
-    title: `${memberName} - Mosuro Family Member Profile`,
+    title: `${memberName} -  Family Member Profile`,
     description:
       memberDescription ||
-      `View ${memberName}'s profile in the Mosuro family tree. Learn about their family connections, shared memories, and personal information.`,
+      `View ${memberName}'s profile in the  family tree. Learn about their family connections, shared memories, and personal information.`,
     keywords: [
       ...DEFAULT_METADATA.keywords,
       memberName,
@@ -351,10 +351,10 @@ export function generateEventMetadata(
   eventDescription?: string
 ) {
   return generatePageMetadata("events", {
-    title: `${eventName} - Mosuro Family Event`,
+    title: `${eventName} -  Family Event`,
     description:
       eventDescription ||
-      `Join us for ${eventName}, a special Mosuro family gathering. Get event details, RSVP, and connect with family members.`,
+      `Join us for ${eventName}, a special  family gathering. Get event details, RSVP, and connect with family members.`,
     keywords: [...DEFAULT_METADATA.keywords, eventName, "family event"],
   });
 }

@@ -24,7 +24,7 @@ const Hero = () => {
       }
     : {
         title: "THE MOSURO FAMILY",
-        subtitle: "The Story Behind the Mosuro Name",
+        subtitle: "The Story Behind the  Name",
         description:
           "Discover our rich family heritage, share precious moments, and stay connected with family members across the world.",
       };
@@ -70,7 +70,7 @@ const Hero = () => {
                 {loading
                   ? isMockMode()
                     ? "The Story Behind the Smith Name"
-                    : "The Story Behind the Mosuro Name"
+                    : "The Story Behind the  Name"
                   : content.subtitle}
               </motion.p>
             </div>

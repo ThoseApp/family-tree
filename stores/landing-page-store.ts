@@ -25,7 +25,7 @@ interface LandingPageActions {
 const defaultSections: LandingPageSection[] = [
   {
     section_type: "hero",
-    title: "Welcome to the Mosuro Family",
+    title: "Welcome to the  Family",
     subtitle: "Connecting generations, preserving memories",
     description:
       "Discover our rich family heritage, share precious moments, and stay connected with family members across the world.",
@@ -49,7 +49,7 @@ const defaultSections: LandingPageSection[] = [
   {
     section_type: "history",
     title: "Our Family History",
-    subtitle: "The Legacy of the Mosuro Family",
+    subtitle: "The Legacy of the  Family",
     description:
       "Explore the rich heritage and stories that shaped our family through generations.",
     image_url: "/images/landing/makes_history.webp",
@@ -57,7 +57,7 @@ const defaultSections: LandingPageSection[] = [
   },
   {
     section_type: "family_members",
-    title: "The Mosuro Family",
+    title: "The  Family",
     description: "Get to know the amazing individuals that make up our family",
     is_published: true,
   },

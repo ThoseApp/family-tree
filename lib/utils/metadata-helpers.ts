@@ -38,13 +38,13 @@ export function generatePersonStructuredData(member: {
     "@context": "https://schema.org",
     "@type": "Person",
     name: member.name,
-    familyName: member.familyName || "Mosuro",
+    familyName: member.familyName || "",
     image: member.image,
     description: member.description,
     birthDate: member.birthDate,
     memberOf: {
       "@type": "Organization",
-      name: "Mosuro Family",
+      name: " Family",
       url: DEFAULT_METADATA.siteUrl,
     },
   };
@@ -77,7 +77,7 @@ export function generateEventStructuredData(event: {
     image: event.image,
     organizer: {
       "@type": "Organization",
-      name: "Mosuro Family",
+      name: " Family",
       url: DEFAULT_METADATA.siteUrl,
     },
   };
@@ -111,7 +111,7 @@ export function generateFamilyOrganizationStructuredData() {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "Mosuro Family",
+    name: " Family",
     url: DEFAULT_METADATA.siteUrl,
     description: DEFAULT_METADATA.description,
     logo: `${DEFAULT_METADATA.siteUrl}/images/logo.png`,

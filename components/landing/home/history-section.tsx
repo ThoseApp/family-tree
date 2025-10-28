@@ -72,7 +72,7 @@ const HistorySection = () => {
       }
     : {
         title: "Every Person Makes His Own History",
-        subtitle: "The Legacy of the Mosuro Family",
+        subtitle: "The Legacy of the  Family",
         description:
           "Explore the rich heritage and stories that shaped our family through generations.",
         image_url: "/images/landing/makes_history.webp",

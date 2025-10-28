@@ -112,8 +112,8 @@ const EventsPage = () => {
   return (
     <>
       <ClientMetadata
-        title="Family Events - Mosuro Family Gatherings"
-        description="Stay updated with upcoming Mosuro family events, reunions, celebrations, and special occasions. Never miss a family gathering."
+        title="Family Events -  Family Gatherings"
+        description="Stay updated with upcoming  family events, reunions, celebrations, and special occasions. Never miss a family gathering."
         keywords={["family events", "reunions", "celebrations", "gatherings"]}
       />
       <div className="pb-20">

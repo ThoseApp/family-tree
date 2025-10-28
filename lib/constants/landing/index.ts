@@ -53,22 +53,22 @@ export const navLinks: NavLink[] = [
 export const historyCards = [
   {
     imageSrc: dummyProfileImage,
-    name: "Egundebi Atotileto Mosuro",
+    name: "Egundebi Atotileto ",
     description: "",
   },
   {
     imageSrc: "/images/AbdulKareem.webp",
-    name: "Abdul-Kareem Gbokoyi Mosuro",
+    name: "Abdul-Kareem Gbokoyi ",
     description: "",
   },
   {
     imageSrc: "/images/Giwakila.webp",
-    name: "Rufai Banjoko Mosuro",
+    name: "Rufai Banjoko ",
     description: "",
   },
   {
     imageSrc: dummyProfileImage,
-    name: "Olufowoke Jeminatu Mosuro",
+    name: "Olufowoke Jeminatu ",
     description: "",
   },
 ];
