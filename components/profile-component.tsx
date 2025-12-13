@@ -163,9 +163,9 @@ const ProfileComponent = () => {
       <Card>
         {/* Header */}
         <CardHeader className="">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-4">
-              <div className="relative w-16 h-16">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center space-x-3 sm:space-x-4">
+              <div className="relative w-12 h-12 sm:w-16 sm:h-16">
                 <Image
                   src={userProfile?.image || placeholderImage}
                   alt={userProfile?.first_name || ""}
@@ -173,11 +173,11 @@ const ProfileComponent = () => {
                   className="rounded-full object-cover"
                 />
               </div>
-              <h1 className="text-2xl font-semibold">
+              <h1 className="text-xl sm:text-2xl font-semibold">
                 {userProfile?.first_name} {userProfile?.last_name}
               </h1>
             </div>
-            <Button variant="outline" asChild>
+            <Button variant="outline" asChild className="w-full sm:w-auto">
               <Link
                 href={
                   user?.user_metadata?.is_admin
@@ -259,30 +259,30 @@ const ProfileComponent = () => {
                 {lifeEvents.map((event) => (
                   <div
                     key={event.id}
-                    className="flex items-start justify-between p-4 border rounded-lg hover:bg-gray-50"
+                    className="flex flex-col sm:flex-row items-start sm:justify-between p-4 border rounded-lg hover:bg-gray-50 gap-3 sm:gap-0"
                   >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
+                    <div className="flex-1 w-full sm:w-auto">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
                         <CalendarIcon className="size-4 text-gray-500" />
                         <span className="font-medium text-gray-900">
                           {event.year}
                         </span>
-                        <span className="text-lg font-semibold text-gray-900">
+                        <span className="text-base sm:text-lg font-semibold text-gray-900">
                           {event.title}
                         </span>
                       </div>
                       {event.description && (
-                        <p className="text-gray-600 text-sm ml-6">
+                        <p className="text-gray-600 text-sm ml-0 sm:ml-6">
                           {event.description}
                         </p>
                       )}
                       {event.date && (
-                        <p className="text-gray-500 text-xs ml-6 mt-1">
+                        <p className="text-gray-500 text-xs ml-0 sm:ml-6 mt-1">
                           Date: {formatDate(new Date(event.date))}
                         </p>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 ml-4">
+                    <div className="flex items-center gap-2 sm:ml-4 w-full sm:w-auto justify-end sm:justify-start">
                       <Button
                         variant="outline"
                         size="sm"

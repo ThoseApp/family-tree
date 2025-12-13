@@ -39,18 +39,18 @@ const Hero = () => {
           initial="hidden"
           animate="visible"
         >
-          <div className=" text-left space-y-4 sm:space-y-8 py-8  bg-[#19141066]/40 rounded-lg">
+          <div className="text-left space-y-4 sm:space-y-8 py-8 px-4 sm:px-6 md:px-8 bg-[#19141066]/40 rounded-lg">
             <motion.div
-              className="text-4xl lg:text-5xl xl:text-6xl  sm:text-center font-bold relative"
+              className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl sm:text-center font-bold relative"
               variants={fadeInUp}
             >
               {loading ? "THE MOSURO FAMILY" : content.title}
             </motion.div>
 
-            <div className="flex -mt-5 items-center gap-x-6 justify-center">
-              <Separator className="w-[310px] h-[2px] bg-background" />
-              <Box className="size-8" />
-              <Separator className="w-[310px] h-[2px] bg-background" />
+            <div className="flex -mt-5 items-center gap-x-2 sm:gap-x-4 md:gap-x-6 justify-center">
+              <Separator className="w-16 sm:w-32 md:w-48 lg:w-[310px] h-[2px] bg-background" />
+              <Box className="size-6 sm:size-8 flex-shrink-0" />
+              <Separator className="w-16 sm:w-32 md:w-48 lg:w-[310px] h-[2px] bg-background" />
             </div>
 
             <div className="flex flex-col gap-y-2 text-2xl font-medium leading-8">
