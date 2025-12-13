@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { createJSONStorage, persist, StorageValue } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 import { User } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase/client";

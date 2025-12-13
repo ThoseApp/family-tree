@@ -85,9 +85,9 @@ export function DataTable<TData, TValue>({
 
   return (
     <div>
-      <div className="flex items-center gap-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 md:gap-6">
         {showSearchInput && (
-          <div className="flex flex-1 items-center py-4 ">
+          <div className="flex flex-1 w-full sm:w-auto items-center py-4">
             <Input
               placeholder={placeholder}
               value={
@@ -102,7 +102,7 @@ export function DataTable<TData, TValue>({
 
         {/* // TODO */}
         {categoryFilter && (
-          <Button variant="outline" className="text-muted-foreground">
+          <Button variant="outline" className="text-muted-foreground w-full sm:w-auto">
             <Boxes className="mr-2 size-5" /> Category
             <ChevronDown className="ml-2 size-5" />
           </Button>
@@ -110,7 +110,7 @@ export function DataTable<TData, TValue>({
 
         {/* // TODO */}
         {visibilityFilter && (
-          <Button variant="outline" className="text-muted-foreground">
+          <Button variant="outline" className="text-muted-foreground w-full sm:w-auto">
             <Eye className="mr-2 size-5" /> Visibility
             <ChevronDown className="ml-2 size-5" />
           </Button>
@@ -118,7 +118,7 @@ export function DataTable<TData, TValue>({
 
         {/* // TODO */}
         {statusFilter && (
-          <Button variant="outline" className="text-muted-foreground">
+          <Button variant="outline" className="text-muted-foreground w-full sm:w-auto">
             <BarChart className="mr-2 size-5" /> Status
             <ChevronDown className="ml-2 size-5" />
           </Button>
@@ -126,7 +126,7 @@ export function DataTable<TData, TValue>({
 
         {/* // TODO */}
         {dateFilter && (
-          <Button variant="outline" className="text-muted-foreground">
+          <Button variant="outline" className="text-muted-foreground w-full sm:w-auto">
             <Calendar className="mr-2 size-5" /> Date
             <ChevronDown className="ml-2 size-5" />
           </Button>
@@ -134,8 +134,8 @@ export function DataTable<TData, TValue>({
 
         {/* // TODO */}
         {exportData && data.length > 0 && (
-          <div className="flex justify-end py-4">
-            <Button className="rounded-lg">
+          <div className="flex justify-end py-4 w-full sm:w-auto">
+            <Button className="rounded-lg w-full sm:w-auto">
               <Download className="size-5 mr-2" />
               Export{" "}
             </Button>
@@ -143,7 +143,7 @@ export function DataTable<TData, TValue>({
         )}
       </div>
 
-      <div className="rounded-md ">
+      <div className="rounded-md overflow-x-auto">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

@@ -263,19 +263,19 @@ const DashboardNavbar = () => {
         <DashboardMobileSidebar />
       )}
 
-      <div className="w-full flex items-center justify-between gap-8">
+      <div className="w-full flex items-center justify-between gap-2 sm:gap-4 md:gap-8">
         {/* SEARCH BAR */}
-        <div className=" flex-1  flex items-center gap-2">
-          <div className="flex-1 w-full  flex items-center justify-center">
+        <div className="flex-1 flex items-center gap-2">
+          <div className="flex-1 w-full flex items-center justify-center">
             <div
               className="relative max-w-full w-full"
               id="global-search-input"
             >
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-muted-foreground pointer-events-none" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 sm:size-5 text-muted-foreground pointer-events-none" />
               <Input
                 type="text"
-                placeholder="Search family members, events, notices..."
-                className="w-full pl-10 focus-visible:ring-offset-0 rounded-full h-12 bg-background cursor-pointer"
+                placeholder="Search..."
+                className="w-full pl-9 sm:pl-10 focus-visible:ring-offset-0 rounded-full h-10 sm:h-12 bg-background cursor-pointer text-sm sm:text-base"
                 onClick={openSearch}
                 onFocus={openSearch}
                 readOnly
@@ -290,7 +290,7 @@ const DashboardNavbar = () => {
 
         {/* SEARCH MODAL */}
         <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogContent className="w-[95vw] sm:w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
             <DialogHeader>
               <DialogTitle>Search</DialogTitle>
               <DialogDescription>
@@ -393,8 +393,8 @@ const DashboardNavbar = () => {
         </Dialog>
 
         {/* ACTION ICONS */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+          <div className="flex items-center gap-1 sm:gap-2">
             {user?.user_metadata?.is_admin === true && (
               <Button
                 variant="outline"

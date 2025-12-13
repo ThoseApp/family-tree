@@ -44,11 +44,11 @@ const FamilyMembersSection = () => {
       </div>
 
       {/* Photos Grid */}
-      <div className="flex justify-center items-end gap-6">
+      <div className="flex flex-wrap justify-center items-end gap-3 sm:gap-4 md:gap-6">
         {familyMembers.map((member) => (
           <div
             key={member.alt}
-            className={`relative w-[${member.width}] h-[${member.height}] rounded-3xl overflow-hidden`}
+            className="relative w-20 h-24 sm:w-32 sm:h-40 md:w-40 md:h-48 lg:w-48 lg:h-56 rounded-xl sm:rounded-2xl md:rounded-3xl overflow-hidden flex-shrink-0"
           >
             <Image
               src={member.imageSrc}
