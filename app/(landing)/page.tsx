@@ -18,6 +18,7 @@ import { useGalleryStore } from "@/stores/gallery-store";
 import { useEffect, useState } from "react";
 import { useNoticeBoardStore } from "@/stores/notice-board-store";
 import Footer from "@/components/landing/footer";
+import NoticesCarouselSection from "@/components/landing/home/notices-carousel-section";
 import WelcomeModal from "@/components/modals/welcome-modal";
 import { supabase } from "@/lib/supabase/client";
 import { markWelcomeMessageAsSeen } from "@/lib/utils/welcome-helpers";
@@ -170,6 +171,9 @@ export default function Home() {
 
           {/* MEET THE FAMILY */}
           <FamilyMembersSection />
+
+          {/* NOTICE BOARD */}
+          <NoticesCarouselSection />
 
           {/* UPCOMING EVENTS */}
           <UpcomingEventsSection />
