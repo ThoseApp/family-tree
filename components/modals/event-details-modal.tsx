@@ -30,7 +30,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
 
   return (
     <Dialog open={!!event} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="sm:max-w-[525px] p-0">
+      <DialogContent className="sm:max-w-[525px] p-0" hideClose>
         <div className="relative w-full h-64">
           <Image
             src={event.image || dummyProfileImage}
