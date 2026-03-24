@@ -52,7 +52,7 @@ export const NoticeDetailsModal: React.FC<NoticeDetailsModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden" hideClose>
         <DialogHeader className="pb-4">
           <div className="flex items-start justify-between">
             <div className="flex-1">
