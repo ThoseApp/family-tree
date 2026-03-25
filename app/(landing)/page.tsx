@@ -135,6 +135,9 @@ export default function Home() {
             <HistorySection />
           </section>
 
+          {/* NOTICE BOARD */}
+          <NoticesCarouselSection />
+
           {/* FAMILY TREE SECTION */}
           <section className="relative h-[585px] w-full mt-8 lg:mt-12 ">
             <Image
@@ -171,9 +174,6 @@ export default function Home() {
 
           {/* MEET THE FAMILY */}
           <FamilyMembersSection />
-
-          {/* NOTICE BOARD */}
-          <NoticesCarouselSection />
 
           {/* UPCOMING EVENTS */}
           <UpcomingEventsSection />
