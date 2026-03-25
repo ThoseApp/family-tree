@@ -130,13 +130,15 @@ export default function Home() {
             <LandingHero />
           </motion.div>
 
+          {/* NOTICE BOARD */}
+          <NoticesCarouselSection />
+
           {/* Every Person Makes His Own History */}
           <section className="-mt-8 lg:-mt-12">
             <HistorySection />
           </section>
 
-          {/* NOTICE BOARD */}
-          <NoticesCarouselSection />
+          
 
           {/* FAMILY TREE SECTION */}
           <section className="relative h-[585px] w-full mt-8 lg:mt-12 ">
