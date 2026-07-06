@@ -1,9 +1,10 @@
 "use client";
 
 import { GalleryType as GalleryGlobalType } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn, isVideoUrl } from "@/lib/utils";
 import Image from "next/image";
 import React, { useMemo, useState } from "react";
+import { Play } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { ImagePreviewModal } from "@/components/modals/image-preview-modal";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -38,11 +39,7 @@ export const GalleryType = ({
     }
   };
 
-  const isImg = useMemo(() => {
-    return (
-      url.endsWith(".jpg") || url.endsWith(".png") || url.endsWith(".jpeg")
-    );
-  }, [url]);
+  const isVideo = useMemo(() => isVideoUrl(url), [url]);
 
   return (
     <Card
@@ -55,12 +52,20 @@ export const GalleryType = ({
     >
       <CardContent className=" p-0">
         <div className="relative h-[40dvh] w-full">
-          <Image
-            src={url}
-            alt={title}
-            fill
-            className="object-cover w-full h-full rounded-t-md"
-          />
+          {isVideo ? (
+            <div className="flex h-full w-full items-center justify-center bg-gray-900 rounded-t-md">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+                <Play className="h-8 w-8 text-white fill-white" />
+              </div>
+            </div>
+          ) : (
+            <Image
+              src={url}
+              alt={title}
+              fill
+              className="object-cover w-full h-full rounded-t-md"
+            />
+          )}
           {status && status !== "approved" && (
             <div className="absolute top-2 right-2">
               <StatusBadge status={status} />

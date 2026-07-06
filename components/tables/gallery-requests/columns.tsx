@@ -4,9 +4,9 @@ import { GalleryType } from "@/lib/types";
 import { ColumnDef } from "@tanstack/react-table";
 
 import Image from "next/image";
-import { cn, formatFileSize } from "@/lib/utils";
+import { cn, formatFileSize, isVideoUrl } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Play } from "lucide-react";
 import { getUserProfile } from "@/lib/user";
 import { useEffect, useState } from "react";
 import { UserProfile } from "@/lib/types";
@@ -68,17 +68,26 @@ export const columns: ColumnDef<GalleryType>[] = [
     header: "Thumbnail",
     cell({ row }) {
       const gallery = row.original;
+      const isVideo = isVideoUrl(gallery.url);
 
       return (
         <div className="relative w-[100px] h-[100px] overflow-hidden rounded-md cursor-pointer">
-          <Image
-            src={gallery.url}
-            alt={gallery.caption || "Gallery Image"}
-            width={100}
-            height={100}
-            className="rounded-md object-cover"
-            style={{ width: "100%", height: "100%" }}
-          />
+          {isVideo ? (
+            <div className="flex h-full w-full items-center justify-center bg-gray-900 rounded-md">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
+                <Play className="h-4 w-4 text-white fill-white" />
+              </div>
+            </div>
+          ) : (
+            <Image
+              src={gallery.url}
+              alt={gallery.caption || "Gallery Image"}
+              width={100}
+              height={100}
+              className="rounded-md object-cover"
+              style={{ width: "100%", height: "100%" }}
+            />
+          )}
         </div>
       );
     },

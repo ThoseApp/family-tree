@@ -11,8 +11,8 @@ import { useEffect, useState } from "react";
 import PageHeader from "@/components/page-header";
 import { dummyProfileImage, dummyFemaleProfileImage } from "@/lib/constants";
 import Image from "next/image";
-import { Calendar as CalendarIcon } from "lucide-react";
-import { formatDate } from "@/lib/utils";
+import { Calendar as CalendarIcon, Play } from "lucide-react";
+import { formatDate, isVideoUrl } from "@/lib/utils";
 import { supabase } from "@/lib/supabase/client";
 import { GalleryStatusEnum } from "@/lib/constants/enums";
 
@@ -326,17 +326,25 @@ const ProfilePage = ({ params }: ProfilePageProps) => {
                     key={imgSrc.id || index}
                     className="aspect-square overflow-hidden rounded-lg hover:opacity-90 transition-opacity"
                   >
-                    <Image
-                      src={imgSrc.url}
-                      alt={
-                        imgSrc.caption ||
-                        imgSrc.file_name ||
-                        `Gallery image ${index + 1}`
-                      }
-                      width={200}
-                      height={200}
-                      className="object-cover w-full h-full"
-                    />
+                    {isVideoUrl(imgSrc.url) ? (
+                      <div className="flex h-full w-full items-center justify-center bg-gray-900">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
+                          <Play className="h-5 w-5 text-white fill-white" />
+                        </div>
+                      </div>
+                    ) : (
+                      <Image
+                        src={imgSrc.url}
+                        alt={
+                          imgSrc.caption ||
+                          imgSrc.file_name ||
+                          `Gallery image ${index + 1}`
+                        }
+                        width={200}
+                        height={200}
+                        className="object-cover w-full h-full"
+                      />
+                    )}
                   </div>
                 ))}
               </div>

@@ -12,7 +12,13 @@ import { toast } from "sonner";
 import { UserProfile, LifeEvent } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import Link from "next/link";
-import { Plus, Edit2, Trash2, Calendar as CalendarIcon } from "lucide-react";
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  Calendar as CalendarIcon,
+  Play,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -32,7 +38,7 @@ import {
 } from "@/components/ui/popover";
 import { EnhancedCalendar } from "@/components/ui/enhanced-calendar";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn, isVideoUrl } from "@/lib/utils";
 import { GalleryStatusEnum } from "@/lib/constants/enums";
 import { Calendar } from "./ui/calendar";
 
@@ -322,13 +328,21 @@ const ProfileComponent = () => {
                   key={index}
                   className="aspect-square overflow-hidden rounded"
                 >
-                  <Image
-                    src={imgSrc.url}
-                    alt={`Gallery image ${index + 1}`}
-                    width={200}
-                    height={200}
-                    className="object-cover w-full h-full"
-                  />
+                  {isVideoUrl(imgSrc.url) ? (
+                    <div className="flex h-full w-full items-center justify-center bg-gray-900">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
+                        <Play className="h-5 w-5 text-white fill-white" />
+                      </div>
+                    </div>
+                  ) : (
+                    <Image
+                      src={imgSrc.url}
+                      alt={`Gallery image ${index + 1}`}
+                      width={200}
+                      height={200}
+                      className="object-cover w-full h-full"
+                    />
+                  )}
                 </div>
               ))}
             </div>
