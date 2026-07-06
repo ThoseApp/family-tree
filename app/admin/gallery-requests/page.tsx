@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import Image from "next/image";
-import { cn } from "@/lib/utils";
+import { Play } from "lucide-react";
+import { cn, isVideoUrl } from "@/lib/utils";
 import GalleryRequestsTable from "@/components/tables/gallery-requests";
 import { useGalleryStore } from "@/stores/gallery-store";
 import { useUserStore } from "@/stores/user-store";
@@ -378,14 +379,24 @@ const GalleryRequestsPage = () => {
                     )}
                     onClick={() => handlePreviewImage(gallery)}
                   >
-                    <Image
-                      src={gallery.url}
-                      alt={
-                        gallery.caption || gallery.file_name || "Gallery image"
-                      }
-                      fill
-                      className="object-cover"
-                    />
+                    {isVideoUrl(gallery.url) ? (
+                      <div className="flex h-full w-full items-center justify-center bg-gray-900">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+                          <Play className="h-7 w-7 text-white fill-white" />
+                        </div>
+                      </div>
+                    ) : (
+                      <Image
+                        src={gallery.url}
+                        alt={
+                          gallery.caption ||
+                          gallery.file_name ||
+                          "Gallery image"
+                        }
+                        fill
+                        className="object-cover"
+                      />
+                    )}
                     <div className="absolute inset-0 bg-black/20 hover:bg-black/10 transition-all" />
                     <div className="absolute bottom-3 left-3 right-3">
                       <p className="text-white text-sm font-medium truncate bg-black/50 px-2 py-1 rounded">

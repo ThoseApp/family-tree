@@ -14,6 +14,19 @@ import {
   canCurrentUserAutoApprove,
   createNotificationForAllAdmins,
 } from "@/lib/utils/multi-admin-helpers";
+import { runPool } from "@/lib/utils/run-pool";
+
+export type BulkItemStatus = "queued" | "uploading" | "done" | "failed";
+
+export interface BulkItemPatch {
+  status: BulkItemStatus;
+  error?: string;
+}
+
+export interface BulkUploadEntry {
+  key: string;
+  file: File;
+}
 
 // Define GalleryType type
 interface GalleryState {
@@ -35,12 +48,30 @@ interface GalleryActions {
     userId: string,
     albumId: string
   ) => Promise<GalleryType[]>;
+  uploadSingleGalleryItem: (
+    file: File,
+    opts: {
+      caption?: string;
+      userId?: string;
+      albumId?: string;
+      canAutoApprove: boolean;
+    }
+  ) => Promise<GalleryType>;
   uploadToGallery: (
     file: File,
     caption?: string,
     userId?: string,
     albumId?: string
-  ) => Promise<void>;
+  ) => Promise<GalleryType>;
+  bulkUploadToGallery: (
+    files: BulkUploadEntry[],
+    opts: {
+      userId?: string;
+      albumId?: string;
+      captions: Record<string, string>;
+    },
+    onItemUpdate: (key: string, patch: BulkItemPatch) => void
+  ) => Promise<{ success: number; failed: number }>;
   importFromWeb: (
     imageUrl: string,
     caption?: string,
@@ -160,67 +191,72 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
       }
     },
 
+    uploadSingleGalleryItem: async (file, opts) => {
+      const { caption, userId, albumId, canAutoApprove } = opts;
+
+      const fileExt = file.name.split(".").pop();
+      const file_name = `${
+        BucketFolderEnum.gallery
+      }/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from(BUCKET_NAME)
+        .upload(file_name, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from(BUCKET_NAME)
+        .getPublicUrl(file_name);
+
+      if (!urlData || !urlData.publicUrl) {
+        throw new Error("Failed to get gallery item URL");
+      }
+
+      const now = new Date().toISOString();
+
+      const newImage: GalleryType = {
+        id: uuidv4(),
+        url: urlData.publicUrl,
+        caption: caption || file.name,
+        uploaded_at: now,
+        created_at: now,
+        updated_at: now,
+        user_id: userId || "",
+        file_name,
+        file_size: file.size,
+        album_id: albumId,
+        status: canAutoApprove
+          ? GalleryStatusEnum.approved
+          : GalleryStatusEnum.pending,
+      };
+
+      const { error: insertError } = await supabase
+        .from("galleries")
+        .insert(newImage);
+
+      if (insertError) throw insertError;
+
+      return newImage;
+    },
+
     uploadToGallery: async (file, caption, userId, albumId) => {
       set({ isLoading: true, error: null });
 
       try {
-        // Check if current user can auto-approve
         const canAutoApprove = await canCurrentUserAutoApprove();
 
-        // Create a unique file_name
-        const fileExt = file.name.split(".").pop();
-        const file_name = `${
-          BucketFolderEnum.gallery
-        }/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-
-        // Upload to Supabase Storage
-        const { error: uploadError, data: uploadData } = await supabase.storage
-          .from(BUCKET_NAME)
-          .upload(file_name, file, {
-            cacheControl: "3600",
-            upsert: false, // Prevent overwriting
-          });
-
-        if (uploadError) throw uploadError;
-
-        // Get the public URL
-        const { data: urlData } = supabase.storage
-          .from(BUCKET_NAME)
-          .getPublicUrl(file_name);
-
-        if (!urlData || !urlData.publicUrl) {
-          throw new Error("Failed to get gallert item URL");
-        }
-
-        const imageUrl = urlData.publicUrl;
-
-        const now = new Date().toISOString();
-
-        // Insert image data into the galleries table
-        const newImage: GalleryType = {
-          id: uuidv4(), // Generate ID client-side
-          url: imageUrl,
-          caption: caption || file.name,
-          uploaded_at: now,
-          created_at: now,
-          updated_at: now,
-          user_id: userId || "",
-          file_name: file_name,
-          file_size: file.size,
-          album_id: albumId,
-          status: canAutoApprove
-            ? GalleryStatusEnum.approved
-            : GalleryStatusEnum.pending,
-        };
-
-        const { error: insertError } = await supabase
-          .from("galleries")
-          .insert(newImage);
-
-        if (insertError) throw insertError;
+        const newImage = await get().uploadSingleGalleryItem(file, {
+          caption,
+          userId,
+          albumId,
+          canAutoApprove,
+        });
 
         if (!canAutoApprove) {
-          // Create notification for all admins about the gallery request
           try {
             await createNotificationForAllAdmins({
               title: "New Gallery Request",
@@ -229,13 +265,17 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
               }" has been uploaded and is pending approval.`,
               type: NotificationTypeEnum.gallery_request,
               resource_id: newImage.id,
-              image: imageUrl,
+              image: newImage.url,
             });
           } catch (notificationErr) {
             console.error("Failed to create notification:", notificationErr);
             // Don't throw here as the main gallery upload was successful
           }
         }
+
+        set({ isLoading: false });
+
+        return newImage;
       } catch (err: any) {
         console.error("Error uploading image:", err);
         set({
@@ -244,6 +284,68 @@ export const useGalleryStore = create<GalleryState & GalleryActions>(
         });
         throw err; // Re-throw to allow caller to handle
       }
+    },
+
+    bulkUploadToGallery: async (files, opts, onItemUpdate) => {
+      const { userId, albumId, captions } = opts;
+
+      // Compute approval eligibility once for the whole batch.
+      const canAutoApprove = await canCurrentUserAutoApprove();
+
+      const results = await runPool(
+        files,
+        async (entry) => {
+          onItemUpdate(entry.key, { status: "uploading" });
+          const row = await get().uploadSingleGalleryItem(entry.file, {
+            caption: captions[entry.key],
+            userId,
+            albumId,
+            canAutoApprove,
+          });
+          onItemUpdate(entry.key, { status: "done" });
+          return row;
+        },
+        { concurrency: 6, retries: 1 }
+      );
+
+      let success = 0;
+      let failed = 0;
+
+      results.forEach((result) => {
+        if (result.status === "fulfilled") {
+          success++;
+        } else {
+          failed++;
+          onItemUpdate(result.item.key, {
+            status: "failed",
+            error: (result.error as any)?.message || "Upload failed",
+          });
+        }
+      });
+
+      // One aggregated admin notification per batch (only when pending).
+      if (!canAutoApprove && success > 0) {
+        try {
+          await createNotificationForAllAdmins({
+            title: "New Gallery Requests",
+            body: `${success} new gallery item${
+              success > 1 ? "s were" : " was"
+            } uploaded and ${
+              success > 1 ? "are" : "is"
+            } pending approval.`,
+            type: NotificationTypeEnum.gallery_request,
+            resource_id: albumId,
+            image: undefined,
+          });
+        } catch (notificationErr) {
+          console.error(
+            "Failed to create bulk gallery notification:",
+            notificationErr
+          );
+        }
+      }
+
+      return { success, failed };
     },
 
     importFromWeb: async (imageUrl, caption, userId, albumId) => {

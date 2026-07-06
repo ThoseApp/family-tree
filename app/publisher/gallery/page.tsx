@@ -25,6 +25,7 @@ import { useAlbumStore } from "@/stores/album-store";
 import { LoadingIcon } from "@/components/loading-icon";
 import { ImagePreviewModal } from "@/components/modals/image-preview-modal";
 import { CreateAlbumModal } from "@/components/modals/create-album-modal";
+import BulkUploadModal from "@/components/modals/bulk-upload-modal";
 import { EditAlbumModal } from "@/components/modals/edit-album-modal";
 import { ImportFromWebModal } from "@/components/modals/import-from-web-modal";
 import { toast } from "sonner";
@@ -89,6 +90,7 @@ const Page = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAlbumId, setSelectedAlbumId] = useState("none");
   const [isCreateAlbumModalOpen, setIsCreateAlbumModalOpen] = useState(false);
+  const [isBulkOpen, setIsBulkOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isEditMode, setIsEditMode] = useState(false);
@@ -284,11 +286,30 @@ const Page = () => {
       caption: "",
     });
     setCaptionInput("");
+    // Default the upload to the album currently being viewed (if any)
+    setSelectedAlbumId(selectedAlbum ? selectedAlbum.id : "none");
     setIsPreviewOpen(true);
 
     // Reset the input
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
+    }
+  };
+
+  const refreshGallery = async () => {
+    if (!user) return;
+    if (statusFilter === "all") {
+      await fetchUserGallery(user.id);
+    } else {
+      await fetchUserGalleryByStatus(
+        user.id,
+        statusFilter as keyof typeof GalleryStatusEnum
+      );
+    }
+    await fetchUserAlbums(user.id);
+    if (selectedAlbum) {
+      const albumItems = await fetchUserGalleryByAlbum(user.id, selectedAlbum.id);
+      setAlbumGallery(albumItems);
     }
   };
 
@@ -310,6 +331,9 @@ const Page = () => {
           : undefined
       );
       toast.success("Gallery uploaded successfully");
+
+      await refreshGallery();
+
       setIsPreviewOpen(false);
       setSelectedImage(null);
       setSelectedAlbumId("none");
@@ -610,6 +634,14 @@ const Page = () => {
               accept="image/*,video/*"
               onChange={handleFileUpload}
             />
+            <Button
+              variant="outline"
+              className="rounded-full"
+              onClick={() => setIsBulkOpen(true)}
+            >
+              <Plus className="size-5 mr-2" />
+              Bulk Upload
+            </Button>
           </div>
         </div>
 
@@ -1091,6 +1123,15 @@ const Page = () => {
             </div>
           )}
 
+        <BulkUploadModal
+          isOpen={isBulkOpen}
+          onClose={() => setIsBulkOpen(false)}
+          user={user}
+          albums={userAlbums}
+          defaultAlbumId={selectedAlbum?.id}
+          onComplete={refreshGallery}
+        />
+
         {/* Image Preview Modal */}
         <ImagePreviewModal
           isOpen={isPreviewOpen}
@@ -1105,6 +1146,13 @@ const Page = () => {
           }}
           imageUrl={selectedImage?.url || ""}
           imageName={selectedImage?.name || ""}
+          mediaType={
+            selectedImage?.file
+              ? selectedImage.file.type?.startsWith("video/")
+                ? "video"
+                : "image"
+              : undefined
+          }
           captionValue={selectedImage?.file ? captionInput : editingCaption}
           onCaptionChange={(value) => {
             if (selectedImage?.file) {

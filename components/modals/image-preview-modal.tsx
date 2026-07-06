@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Album } from "@/stores/album-store";
+import { isVideoUrl } from "@/lib/utils";
 
 interface ImagePreviewModalProps {
   isOpen: boolean;
@@ -49,6 +50,9 @@ interface ImagePreviewModalProps {
   editMode?: boolean; // Whether in edit mode
   editButtonText?: string; // Text for edit button
   confirmButtonText?: string; // Text for confirm button
+  // Explicit media type; when omitted it is auto-detected from the URL/name.
+  // Required for blob URLs (e.g. video upload previews) that have no extension.
+  mediaType?: "image" | "video";
 }
 
 export const ImagePreviewModal = ({
@@ -69,16 +73,31 @@ export const ImagePreviewModal = ({
   editMode = false,
   editButtonText = "Edit",
   confirmButtonText = "OK",
+  mediaType,
 }: ImagePreviewModalProps) => {
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [videoError, setVideoError] = useState(false);
   const [caption, setCaption] = useState(captionValue);
   const maxCaptionLength = 200;
+
+  // Prefer the explicit mediaType prop; fall back to detecting from the
+  // filename/URL (blob URLs from uploads have no extension, hence the prop).
+  const isVideo =
+    mediaType === "video" ||
+    (mediaType !== "image" && (isVideoUrl(imageName) || isVideoUrl(imageUrl)));
 
   // Sync captionValue prop with local state
   React.useEffect(() => {
     setCaption(captionValue);
   }, [captionValue]);
+
+  // Reset media load/error state whenever the previewed media changes
+  React.useEffect(() => {
+    setImgLoaded(false);
+    setImgError(false);
+    setVideoError(false);
+  }, [imageUrl]);
 
   const handleCaptionChange = (value: string) => {
     if (value.length <= maxCaptionLength) {
@@ -109,31 +128,53 @@ export const ImagePreviewModal = ({
 
         <div className="p-6 flex-grow overflow-y-auto">
           <div className="relative w-full aspect-[16/9] rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-            {!imgLoaded && !imgError && (
-              <div className="absolute inset-0 flex items-center justify-center animate-pulse">
-                <div className="w-24 h-24 bg-gray-200 dark:bg-gray-600 rounded-full" />
-              </div>
-            )}
-            {imgError ? (
-              <div className="w-full h-full flex flex-col items-center justify-center">
-                <ImageOff className="w-12 h-12 text-gray-400 mb-2" />
-                <p className="text-gray-500 dark:text-gray-400">
-                  Image not available
-                </p>
-              </div>
+            {isVideo ? (
+              videoError ? (
+                <div className="w-full h-full flex flex-col items-center justify-center">
+                  <ImageOff className="w-12 h-12 text-gray-400 mb-2" />
+                  <p className="text-gray-500 dark:text-gray-400">
+                    Video not available
+                  </p>
+                </div>
+              ) : (
+                <video
+                  src={imageUrl}
+                  controls
+                  className="w-full h-full object-contain bg-black"
+                  onError={() => setVideoError(true)}
+                >
+                  Your browser does not support the video tag.
+                </video>
+              )
             ) : (
-              <Image
-                src={imageUrl}
-                alt={imageName || "Image preview"}
-                layout="fill"
-                objectFit="contain"
-                className={`transition-transform duration-200 ${
-                  imgLoaded ? "hover:scale-105" : ""
-                }`}
-                onLoadingComplete={() => setImgLoaded(true)}
-                onError={() => setImgError(true)}
-                priority
-              />
+              <>
+                {!imgLoaded && !imgError && (
+                  <div className="absolute inset-0 flex items-center justify-center animate-pulse">
+                    <div className="w-24 h-24 bg-gray-200 dark:bg-gray-600 rounded-full" />
+                  </div>
+                )}
+                {imgError ? (
+                  <div className="w-full h-full flex flex-col items-center justify-center">
+                    <ImageOff className="w-12 h-12 text-gray-400 mb-2" />
+                    <p className="text-gray-500 dark:text-gray-400">
+                      Image not available
+                    </p>
+                  </div>
+                ) : (
+                  <Image
+                    src={imageUrl}
+                    alt={imageName || "Image preview"}
+                    layout="fill"
+                    objectFit="contain"
+                    className={`transition-transform duration-200 ${
+                      imgLoaded ? "hover:scale-105" : ""
+                    }`}
+                    onLoadingComplete={() => setImgLoaded(true)}
+                    onError={() => setImgError(true)}
+                    priority
+                  />
+                )}
+              </>
             )}
           </div>
 

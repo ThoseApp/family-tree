@@ -70,6 +70,18 @@ export const ensureDateAsObject = (
 };
 
 /**
+ * Determines whether a filename or URL points to a video file, based on its
+ * extension. Any query string / hash is stripped before checking.
+ * @param nameOrUrl - The file name or URL to inspect
+ * @returns True if the resource looks like a video
+ */
+export const isVideoUrl = (nameOrUrl?: string): boolean => {
+  if (!nameOrUrl) return false;
+  const withoutQuery = nameOrUrl.split(/[?#]/)[0];
+  return /\.(mp4|webm|mov|avi|wmv|flv|mkv|m4v|ogg|ogv)$/i.test(withoutQuery);
+};
+
+/**
  * Formats a file size to a string with the format "B", "KB", "MB", etc.
  * @param bytes - The file size in bytes
  * @returns A string with the format "B", "KB", "MB", etc.
